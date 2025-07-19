@@ -26,25 +26,18 @@ jobs:
       - name: Locate and Prepare JAR artifact
         id: get_jar_path
         run: |
-          # --- 디버깅용 코드 추가 시작 ---
-          echo "Current working directory: $(pwd)"
-          echo "Listing contents of build/libs/ before finding JAR:"
-          ls -al build/libs/
-          # --- 디버깅용 코드 추가 끝 ---
-
           JAR_FILE=$(find build/libs -name "*.jar" | head -n 1)
           if [ -z "$JAR_FILE" ]; then
             echo "Error: No JAR file found!"
             exit 1
           fi
-          echo "Found JAR: $JAR_FILE"
           echo "jar_path=$JAR_FILE" >> $GITHUB_OUTPUT
 
-      - name: Verify JAR path before transfer
+      - name: Add EC2 Host Key to known_hosts
         run: |
-          echo "Verifying JAR_FILE path: ${{ steps.get_jar_path.outputs.jar_path }}"
-          test -f "${{ steps.get_jar_path.outputs.jar_path }}" || { echo "Error: JAR file not found at expected path!"; exit 1; }
-          ls -lh "${{ steps.get_jar_path.outputs.jar_path }}"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_HOST_KEYS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
       - name: Transfer JAR to EC2 Server
         uses: appleboy/scp-action@master
