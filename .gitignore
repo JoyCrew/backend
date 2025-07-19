@@ -1,0 +1,70 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# IDE (IntelliJ IDEA)
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# IDE (Eclipse/STS)
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+bin/
+
+# IDE (NetBeans)
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# IDE (VS Code)
+.vscode/
+
+# General Logs & Temp
+*.log
+*.log.*
+*.class
+*.jar
+*.war
+*.zip
+*.rar
+*.tar
+*.gz
+*.sqlite
+*.db
+
+# OS Specific
+.DS_Store
+Thumbs.db
+
+# Sensitive Files / Credentials
+*.pem
+*.key
+*.env
+*.env.*
+.env.production.local
+.env.development.local
+.env.test.local
+.env.local
+config/application-local.yml
+config/application-dev.yml
+config/application-prod.yml
+
+# Spring Boot / Maven (if also used)
+/target/
+/hs_err_pid*.log
+/.gradle-enterprise/
+
+# Auto-generated documentation (if not meant for version control)
+HELP.md

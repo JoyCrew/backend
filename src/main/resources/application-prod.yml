@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: ${DB_HOST}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate # 또는 none (배포 시에는 create/update 지양)
+    show-sql: false
