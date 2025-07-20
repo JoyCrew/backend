@@ -26,16 +26,11 @@ jobs:
       - name: Locate and Prepare JAR artifact
         id: get_jar_path
         run: |
-          echo "Current working directory: $(pwd)" # 디버깅용
-          echo "Listing contents of build/libs/ before finding JAR:" # 디버깅용
-          ls -al build/libs/ # 디버깅용
-
           JAR_FILE=$(find build/libs -name "*.jar" | head -n 1)
           if [ -z "$JAR_FILE" ]; then
             echo "Error: No JAR file found!"
             exit 1
           fi
-          echo "Found JAR: $JAR_FILE" # 디버깅용
           echo "jar_path=$JAR_FILE" >> $GITHUB_OUTPUT
 
       - name: Add EC2 Host Key to known_hosts
