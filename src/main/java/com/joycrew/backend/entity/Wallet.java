@@ -17,18 +17,28 @@ public class Wallet {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long walletId;
 
-    @ManyToOne
-    @JoinColumn(name = "employee_id")
+    @OneToOne
+    @JoinColumn(name = "employee_id", nullable = false, unique = true)
     private Employee employee;
 
+    @Column(nullable = false)
     private Integer balance;
+    @Column(nullable = false)
     private Integer giftablePoint;
+    @Column(nullable = false)
     private LocalDateTime createdAt;
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = this.updatedAt = LocalDateTime.now();
+        if (this.balance == null) {
+            this.balance = 0;
+        }
+        if (this.giftablePoint == null) {
+            this.giftablePoint = 0;
+        }
     }
 
     @PreUpdate

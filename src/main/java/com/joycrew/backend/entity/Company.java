@@ -21,21 +21,28 @@ public class Company {
     private String companyName;
     private String status;
     private LocalDateTime startAt;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "company")
+    @Column(nullable = false)
+    private Double totalCompanyBalance;
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Employee> employees;
 
-    @OneToMany(mappedBy = "company")
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Department> departments;
 
-    @OneToMany(mappedBy = "company")
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CompanyAdminAccess> adminAccessList;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = this.updatedAt = LocalDateTime.now();
+        if (this.totalCompanyBalance == null) {
+            this.totalCompanyBalance = 0.0;
+        }
     }
 
     @PreUpdate

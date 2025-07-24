@@ -7,8 +7,11 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 @Schema(description = "지갑 잔액 응답 DTO")
-public class WalletResponse {
+public class PointBalanceResponse {
 
     @Schema(description = "현재 잔액", example = "12000")
-    private Integer balance;
+    private Integer totalBalance;
+
+    @Schema(description = "선물 가능한 포인트", example = "500")
+    private Integer giftableBalance;
 }

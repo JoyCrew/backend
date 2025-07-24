@@ -1,5 +1,6 @@
 package com.joycrew.backend.entity;
 
+import com.joycrew.backend.entity.enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -17,21 +18,27 @@ public class RewardPointTransaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long transactionId;
 
-    @ManyToOne
-    @JoinColumn(name = "sender_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id", nullable = true)
     private Employee sender;
 
-    @ManyToOne
-    @JoinColumn(name = "receiver_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_id", nullable = false)
     private Employee receiver;
 
+    @Column(nullable = false)
     private Integer pointAmount;
 
     @Lob
     private String message;
 
-    private String type;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TransactionType type;
+
+    @Column(nullable = false)
     private LocalDateTime transactionDate;
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @PrePersist

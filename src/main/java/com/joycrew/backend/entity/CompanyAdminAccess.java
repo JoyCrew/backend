@@ -1,5 +1,7 @@
 package com.joycrew.backend.entity;
 
+import com.joycrew.backend.entity.enums.AccessStatus;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -17,29 +19,43 @@ public class CompanyAdminAccess {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long accessId;
 
-    @ManyToOne
-    @JoinColumn(name = "employee_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
-    @ManyToOne
-    @JoinColumn(name = "company_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    private String adminLevel;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private AdminLevel adminLevel;
 
-    @ManyToOne
-    @JoinColumn(name = "assigned_by")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_by", nullable = true)
     private Employee assignedBy;
 
+    @Column(nullable = false)
     private LocalDateTime assignedAt;
-    private String status;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private AccessStatus status;
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = this.updatedAt = LocalDateTime.now();
-        this.assignedAt = LocalDateTime.now();
+        if (this.assignedAt == null) {
+            this.assignedAt = LocalDateTime.now();
+        }
+        if (this.status == null) {
+            this.status = AccessStatus.ACTIVE;
+        }
     }
 
     @PreUpdate
