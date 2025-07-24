@@ -1,6 +1,6 @@
 package com.joycrew.backend.controller;
 
-import com.joycrew.backend.dto.WalletResponse;
+import com.joycrew.backend.dto.PointBalanceResponse;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.Wallet;
 import com.joycrew.backend.repository.WalletRepository;
@@ -17,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Tag(name = "지갑", description = "포인트 관련 API")
 @RestController
@@ -30,7 +31,7 @@ public class WalletController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = WalletResponse.class))),
+                            schema = @Schema(implementation = PointBalanceResponse.class))),
             @ApiResponse(responseCode = "401", description = "인증 필요",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(example = "{\"message\": \"로그인이 필요합니다.\"}")))
@@ -42,10 +43,21 @@ public class WalletController {
                     .body(Map.of("message", "로그인이 필요합니다."));
         }
 
-        Employee employee = (Employee) authentication.getPrincipal();
-        Wallet wallet = walletRepository.findByEmployee(employee);
+        String userEmail = authentication.getName();
 
-        int balance = wallet != null ? wallet.getBalance() : 0;
-        return ResponseEntity.ok(new WalletResponse(balance));
+        Long employeeId = ((Employee) authentication.getPrincipal()).getEmployeeId();
+
+        Optional<Wallet> walletOptional = walletRepository.findByEmployee_EmployeeId(employeeId);
+
+        int totalBalance = 0;
+        int giftableBalance = 0;
+
+        if (walletOptional.isPresent()) {
+            Wallet wallet = walletOptional.get();
+            totalBalance = wallet.getBalance();
+            giftableBalance = wallet.getGiftablePoint();
+        }
+
+        return ResponseEntity.ok(new PointBalanceResponse(totalBalance, giftableBalance));
     }
 }

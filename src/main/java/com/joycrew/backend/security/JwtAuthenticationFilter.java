@@ -1,10 +1,10 @@
 package com.joycrew.backend.security;
 
-import com.joycrew.backend.entity.Employee;
-import com.joycrew.backend.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -17,7 +17,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final EmployeeRepository employeeRepository;
+    private final UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -28,16 +28,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7); // Remove "Bearer "
+            String token = authHeader.substring(7);
             String email = jwtUtil.getEmailFromToken(token);
 
-            Employee employee = employeeRepository.findByEmail(email)
-                    .orElse(null);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-            if (employee != null) {
+            if (userDetails != null) {
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                employee, null, null // 권한은 아직 처리 안함
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
                         );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);

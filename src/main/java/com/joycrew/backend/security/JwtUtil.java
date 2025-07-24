@@ -3,19 +3,23 @@ package com.joycrew.backend.security;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class JwtUtil {
 
-    private final String SECRET_KEY = "your-secret-key-should-be-at-least-256-bits-long!";
-    private final long EXPIRATION_TIME = 86400000L; // 1 day
+    @Value("${jwt.secret}")
+    private String secretKey;
+
+    private final long EXPIRATION_TIME = 86400000L;
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = SECRET_KEY.getBytes();
+        byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
