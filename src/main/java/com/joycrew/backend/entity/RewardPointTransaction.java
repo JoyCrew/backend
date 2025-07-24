@@ -1,0 +1,48 @@
+package com.joycrew.backend.entity;
+
+import com.joycrew.backend.entity.enums.TransactionType;
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "reward_point_transaction")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class RewardPointTransaction {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long transactionId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id", nullable = true)
+    private Employee sender;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_id", nullable = false)
+    private Employee receiver;
+
+    @Column(nullable = false)
+    private Integer pointAmount;
+
+    @Lob
+    private String message;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TransactionType type;
+
+    @Column(nullable = false)
+    private LocalDateTime transactionDate;
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = this.transactionDate = LocalDateTime.now();
+    }
+}

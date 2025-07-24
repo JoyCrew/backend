@@ -1,14 +1,18 @@
 server:
-  port: 8081 # ?? ??, ??? 8081 ??? ??
+  port: 8080
 
 spring:
   application:
     name: joycrew
 
   profiles:
-    active: dev # ??? H2 ?? ??
+    active: dev
+
+jwt:
+  expiration-ms: 3600000
 
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
   level:
-    org.hibernate.SQL: debug      # ?? ??
-    org.hibernate.type.descriptor.sql.BasicBinder: trace # ??? ?
+    com.joycrew.backend: INFO
