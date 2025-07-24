@@ -26,12 +26,13 @@ jobs:
       - name: Locate and Prepare JAR artifact
         id: get_jar_path
         run: |
-          JAR_FILE=$(find build/libs -name "*.jar" | head -n 1)
+          JAR_FILE=$(find build/libs -name "*.jar" | head -n 1) 
+          
           if [ -z "$JAR_FILE" ]; then
-            echo "Error: No JAR file found!"
+            echo "Error: No executable JAR file found in build/libs directory!"
             exit 1
           fi
-          echo "JAR_FILE=$JAR_FILE" >> $GITHUB_OUTPUT
+          echo "jar_path=$JAR_FILE" >> $GITHUB_OUTPUT
 
       - name: Add EC2 Host Key to known_hosts
         run: |
@@ -58,7 +59,9 @@ jobs:
 
           script: |
             set -eux
-
+            
+            export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
+            
             sudo systemctl stop joycrew-backend || true
 
             DEPLOY_DIR="/home/${{ secrets.SSH_USER }}/app/build/libs"

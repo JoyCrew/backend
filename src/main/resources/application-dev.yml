@@ -9,8 +9,14 @@ spring:
       enabled: true
   jpa:
     hibernate:
-      ddl-auto: create # 또는 update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+      ddl-auto: create
+    show-sql: false
+
+jwt:
+  secret: dev-test-secret-key-for-joycrew-backend-at-least-256-bits-long!
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+    com.joycrew.backend: DEBUG
