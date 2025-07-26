@@ -8,6 +8,7 @@ import com.joycrew.backend.entity.enums.TransactionType;
 import com.joycrew.backend.event.RecognitionEvent;
 import com.joycrew.backend.exception.UserNotFoundException;
 import com.joycrew.backend.repository.EmployeeRepository;
+import com.joycrew.backend.repository.RewardPointTransactionRepository;
 import com.joycrew.backend.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;

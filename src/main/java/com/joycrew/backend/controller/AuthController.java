@@ -2,6 +2,7 @@ package com.joycrew.backend.controller;
 
 import com.joycrew.backend.dto.LoginRequest;
 import com.joycrew.backend.dto.LoginResponse;
+import com.joycrew.backend.dto.SuccessResponse;
 import com.joycrew.backend.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -31,10 +32,10 @@ public class AuthController {
     }
 
     @Operation(summary = "로그아웃")
-    @ApiResponse(responseCode = "200", description = "로그아웃 성공")
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(HttpServletRequest request) {
+    public ResponseEntity<SuccessResponse> logout(HttpServletRequest request) {
         authService.logout(request);
-        return ResponseEntity.ok(Map.of("message", "로그아웃 되었습니다."));
+        // [L3] Map 대신 일관된 SuccessResponse DTO 사용
+        return ResponseEntity.ok(new SuccessResponse("로그아웃 되었습니다."));
     }
 }

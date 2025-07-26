@@ -1,7 +1,9 @@
 package com.joycrew.backend.controller;
 
 import com.joycrew.backend.dto.PasswordChangeRequest;
+import com.joycrew.backend.dto.SuccessResponse;
 import com.joycrew.backend.dto.UserProfileResponse;
+import com.joycrew.backend.security.UserPrincipal;
 import com.joycrew.backend.service.EmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -10,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
@@ -23,15 +26,19 @@ public class UserController {
 
     @Operation(summary = "사용자 프로필 조회", security = @SecurityRequirement(name = "Authorization"))
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponse> getProfile(Authentication authentication) {
-        UserProfileResponse response = employeeService.getUserProfile(authentication.getName());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<UserProfileResponse> getProfile(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        return ResponseEntity.ok(employeeService.getUserProfile(principal.getUsername()));
     }
 
-    @Operation(summary = "비밀번호 변경 (첫 로그인 시)", security = @SecurityRequirement(name = "Authorization"))
+    @Operation(summary = "비밀번호 변경", security = @SecurityRequirement(name = "Authorization"))
     @PostMapping("/password")
-    public ResponseEntity<Map<String, String>> forceChangePassword(Authentication authentication, @Valid @RequestBody PasswordChangeRequest request) {
-        employeeService.forcePasswordChange(authentication.getName(), request);
-        return ResponseEntity.ok(Map.of("message", "비밀번호가 성공적으로 변경되었습니다."));
+    public ResponseEntity<SuccessResponse> forceChangePassword(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody PasswordChangeRequest request
+    ) {
+        employeeService.forcePasswordChange(principal.getUsername(), request);
+        return ResponseEntity.ok(new SuccessResponse("비밀번호가 성공적으로 변경되었습니다."));
     }
 }
