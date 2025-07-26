@@ -6,6 +6,7 @@ import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,8 +46,7 @@ public class Employee implements UserDetails {
     @Column(nullable = false)
     private UserRole role;
 
-    // 사용자 셀프 서비스 필드
-    @Column(length = 2048) // URL은 길 수 있으므로 길이 확장
+    @Column(length = 2048)
     private String profileImageUrl;
     private String personalEmail;
     private String phoneNumber;
@@ -77,16 +77,8 @@ public class Employee implements UserDetails {
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CompanyAdminAccess> adminAccesses = new ArrayList<>();
 
-    public void changePassword(String newEncodedPassword) {
-        this.passwordHash = newEncodedPassword;
-    }
-
     public void updateLastLogin() {
         this.lastLoginAt = LocalDateTime.now();
-    }
-
-    public void deactivate() {
-        this.status = "INACTIVE";
     }
 
     public void assignToDepartment(Department newDepartment) {
@@ -141,5 +133,9 @@ public class Employee implements UserDetails {
     @Override
     public boolean isEnabled() {
         return "ACTIVE".equals(this.status);
+    }
+
+    public void changePassword(String rawPassword, PasswordEncoder encoder) {
+        this.passwordHash = encoder.encode(rawPassword);
     }
 }
