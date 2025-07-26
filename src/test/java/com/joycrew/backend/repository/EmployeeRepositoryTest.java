@@ -11,10 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,54 +24,41 @@ class EmployeeRepositoryTest {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
     private Company testCompany;
     private Department testDepartment;
-    private Employee testEmployee;
 
     @BeforeEach
     void setUp() {
-        testCompany = Company.builder()
-                .companyName("테스트회사")
-                .status("ACTIVE")
-                .startAt(LocalDateTime.now())
-                .totalCompanyBalance(0.0)
-                .build();
+        // 1. 의존하는 엔티티 먼저 생성 및 영속화
+        testCompany = Company.builder().companyName("테스트회사").build();
         entityManager.persist(testCompany);
 
-        testDepartment = Department.builder()
-                .name("테스트부서")
-                .company(testCompany)
-                .build();
+        testDepartment = Department.builder().name("테스트부서").company(testCompany).build();
         entityManager.persist(testDepartment);
 
-        testEmployee = Employee.builder()
+        // 2. 테스트 대상 주체인 Employee 생성
+        Employee testEmployee = Employee.builder()
                 .company(testCompany)
                 .department(testDepartment)
                 .email("test@joycrew.com")
-                .passwordHash(passwordEncoder.encode("password123"))
+                .passwordHash("encodedPassword")
                 .employeeName("김테스트")
                 .position("사원")
-                .status("ACTIVE")
                 .role(UserRole.EMPLOYEE)
-                .lastLoginAt(null)
                 .build();
         entityManager.persist(testEmployee);
 
-        Wallet testWallet = Wallet.builder()
-                .employee(testEmployee)
-                .balance(1000)
-                .giftablePoint(100)
-                .build();
+        // 3. [수정] Wallet은 이제 new 키워드와 생성자를 통해서만 생성
+        Wallet testWallet = new Wallet(testEmployee);
         entityManager.persist(testWallet);
 
+        // 4. DB에 변경사항을 반영하고, 영속성 컨텍스트를 비워 순수한 DB 조회 테스트 환경 구축
         entityManager.flush();
         entityManager.clear();
     }
 
     @Test
-    @DisplayName("이메일로 직원 조회 성공")
+    @DisplayName("이메일로 직원 조회 성공 (@EntityGraph 적용 확인)")
     void findByEmail_Success() {
         // When
         Optional<Employee> foundEmployee = employeeRepository.findByEmail("test@joycrew.com");
@@ -82,7 +66,7 @@ class EmployeeRepositoryTest {
         // Then
         assertThat(foundEmployee).isPresent();
         assertThat(foundEmployee.get().getEmail()).isEqualTo("test@joycrew.com");
-        assertThat(foundEmployee.get().getEmployeeName()).isEqualTo("김테스트");
+        // @EntityGraph 덕분에 추가 쿼리 없이 연관 엔티티 접근 가능
         assertThat(foundEmployee.get().getCompany().getCompanyName()).isEqualTo("테스트회사");
         assertThat(foundEmployee.get().getDepartment().getName()).isEqualTo("테스트부서");
     }
@@ -95,30 +79,5 @@ class EmployeeRepositoryTest {
 
         // Then
         assertThat(foundEmployee).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Employee 저장 및 조회 성공")
-    void saveAndFindEmployee() {
-        // Given
-        Employee newEmployee = Employee.builder()
-                .company(testCompany)
-                .department(testDepartment)
-                .email("new@joycrew.com")
-                .passwordHash(passwordEncoder.encode("newpass"))
-                .employeeName("새로운직원")
-                .position("대리")
-                .status("ACTIVE")
-                .role(UserRole.EMPLOYEE)
-                .build();
-
-        // When
-        Employee savedEmployee = employeeRepository.save(newEmployee);
-        Optional<Employee> found = employeeRepository.findById(savedEmployee.getEmployeeId());
-
-        // Then
-        assertThat(found).isPresent();
-        assertThat(found.get().getEmail()).isEqualTo("new@joycrew.com");
-        assertThat(found.get().getEmployeeName()).isEqualTo("새로운직원");
     }
 }

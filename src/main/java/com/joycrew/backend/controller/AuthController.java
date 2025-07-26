@@ -35,7 +35,6 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<SuccessResponse> logout(HttpServletRequest request) {
         authService.logout(request);
-        // [L3] Map 대신 일관된 SuccessResponse DTO 사용
         return ResponseEntity.ok(new SuccessResponse("로그아웃 되었습니다."));
     }
 }
