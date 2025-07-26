@@ -146,7 +146,6 @@ class WalletRepositoryTest {
         assertThat(found.get().getBalance()).isEqualTo(2000);
         assertThat(found.get().getEmployee().getEmployeeId()).isEqualTo(anotherEmployee.getEmployeeId());
 
-        // 양방향 관계 업데이트
         anotherEmployee.setWallet(savedWallet);
         entityManager.merge(anotherEmployee);
         entityManager.flush();
