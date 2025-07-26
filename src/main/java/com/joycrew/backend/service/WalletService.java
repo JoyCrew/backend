@@ -24,6 +24,6 @@ public class WalletService {
         Wallet wallet = walletRepository.findByEmployee_EmployeeId(employee.getEmployeeId())
                 .orElse(new Wallet(employee));
 
-        return new PointBalanceResponse(wallet.getBalance(), wallet.getGiftablePoint());
+        return PointBalanceResponse.from(wallet);
     }
 }
