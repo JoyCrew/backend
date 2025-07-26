@@ -33,13 +33,11 @@ public class UserPrincipal implements UserDetails {
         return employee.getEmail();
     }
 
-    // Employee의 상태에 따라 계정 활성화 여부 결정
     @Override
     public boolean isEnabled() {
         return "ACTIVE".equals(employee.getStatus());
     }
 
-    // 필요에 따라 아래 메서드들도 Employee의 필드와 연동 가능
     @Override
     public boolean isAccountNonExpired() {
         return true;
