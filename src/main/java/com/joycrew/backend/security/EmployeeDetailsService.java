@@ -21,7 +21,6 @@ public class EmployeeDetailsService implements UserDetailsService {
         Employee employee = employeeRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        // Employee 엔티티를 UserPrincipal로 감싸서 반환
         return new UserPrincipal(employee);
     }
 }
