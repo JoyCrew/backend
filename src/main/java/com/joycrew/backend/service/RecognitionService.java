@@ -1,5 +1,6 @@
 package com.joycrew.backend.service;
 
+import com.joycrew.backend.dto.RecognitionRequest;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.RewardPointTransaction;
 import com.joycrew.backend.entity.Wallet;
@@ -19,7 +20,7 @@ public class RecognitionService {
     private final EmployeeRepository employeeRepository;
     private final WalletRepository walletRepository;
     private final RewardPointTransactionRepository transactionRepository;
-    private final ApplicationEventPublisher eventPublisher; // [L3] 이벤트 발행을 위한 주입
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void sendRecognition(String senderEmail, RecognitionRequest request) {

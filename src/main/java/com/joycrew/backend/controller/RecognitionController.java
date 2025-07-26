@@ -1,5 +1,6 @@
 package com.joycrew.backend.controller;
 
+import com.joycrew.backend.dto.RecognitionRequest;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.service.RecognitionService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,7 +21,6 @@ public class RecognitionController {
 
     @PostMapping
     public ResponseEntity<Map<String, String>> sendPoints(
-            // [L3] @AuthenticationPrincipal을 사용하여 프레임워크 의존성 제거
             @AuthenticationPrincipal Employee sender,
             @Valid @RequestBody RecognitionRequest request
     ) {
