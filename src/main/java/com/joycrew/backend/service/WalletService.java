@@ -17,12 +17,6 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final EmployeeRepository employeeRepository;
 
-    /**
-     * [리팩토링]
-     * 포인트 잔액 조회 로직을 별도의 WalletService로 분리하여 응집도를 높임.
-     * @param userEmail 조회할 사용자의 이메일
-     * @return PointBalanceResponse DTO
-     */
     public PointBalanceResponse getPointBalance(String userEmail) {
         Employee employee = employeeRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("인증된 사용자를 찾을 수 없습니다."));

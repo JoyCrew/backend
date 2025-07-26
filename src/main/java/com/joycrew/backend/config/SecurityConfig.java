@@ -27,6 +27,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.Map;
 
+import static com.joycrew.backend.entity.enums.UserRole.HR_ADMIN;
+
 
 @Configuration
 @EnableWebSecurity
@@ -52,6 +54,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers("/api/admin/**").hasRole(HR_ADMIN.name())
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions

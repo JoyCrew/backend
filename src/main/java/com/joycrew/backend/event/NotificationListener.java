@@ -22,4 +22,3 @@ public class NotificationListener {
             Thread.currentThread().interrupt();
         }
     }
-}
