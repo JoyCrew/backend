@@ -4,14 +4,14 @@ import com.joycrew.backend.entity.enums.AccessStatus;
 import com.joycrew.backend.entity.enums.AdminLevel;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "company_admin_access")
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 public class CompanyAdminAccess {
 
@@ -46,6 +46,11 @@ public class CompanyAdminAccess {
     private LocalDateTime createdAt;
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    public void revoke() {
+        this.status = AccessStatus.REVOKED;
+    }
+
 
     @PrePersist
     protected void onCreate() {
