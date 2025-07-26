@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
-    List<Department> findAllByCompanyId(Long companyId);
+    List<Department> findAllByCompanyCompanyId(Long companyId);
 }

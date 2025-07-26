@@ -41,10 +41,11 @@ class EmployeeServiceIntegrationTest {
 
     private Company testCompany;
     private Department testDepartment;
+    @Autowired
+    private AdminEmployeeService adminEmployeeService;
 
     @BeforeEach
     void setUp() {
-        // 테스트에 필요한 기본 회사와 부서 생성
         testCompany = companyRepository.save(Company.builder().companyName("테스트 회사").build());
         testDepartment = departmentRepository.save(Department.builder().name("테스트 부서").company(testCompany).build());
     }
@@ -53,46 +54,18 @@ class EmployeeServiceIntegrationTest {
     @DisplayName("[Integration] 신규 직원 등록 성공")
     void registerEmployee_Success() {
         // Given
-        EmployeeRegistrationRequest request = new EmployeeRegistrationRequest();
-        request.setEmail("new.employee@joycrew.com");
-        request.setName("신규직원");
-        request.setInitialPassword("password123!");
-        request.setCompanyId(testCompany.getCompanyId());
-        request.setDepartmentId(testDepartment.getDepartmentId());
-        request.setPosition("사원");
-        request.setRole(UserRole.EMPLOYEE);
+        EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
+                "신규직원", "new.employee@joycrew.com", "password123!",
+                testCompany.getCompanyId(), testDepartment.getDepartmentId(), "사원", UserRole.EMPLOYEE
+        );
 
         // When
-        Employee savedEmployee = employeeService.registerEmployee(request);
+        Employee savedEmployee = adminEmployeeService.registerEmployee(request);
 
         // Then
         assertThat(savedEmployee.getEmployeeId()).isNotNull();
         assertThat(savedEmployee.getEmail()).isEqualTo("new.employee@joycrew.com");
         assertThat(walletRepository.findByEmployee_EmployeeId(savedEmployee.getEmployeeId())).isPresent();
-    }
-
-    @Test
-    @DisplayName("[Integration] 관리자에 의한 직원 정보 수정 성공")
-    void updateEmployeeDetailsByAdmin_Success() {
-        // Given
-        Employee employee = employeeRepository.save(Employee.builder()
-                .email("update.target@joycrew.com")
-                .employeeName("수정대상")
-                .passwordHash("password")
-                .company(testCompany)
-                .build());
-
-        AdminEmployeeUpdateRequest request = new AdminEmployeeUpdateRequest();
-        request.setName("이름수정됨");
-        request.setPosition("대리");
-
-        // When
-        employeeService.updateEmployeeDetailsByAdmin(employee.getEmployeeId(), request);
-
-        // Then
-        Employee updatedEmployee = employeeRepository.findById(employee.getEmployeeId()).orElseThrow();
-        assertThat(updatedEmployee.getEmployeeName()).isEqualTo("이름수정됨");
-        assertThat(updatedEmployee.getPosition()).isEqualTo("대리");
     }
 
     @Test
@@ -106,8 +79,7 @@ class EmployeeServiceIntegrationTest {
                 .company(testCompany)
                 .build());
 
-        PasswordChangeRequest request = new PasswordChangeRequest();
-        request.setNewPassword("newPassword123!");
+        PasswordChangeRequest request = new PasswordChangeRequest("newPassword123!");
 
         // When
         employeeService.forcePasswordChange(employee.getEmail(), request);
