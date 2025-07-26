@@ -3,14 +3,14 @@ package com.joycrew.backend.entity;
 import com.joycrew.backend.entity.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
-import java.util.List;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @Entity
 @Table(name = "employee")
@@ -45,6 +45,17 @@ public class Employee implements UserDetails {
     @Column(nullable = false)
     private UserRole role;
 
+    // 사용자 셀프 서비스 필드
+    @Column(length = 2048) // URL은 길 수 있으므로 길이 확장
+    private String profileImageUrl;
+    private String personalEmail;
+    private String phoneNumber;
+    private String shippingAddress;
+    private Boolean emailNotificationEnabled;
+    private Boolean appNotificationEnabled;
+    private String language;
+    private String timezone;
+
     private LocalDateTime lastLoginAt;
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -66,12 +77,10 @@ public class Employee implements UserDetails {
     @PrePersist
     protected void onCreate() {
         this.createdAt = this.updatedAt = LocalDateTime.now();
-        if (this.status == null) {
-            this.status = "ACTIVE";
-        }
-        if (this.role == null) {
-            this.role = UserRole.EMPLOYEE;
-        }
+        if (this.status == null) this.status = "ACTIVE";
+        if (this.role == null) this.role = UserRole.EMPLOYEE;
+        if (this.emailNotificationEnabled == null) this.emailNotificationEnabled = true;
+        if (this.appNotificationEnabled == null) this.appNotificationEnabled = true;
     }
 
     @PreUpdate
@@ -79,6 +88,7 @@ public class Employee implements UserDetails {
         this.updatedAt = LocalDateTime.now();
     }
 
+    // UserDetails 구현 메서드들...
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role));
