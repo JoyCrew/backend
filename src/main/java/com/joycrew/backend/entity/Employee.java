@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -15,9 +16,8 @@ import java.util.List;
 @Entity
 @Table(name = "employee")
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 public class Employee implements UserDetails {
 
@@ -65,14 +65,33 @@ public class Employee implements UserDetails {
     @OneToOne(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Wallet wallet;
 
+    @Builder.Default
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RewardPointTransaction> sentTransactions;
+    private List<RewardPointTransaction> sentTransactions = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RewardPointTransaction> receivedTransactions;
+    private List<RewardPointTransaction> receivedTransactions = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CompanyAdminAccess> adminAccesses;
+    private List<CompanyAdminAccess> adminAccesses = new ArrayList<>();
+
+    public void changePassword(String newEncodedPassword) {
+        this.passwordHash = newEncodedPassword;
+    }
+
+    public void updateLastLogin() {
+        this.lastLoginAt = LocalDateTime.now();
+    }
+
+    public void deactivate() {
+        this.status = "INACTIVE";
+    }
+
+    public void assignToDepartment(Department newDepartment) {
+        this.department = newDepartment;
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -92,19 +111,6 @@ public class Employee implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role));
-    }
-
-    public void changePassword(String newEncodedPassword) {
-        this.passwordHash = newEncodedPassword;
-    }
-
-    public void updateProfile(String newName, String newPosition) {
-        if (newName != null) {
-            this.employeeName = newName;
-        }
-        if (newPosition != null) {
-            this.position = newPosition;
-        }
     }
 
     @Override
