@@ -1,16 +1,13 @@
 package com.joycrew.backend.entity;
 
+import com.joycrew.backend.exception.InsufficientPointsException;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "wallet")
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Wallet {
 
     @Id
@@ -29,6 +26,31 @@ public class Wallet {
     private LocalDateTime createdAt;
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    public Wallet(Employee employee) {
+        this.employee = employee;
+        this.balance = 0;
+        this.giftablePoint = 0;
+    }
+
+    public void addPoints(int amount) {
+        if (amount < 0) {
+            throw new IllegalArgumentException("포인트는 음수일 수 없습니다.");
+        }
+        this.balance += amount;
+        this.giftablePoint += amount;
+    }
+
+    public void spendPoints(int amount) {
+        if (amount < 0) {
+            throw new IllegalArgumentException("포인트는 음수일 수 없습니다.");
+        }
+        if (this.balance < amount || this.giftablePoint < amount) {
+            throw new InsufficientPointsException("선물 가능한 포인트가 부족합니다.");
+        }
+        this.balance -= amount;
+        this.giftablePoint -= amount;
+    }
 
     @PrePersist
     protected void onCreate() {

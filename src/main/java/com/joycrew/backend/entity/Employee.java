@@ -94,6 +94,19 @@ public class Employee implements UserDetails {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role));
     }
 
+    public void changePassword(String newEncodedPassword) {
+        this.passwordHash = newEncodedPassword;
+    }
+
+    public void updateProfile(String newName, String newPosition) {
+        if (newName != null) {
+            this.employeeName = newName;
+        }
+        if (newPosition != null) {
+            this.position = newPosition;
+        }
+    }
+
     @Override
     public String getPassword() {
         return this.passwordHash;
