@@ -1,6 +1,7 @@
 package com.joycrew.backend.service;
 
 import com.joycrew.backend.JoyCrewBackendApplication;
+import com.joycrew.backend.dto.EmployeeRegistrationRequest;
 import com.joycrew.backend.dto.LoginRequest;
 import com.joycrew.backend.dto.LoginResponse;
 import com.joycrew.backend.entity.Company;
@@ -55,7 +56,17 @@ class AuthServiceIntegrationTest {
 
         employeeRepository.findByEmail(testEmail).ifPresent(employeeRepository::delete);
 
-        employeeService.registerEmployee(testEmail, testPassword, testName, defaultCompany);
+        // --- DTO를 사용하도록 수정된 부분 ---
+        EmployeeRegistrationRequest request = new EmployeeRegistrationRequest();
+        request.setEmail(testEmail);
+        request.setInitialPassword(testPassword);
+        request.setName(testName);
+        request.setCompanyId(defaultCompany.getCompanyId());
+        request.setPosition("사원"); // DTO에 필요한 기본값 설정
+        request.setRole(UserRole.EMPLOYEE); // DTO에 필요한 기본값 설정
+
+        employeeService.registerEmployee(request);
+        // --- 수정 끝 ---
     }
 
     @Test
@@ -91,7 +102,6 @@ class AuthServiceIntegrationTest {
         request.setPassword("anypassword");
 
         // When & Then
-        // 발생하는 예외의 종류만 확인하도록 수정
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(BadCredentialsException.class);
     }
@@ -105,7 +115,6 @@ class AuthServiceIntegrationTest {
         request.setPassword("wrongpassword");
 
         // When & Then
-        // 발생하는 예외의 종류만 확인하도록 수정
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(BadCredentialsException.class);
     }

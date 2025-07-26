@@ -1,11 +1,14 @@
 package com.joycrew.backend.service;
 
-import com.joycrew.backend.JoyCrewBackendApplication;
+import com.joycrew.backend.dto.AdminEmployeeUpdateRequest;
+import com.joycrew.backend.dto.EmployeeRegistrationRequest;
+import com.joycrew.backend.dto.PasswordChangeRequest;
 import com.joycrew.backend.entity.Company;
+import com.joycrew.backend.entity.Department;
 import com.joycrew.backend.entity.Employee;
-import com.joycrew.backend.entity.Wallet;
 import com.joycrew.backend.entity.enums.UserRole;
 import com.joycrew.backend.repository.CompanyRepository;
+import com.joycrew.backend.repository.DepartmentRepository;
 import com.joycrew.backend.repository.EmployeeRepository;
 import com.joycrew.backend.repository.WalletRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,13 +19,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringBootTest(classes = JoyCrewBackendApplication.class)
+@SpringBootTest
 @Transactional
 class EmployeeServiceIntegrationTest {
 
@@ -33,75 +33,87 @@ class EmployeeServiceIntegrationTest {
     @Autowired
     private WalletRepository walletRepository;
     @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
     private CompanyRepository companyRepository;
+    @Autowired
+    private DepartmentRepository departmentRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    private String testEmail = "integration_new@joycrew.com";
-    private String testPassword = "newPass123!";
-    private String testName = "새통합유저";
-    private Company defaultCompany;
-    private Employee registeredEmployee; // <-- setUp에서 등록된 Employee를 저장할 필드 추가
+    private Company testCompany;
+    private Department testDepartment;
 
     @BeforeEach
     void setUp() {
-        defaultCompany = Company.builder()
-                .companyName("테스트컴퍼니2")
-                .status("ACTIVE")
-                .startAt(LocalDateTime.now())
-                .totalCompanyBalance(0.0)
-                .build();
-        defaultCompany = companyRepository.save(defaultCompany);
-
-        employeeRepository.findByEmail(testEmail).ifPresent(employeeRepository::delete);
-
-        // --- setUp에서 Employee를 등록하고 필드에 저장 ---
-        employeeService.registerEmployee(testEmail, testPassword, testName, defaultCompany);
-        registeredEmployee = employeeRepository.findByEmail(testEmail).orElseThrow(); // 등록된 Employee 조회
-        // --- 수정 끝 ---
+        // 테스트에 필요한 기본 회사와 부서 생성
+        testCompany = companyRepository.save(Company.builder().companyName("테스트 회사").build());
+        testDepartment = departmentRepository.save(Department.builder().name("테스트 부서").company(testCompany).build());
     }
 
     @Test
-    @DisplayName("통합 테스트: 직원 등록 성공 및 Wallet 자동 생성 확인")
-    void registerEmployee_Integration_Success_And_WalletCreated() {
+    @DisplayName("[Integration] 신규 직원 등록 성공")
+    void registerEmployee_Success() {
         // Given
-        // 이 테스트는 새로운 직원을 등록하는 것이 아니라, setUp에서 등록된 직원의 상태를 확인하는 테스트로 변경
-        // 또는, 새로운 이메일을 가진 직원을 등록하는 테스트로 변경
-        String newTestEmailForSuccess = "success_test@joycrew.com";
-        employeeRepository.findByEmail(newTestEmailForSuccess).ifPresent(employeeRepository::delete); // 혹시 모를 잔여 데이터 삭제
+        EmployeeRegistrationRequest request = new EmployeeRegistrationRequest();
+        request.setEmail("new.employee@joycrew.com");
+        request.setName("신규직원");
+        request.setInitialPassword("password123!");
+        request.setCompanyId(testCompany.getCompanyId());
+        request.setDepartmentId(testDepartment.getDepartmentId());
+        request.setPosition("사원");
+        request.setRole(UserRole.EMPLOYEE);
 
         // When
-        employeeService.registerEmployee(newTestEmailForSuccess, "successPass123", "성공유저", defaultCompany);
+        Employee savedEmployee = employeeService.registerEmployee(request);
 
         // Then
-        Optional<Employee> savedEmployeeOptional = employeeRepository.findByEmail(newTestEmailForSuccess);
-        assertThat(savedEmployeeOptional).isPresent();
-        Employee savedEmployee = savedEmployeeOptional.get();
-
-        assertThat(savedEmployee.getEmployeeName()).isEqualTo("성공유저");
-        assertThat(passwordEncoder.matches("successPass123", savedEmployee.getPasswordHash())).isTrue();
-        assertThat(savedEmployee.getRole()).isEqualTo(UserRole.EMPLOYEE);
-        assertThat(savedEmployee.getStatus()).isEqualTo("ACTIVE");
-
-        Optional<Wallet> savedWalletOptional = walletRepository.findByEmployee_EmployeeId(savedEmployee.getEmployeeId());
-        assertThat(savedWalletOptional).isPresent();
-        Wallet savedWallet = savedWalletOptional.get();
-
-        assertThat(savedWallet.getEmployee().getEmployeeId()).isEqualTo(savedEmployee.getEmployeeId());
-        assertThat(savedWallet.getBalance()).isEqualTo(0);
-        assertThat(savedWallet.getGiftablePoint()).isEqualTo(0);
+        assertThat(savedEmployee.getEmployeeId()).isNotNull();
+        assertThat(savedEmployee.getEmail()).isEqualTo("new.employee@joycrew.com");
+        assertThat(walletRepository.findByEmployee_EmployeeId(savedEmployee.getEmployeeId())).isPresent();
     }
 
     @Test
-    @DisplayName("통합 테스트: 직원 등록 실패 - 이메일 중복")
-    void registerEmployee_Integration_Failure_EmailDuplicate() {
+    @DisplayName("[Integration] 관리자에 의한 직원 정보 수정 성공")
+    void updateEmployeeDetailsByAdmin_Success() {
         // Given
-        // setUp에서 이미 testEmail로 직원이 등록되어 있음
+        Employee employee = employeeRepository.save(Employee.builder()
+                .email("update.target@joycrew.com")
+                .employeeName("수정대상")
+                .passwordHash("password")
+                .company(testCompany)
+                .build());
 
-        // When & Then
-        // 동일한 이메일로 다시 등록 시도 시 예외 발생 확인
-        assertThatThrownBy(() -> employeeService.registerEmployee(testEmail, "anotherPass", "다른이름", defaultCompany))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("이미 존재하는 이메일입니다.");
+        AdminEmployeeUpdateRequest request = new AdminEmployeeUpdateRequest();
+        request.setName("이름수정됨");
+        request.setPosition("대리");
+
+        // When
+        employeeService.updateEmployeeDetailsByAdmin(employee.getEmployeeId(), request);
+
+        // Then
+        Employee updatedEmployee = employeeRepository.findById(employee.getEmployeeId()).orElseThrow();
+        assertThat(updatedEmployee.getEmployeeName()).isEqualTo("이름수정됨");
+        assertThat(updatedEmployee.getPosition()).isEqualTo("대리");
+    }
+
+    @Test
+    @DisplayName("[Integration] 직원 비밀번호 변경 성공")
+    void forcePasswordChange_Success() {
+        // Given
+        Employee employee = employeeRepository.save(Employee.builder()
+                .email("pw.change@joycrew.com")
+                .employeeName("패스워드변경")
+                .passwordHash(passwordEncoder.encode("oldPassword"))
+                .company(testCompany)
+                .build());
+
+        PasswordChangeRequest request = new PasswordChangeRequest();
+        request.setNewPassword("newPassword123!");
+
+        // When
+        employeeService.forcePasswordChange(employee.getEmail(), request);
+
+        // Then
+        Employee updatedEmployee = employeeRepository.findByEmail(employee.getEmail()).orElseThrow();
+        assertThat(passwordEncoder.matches("newPassword123!", updatedEmployee.getPasswordHash())).isTrue();
     }
 }

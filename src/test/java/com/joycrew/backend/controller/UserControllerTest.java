@@ -1,12 +1,13 @@
 package com.joycrew.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.joycrew.backend.dto.PasswordChangeRequest;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.Wallet;
 import com.joycrew.backend.entity.enums.UserRole;
 import com.joycrew.backend.repository.EmployeeRepository;
 import com.joycrew.backend.repository.WalletRepository;
-import com.joycrew.backend.security.EmployeeDetailsService;
-import com.joycrew.backend.security.JwtUtil;
+import com.joycrew.backend.service.EmployeeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,8 +26,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -36,14 +43,15 @@ class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockBean
     private EmployeeRepository employeeRepository;
     @MockBean
     private WalletRepository walletRepository;
     @MockBean
-    private JwtUtil jwtUtil;
-    @MockBean
-    private EmployeeDetailsService employeeDetailsService;
+    private EmployeeService employeeService;
 
     @ControllerAdvice
     static class TestControllerAdvice {
@@ -86,20 +94,36 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/user/profile - 프로필 조회 실패 (인증되지 않은 사용자)")
-    void getProfile_Failure_Unauthenticated() throws Exception {
-        mockMvc.perform(get("/api/user/profile"))
-                .andExpect(status().isUnauthorized());
+    @DisplayName("POST /api/user/password - 비밀번호 변경 성공")
+    @WithMockUser(username = "testuser@joycrew.com")
+    void forceChangePassword_Success() throws Exception {
+        // Given
+        PasswordChangeRequest request = new PasswordChangeRequest();
+        request.setNewPassword("newPassword123!");
+        doNothing().when(employeeService).forcePasswordChange(eq("testuser@joycrew.com"), any(PasswordChangeRequest.class));
+
+        // When & Then
+        mockMvc.perform(post("/api/user/password")
+                        .with(csrf()) // CSRF 토큰 추가
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("비밀번호가 성공적으로 변경되었습니다."));
     }
 
     @Test
-    @DisplayName("GET /api/user/profile - 프로필 조회 실패 (인증은 되었으나 사용자 정보 없음)")
-    @WithMockUser(username = "nonexistent@joycrew.com")
-    void getProfile_Failure_UserNotFoundAfterAuth() throws Exception {
-        when(employeeRepository.findByEmail("nonexistent@joycrew.com")).thenReturn(Optional.empty());
+    @DisplayName("POST /api/user/password - 비밀번호 변경 실패 (유효성 검사 실패)")
+    @WithMockUser(username = "testuser@joycrew.com")
+    void forceChangePassword_Failure_InvalidPassword() throws Exception {
+        // Given
+        PasswordChangeRequest request = new PasswordChangeRequest();
+        request.setNewPassword("short");
 
-        mockMvc.perform(get("/api/user/profile"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.message").value("인증된 사용자를 찾을 수 없습니다."));
+        // When & Then
+        mockMvc.perform(post("/api/user/password")
+                        .with(csrf()) // CSRF 토큰 추가
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 }

@@ -26,8 +26,6 @@ class EmployeeRepositoryTest {
     private TestEntityManager entityManager;
     @Autowired
     private EmployeeRepository employeeRepository;
-    @Autowired
-    private WalletRepository walletRepository;
 
     private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 

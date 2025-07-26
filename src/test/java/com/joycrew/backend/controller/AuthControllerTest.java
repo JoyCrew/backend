@@ -99,7 +99,6 @@ class AuthControllerTest {
         doNothing().when(authService).logout(any(HttpServletRequest.class));
 
         mockMvc.perform(post("/api/auth/logout")
-                        // 실제 요청처럼 Authorization 헤더를 포함하여 테스트
                         .header("Authorization", "Bearer some.mock.token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("로그아웃 되었습니다."));
