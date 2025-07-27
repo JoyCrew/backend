@@ -16,14 +16,13 @@ public class TestUserDetailsService implements UserDetailsService {
     private final Map<String, Employee> users = new HashMap<>();
 
     public TestUserDetailsService() {
-        // Pre-populate with test users
         users.put("testuser@joycrew.com", Employee.builder()
                 .employeeId(1L)
                 .email("testuser@joycrew.com")
                 .employeeName("테스트유저")
                 .role(UserRole.EMPLOYEE)
                 .status("ACTIVE")
-                .passwordHash("{noop}password") // Use {noop} for plain text password in tests or your actual encoder
+                .passwordHash("{noop}password")
                 .build());
 
         users.put("nowallet@joycrew.com", Employee.builder()

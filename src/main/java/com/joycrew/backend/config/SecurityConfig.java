@@ -1,7 +1,7 @@
 package com.joycrew.backend.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.joycrew.backend.repository.EmployeeRepository;
+import com.joycrew.backend.dto.ErrorResponse;
 import com.joycrew.backend.security.JwtAuthenticationFilter;
 import com.joycrew.backend.security.JwtUtil;
 import com.joycrew.backend.security.EmployeeDetailsService;
@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -23,9 +22,8 @@ import org.springframework.web.filter.CorsFilter;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
-import java.util.Map;
+import static com.joycrew.backend.entity.enums.UserRole.HR_ADMIN;
 
 
 @Configuration
@@ -34,13 +32,13 @@ import java.util.Map;
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
-    private final EmployeeRepository employeeRepository;
+    private final EmployeeDetailsService employeeDetailsService;
     private final ObjectMapper objectMapper;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(Customizer.withDefaults())
+                .cors(cors -> {})
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers
                         .frameOptions(frameOptions -> frameOptions.disable()))
@@ -52,27 +50,31 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers("/api/admin/**").hasRole(HR_ADMIN.name())
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpStatus.UNAUTHORIZED.value());
                             response.setContentType("application/json;charset=UTF-8");
-
-                            // JSON 형식으로 에러 메시지 생성
                             String jsonResponse = objectMapper.writeValueAsString(
-                                    Map.of("message", "로그인이 필요합니다.")
+                                    new ErrorResponse("UNAUTHENTICATED", "인증이 필요합니다. 로그인을 진행해주세요.")
                             );
-
+                            response.getWriter().write(jsonResponse);
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpStatus.FORBIDDEN.value());
+                            response.setContentType("application/json;charset=UTF-8");
+                            String jsonResponse = objectMapper.writeValueAsString(
+                                    new ErrorResponse("ACCESS_DENIED", "해당 리소스에 접근할 권한이 없습니다.")
+                            );
                             response.getWriter().write(jsonResponse);
                         })
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService()),
-                        UsernamePasswordAuthenticationFilter.class)
-                .formLogin(form -> form.disable())
-                .httpBasic(httpBasic -> httpBasic.disable());
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, employeeDetailsService),
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -97,14 +99,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        return new EmployeeDetailsService(employeeRepository);
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+    public AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService);
+        authenticationProvider.setUserDetailsService(employeeDetailsService);
         authenticationProvider.setPasswordEncoder(passwordEncoder);
         return new ProviderManager(authenticationProvider);
     }
