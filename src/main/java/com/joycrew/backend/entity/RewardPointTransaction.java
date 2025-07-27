@@ -3,14 +3,14 @@ package com.joycrew.backend.entity;
 import com.joycrew.backend.entity.enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reward_point_transaction")
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 public class RewardPointTransaction {
 
@@ -38,6 +38,7 @@ public class RewardPointTransaction {
 
     @Column(nullable = false)
     private LocalDateTime transactionDate;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
