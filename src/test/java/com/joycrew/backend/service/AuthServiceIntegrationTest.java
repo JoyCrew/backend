@@ -18,8 +18,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -31,8 +29,6 @@ class AuthServiceIntegrationTest {
     @Autowired
     private AuthService authService;
     @Autowired
-    private EmployeeService employeeService;
-    @Autowired
     private EmployeeRepository employeeRepository;
     @Autowired
     private JwtUtil jwtUtil;
@@ -43,53 +39,45 @@ class AuthServiceIntegrationTest {
     private String testPassword = "integrationPass123!";
     private String testName = "통합테스트유저";
     private Company defaultCompany;
+    @Autowired
+    private AdminEmployeeService adminEmployeeService;
 
     @BeforeEach
     void setUp() {
-        defaultCompany = Company.builder()
-                .companyName("테스트컴퍼니")
-                .status("ACTIVE")
-                .startAt(LocalDateTime.now())
-                .totalCompanyBalance(0.0)
-                .build();
-        defaultCompany = companyRepository.save(defaultCompany);
-
+        defaultCompany = companyRepository.save(Company.builder().companyName("테스트컴퍼니").build());
         employeeRepository.findByEmail(testEmail).ifPresent(employeeRepository::delete);
 
-        // --- DTO를 사용하도록 수정된 부분 ---
-        EmployeeRegistrationRequest request = new EmployeeRegistrationRequest();
-        request.setEmail(testEmail);
-        request.setInitialPassword(testPassword);
-        request.setName(testName);
-        request.setCompanyId(defaultCompany.getCompanyId());
-        request.setPosition("사원"); // DTO에 필요한 기본값 설정
-        request.setRole(UserRole.EMPLOYEE); // DTO에 필요한 기본값 설정
-
-        employeeService.registerEmployee(request);
-        // --- 수정 끝 ---
+        EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
+                testName,
+                testEmail,
+                testPassword,
+                defaultCompany.getCompanyId(),
+                null,
+                "사원",
+                UserRole.EMPLOYEE
+        );
+        adminEmployeeService.registerEmployee(request);
     }
 
     @Test
     @DisplayName("통합 테스트: 로그인 성공 시 JWT 토큰과 사용자 정보 반환")
     void login_Integration_Success() {
         // Given
-        LoginRequest request = new LoginRequest();
-        request.setEmail(testEmail);
-        request.setPassword(testPassword);
+        LoginRequest request = new LoginRequest(testEmail, testPassword);
 
         // When
         LoginResponse response = authService.login(request);
 
         // Then
         assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isNotBlank();
-        assertThat(response.getMessage()).isEqualTo("로그인 성공");
-        assertThat(response.getEmail()).isEqualTo(testEmail);
-        assertThat(response.getUserId()).isEqualTo(employeeRepository.findByEmail(testEmail).get().getEmployeeId());
-        assertThat(response.getName()).isEqualTo(testName);
-        assertThat(response.getRole()).isEqualTo(UserRole.EMPLOYEE);
+        assertThat(response.accessToken()).isNotBlank();
+        assertThat(response.message()).isEqualTo("로그인 성공");
+        assertThat(response.email()).isEqualTo(testEmail);
+        assertThat(response.userId()).isEqualTo(employeeRepository.findByEmail(testEmail).get().getEmployeeId());
+        assertThat(response.name()).isEqualTo(testName);
+        assertThat(response.role()).isEqualTo(UserRole.EMPLOYEE);
 
-        String extractedEmail = jwtUtil.getEmailFromToken(response.getAccessToken());
+        String extractedEmail = jwtUtil.getEmailFromToken(response.accessToken());
         assertThat(extractedEmail).isEqualTo(testEmail);
     }
 
@@ -97,9 +85,7 @@ class AuthServiceIntegrationTest {
     @DisplayName("통합 테스트: 로그인 실패 - 존재하지 않는 이메일")
     void login_Integration_Failure_EmailNotFound() {
         // Given
-        LoginRequest request = new LoginRequest();
-        request.setEmail("nonexistent@joycrew.com");
-        request.setPassword("anypassword");
+        LoginRequest request = new LoginRequest("nonexistent@joycrew.com", "anypassword");
 
         // When & Then
         assertThatThrownBy(() -> authService.login(request))
@@ -110,9 +96,7 @@ class AuthServiceIntegrationTest {
     @DisplayName("통합 테스트: 로그인 실패 - 비밀번호 불일치")
     void login_Integration_Failure_WrongPassword() {
         // Given
-        LoginRequest request = new LoginRequest();
-        request.setEmail(testEmail);
-        request.setPassword("wrongpassword");
+        LoginRequest request = new LoginRequest(testEmail, "wrongpassword");
 
         // When & Then
         assertThatThrownBy(() -> authService.login(request))

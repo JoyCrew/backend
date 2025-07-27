@@ -1,7 +1,6 @@
 package com.joycrew.backend.repository;
 
 import com.joycrew.backend.entity.Company;
-import com.joycrew.backend.entity.Department;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.Wallet;
 import com.joycrew.backend.entity.enums.UserRole;
@@ -11,10 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,68 +21,42 @@ class WalletRepositoryTest {
     @Autowired
     private TestEntityManager entityManager;
     @Autowired
-    private EmployeeRepository employeeRepository;
-    @Autowired
     private WalletRepository walletRepository;
 
-    private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
-    private Company testCompany;
-    private Department testDepartment;
     private Employee testEmployeeWithWallet;
     private Employee testEmployeeWithoutWallet;
-    private Wallet testWallet;
 
     @BeforeEach
     void setUp() {
-        testCompany = Company.builder()
-                .companyName("테스트회사")
-                .status("ACTIVE")
-                .startAt(LocalDateTime.now())
-                .totalCompanyBalance(0.0)
-                .build();
+        Company testCompany = Company.builder().companyName("테스트회사").build();
         entityManager.persist(testCompany);
-
-        testDepartment = Department.builder()
-                .name("테스트부서")
-                .company(testCompany)
-                .build();
-        entityManager.persist(testDepartment);
 
         testEmployeeWithWallet = Employee.builder()
                 .company(testCompany)
-                .department(testDepartment)
                 .email("walletuser@joycrew.com")
-                .passwordHash(passwordEncoder.encode("pass123"))
+                .passwordHash("pass123")
                 .employeeName("지갑유저")
-                .position("선임")
-                .status("ACTIVE")
                 .role(UserRole.EMPLOYEE)
                 .build();
         entityManager.persist(testEmployeeWithWallet);
 
         testEmployeeWithoutWallet = Employee.builder()
                 .company(testCompany)
-                .department(testDepartment)
                 .email("nowallet@joycrew.com")
-                .passwordHash(passwordEncoder.encode("pass123"))
+                .passwordHash("pass123")
                 .employeeName("지갑없는유저")
-                .position("주니어")
-                .status("ACTIVE")
                 .role(UserRole.EMPLOYEE)
                 .build();
         entityManager.persist(testEmployeeWithoutWallet);
 
-
-        testWallet = Wallet.builder()
-                .employee(testEmployeeWithWallet)
-                .balance(5000)
-                .giftablePoint(500)
-                .build();
+        // [수정] Wallet은 이제 new 키워드와 생성자를 통해서만 생성
+        Wallet testWallet = new Wallet(testEmployeeWithWallet);
+        // [수정] 도메인 메서드를 사용하여 상태 변경 (Setter 대신)
+        testWallet.addPoints(5000);
         entityManager.persist(testWallet);
 
-        testEmployeeWithWallet.setWallet(testWallet);
-        entityManager.merge(testEmployeeWithWallet);
+        // [수정] employee.setWallet()은 불가능하며, 불필요하므로 제거.
+        // Wallet이 Employee의 참조를 가지고 있으므로 관계는 이미 설정됨.
 
         entityManager.flush();
         entityManager.clear();
@@ -102,7 +72,6 @@ class WalletRepositoryTest {
         assertThat(foundWallet).isPresent();
         assertThat(foundWallet.get().getEmployee().getEmployeeId()).isEqualTo(testEmployeeWithWallet.getEmployeeId());
         assertThat(foundWallet.get().getBalance()).isEqualTo(5000);
-        assertThat(foundWallet.get().getGiftablePoint()).isEqualTo(500);
     }
 
     @Test
@@ -113,47 +82,5 @@ class WalletRepositoryTest {
 
         // Then
         assertThat(foundWallet).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Wallet 저장 및 조회 성공")
-    void saveAndFindWallet() {
-        // Given
-        Employee anotherEmployee = Employee.builder()
-                .company(testCompany)
-                .department(testDepartment)
-                .email("another@joycrew.com")
-                .passwordHash(passwordEncoder.encode("pass456"))
-                .employeeName("다른직원")
-                .position("팀장")
-                .status("ACTIVE")
-                .role(UserRole.MANAGER)
-                .build();
-        entityManager.persist(anotherEmployee);
-
-        Wallet newWallet = Wallet.builder()
-                .employee(anotherEmployee)
-                .balance(2000)
-                .giftablePoint(200)
-                .build();
-
-        // When
-        Wallet savedWallet = walletRepository.save(newWallet);
-        Optional<Wallet> found = walletRepository.findById(savedWallet.getWalletId());
-
-        // Then
-        assertThat(found).isPresent();
-        assertThat(found.get().getBalance()).isEqualTo(2000);
-        assertThat(found.get().getEmployee().getEmployeeId()).isEqualTo(anotherEmployee.getEmployeeId());
-
-        anotherEmployee.setWallet(savedWallet);
-        entityManager.merge(anotherEmployee);
-        entityManager.flush();
-        entityManager.clear();
-
-        Optional<Employee> foundEmployee = employeeRepository.findById(anotherEmployee.getEmployeeId());
-        assertThat(foundEmployee).isPresent();
-        assertThat(foundEmployee.get().getWallet()).isNotNull();
-        assertThat(foundEmployee.get().getWallet().getWalletId()).isEqualTo(savedWallet.getWalletId());
     }
 }

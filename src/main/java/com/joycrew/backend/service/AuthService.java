@@ -3,8 +3,8 @@ package com.joycrew.backend.service;
 import com.joycrew.backend.dto.LoginRequest;
 import com.joycrew.backend.dto.LoginResponse;
 import com.joycrew.backend.entity.Employee;
-import com.joycrew.backend.repository.EmployeeRepository;
 import com.joycrew.backend.security.JwtUtil;
+import com.joycrew.backend.security.UserPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -14,8 +14,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,51 +23,46 @@ public class AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
-    private final EmployeeRepository employeeRepository;
-    private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
 
+    @Transactional
     public LoginResponse login(LoginRequest request) {
-        log.info("Attempting login for email: {}", request.getEmail());
+        log.info("Attempting login for email: {}", request.email());
 
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(request.email(), request.password())
             );
 
-            Employee employee = employeeRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new UsernameNotFoundException("사용자 정보를 찾을 수 없습니다."));
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            Employee employee = userPrincipal.getEmployee();
+
+            employee.updateLastLogin();
 
             String accessToken = jwtUtil.generateToken(employee.getEmail());
 
-            return LoginResponse.builder()
-                    .accessToken(accessToken)
-                    .message("로그인 성공")
-                    .userId(employee.getEmployeeId())
-                    .name(employee.getEmployeeName())
-                    .email(employee.getEmail())
-                    .role(employee.getRole())
-                    .build();
+            return new LoginResponse(
+                    accessToken,
+                    "로그인 성공",
+                    employee.getEmployeeId(),
+                    employee.getEmployeeName(),
+                    employee.getEmail(),
+                    employee.getRole()
+            );
+
         } catch (UsernameNotFoundException | BadCredentialsException e) {
-            log.warn("Login failed for email {}: {}", request.getEmail(), e.getMessage());
+            log.warn("Login failed for email {}: {}", request.email(), e.getMessage());
             throw e;
-        } catch (Exception e) {
-            log.error("An unexpected error occurred during login for email {}: {}", request.getEmail(), e.getMessage(), e);
-            throw new RuntimeException("로그인 중 서버 오류가 발생했습니다.");
         }
     }
 
     public void logout(HttpServletRequest request) {
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.warn("Logout request received without a valid Bearer token.");
-            return;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String jwt = authHeader.substring(7);
+            log.info("Logout request received. Token blacklisting can be implemented here.");
+            // TODO: Redis 등을 이용한 토큰 블랙리스트 처리 로직 추가
         }
-
-        jwt = authHeader.substring(7);
-        log.info("Logout request received for a token. In a real application, this token should be blacklisted.");
     }
 }
