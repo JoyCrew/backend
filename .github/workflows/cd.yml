@@ -17,38 +17,38 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: gradle
 
       - name: Build JAR for Production
         run: |
           chmod +x gradlew
-          ./gradlew clean build
+          ./gradlew clean assemble -Pspring.profiles.active=prod
 
-      - name: Locate JAR artifact
-        id: find_jar
+      - name: Locate and Prepare JAR artifact
+        id: get_jar_path
         run: |
-          JAR_PATH=$(find build/libs -name '*.jar')
-          echo "jar_path=${JAR_PATH}" >> $GITHUB_OUTPUT
+          JAR_FILE=$(find build/libs -name "*.jar" | head -n 1) 
+          
+          if [ -z "$JAR_FILE" ]; then
+            echo "Error: No executable JAR file found in build/libs directory!"
+            exit 1
+          fi
+          echo "jar_path=$JAR_FILE" >> $GITHUB_OUTPUT
 
-      - name: Create environment file for EC2
+      - name: Add EC2 Host Key to known_hosts
         run: |
-          echo "SPRING_PROFILES_ACTIVE=prod" > .env
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
-          echo "SERVER_PORT=8080" >> .env
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_HOST_KEYS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
-      - name: Transfer files to EC2 Server
+      - name: Transfer JAR to EC2 Server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          source: |
-            ${{ steps.find_jar.outputs.jar_path }}
-            .env
-          target: ~/app/
+          source: ${{ steps.get_jar_path.outputs.jar_path }}
+          target: ~/app/build/libs/
+          strip_components: 2
 
       - name: Deploy and Restart Application on EC2
         uses: appleboy/ssh-action@master
@@ -56,17 +56,23 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+
           script: |
             set -eux
             
-            sudo mkdir -p /etc/joycrew
-            sudo mv ~/app/.env /etc/joycrew/.env
-            sudo chown ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} /etc/joycrew/.env
-            sudo chmod 600 /etc/joycrew/.env
+            export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
+            
+            sudo systemctl stop joycrew-backend || true
 
-            JAR_NAME=$(basename "${{ steps.find_jar.outputs.jar_path }}")
-            sudo mv ~/app/$JAR_NAME /var/www/joycrew/app.jar
+            DEPLOY_DIR="/home/${{ secrets.SSH_USER }}/app/build/libs"
+            JAR_NAME=$(basename "${{ steps.get_jar_path.outputs.jar_path }}")
 
-            sudo systemctl restart joycrew-backend
-            sleep 10
-            sudo systemctl status joycrew-backend --no-pager
+            sudo chmod +x "$DEPLOY_DIR/$JAR_NAME"
+
+            sudo systemctl start joycrew-backend
+
+            sudo systemctl status joycrew-backend --no-pager || true
+
+      - name: Clean up local SSH key file
+        if: always()
+        run: rm -f private_key.pem
