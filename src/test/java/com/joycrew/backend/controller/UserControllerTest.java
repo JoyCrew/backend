@@ -5,8 +5,7 @@ import com.joycrew.backend.dto.PasswordChangeRequest;
 import com.joycrew.backend.dto.UserProfileResponse;
 import com.joycrew.backend.entity.enums.UserRole;
 import com.joycrew.backend.exception.GlobalExceptionHandler;
-import com.joycrew.backend.security.EmployeeDetailsService;
-import com.joycrew.backend.security.JwtUtil;
+import com.joycrew.backend.security.WithMockUserPrincipal;
 import com.joycrew.backend.service.EmployeeService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -29,18 +27,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = UserController.class)
-@Import(GlobalExceptionHandler.class) // [L3] 실제 전역 예외 핸들러를 가져와 테스트의 정확성 높임
+@Import(GlobalExceptionHandler.class)
 class UserControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @MockBean private EmployeeService employeeService;
-    @MockBean private JwtUtil jwtUtil; // SecurityConfig 구성에 필요
-    @MockBean private EmployeeDetailsService employeeDetailsService; // SecurityConfig 구성에 필요
 
     @Test
     @DisplayName("GET /api/user/profile - 프로필 조회 성공")
-    @WithMockUser(username = "testuser@joycrew.com")
+    @WithMockUserPrincipal
     void getProfile_Success() throws Exception {
         // Given
         UserProfileResponse mockResponse = new UserProfileResponse(
@@ -58,7 +54,7 @@ class UserControllerTest {
 
     @Test
     @DisplayName("POST /api/user/password - 비밀번호 변경 성공")
-    @WithMockUser(username = "testuser@joycrew.com")
+    @WithMockUserPrincipal
     void forceChangePassword_Success() throws Exception {
         // Given
         PasswordChangeRequest request = new PasswordChangeRequest("newPassword123!");
