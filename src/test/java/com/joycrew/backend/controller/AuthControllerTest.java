@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joycrew.backend.dto.LoginRequest;
 import com.joycrew.backend.dto.LoginResponse;
 import com.joycrew.backend.entity.enums.UserRole;
+import com.joycrew.backend.exception.GlobalExceptionHandler;
 import com.joycrew.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = AuthController.class,
         excludeAutoConfiguration = {SecurityAutoConfiguration.class})
+@Import(GlobalExceptionHandler.class)
 class AuthControllerTest {
 
     @Autowired
@@ -39,7 +42,6 @@ class AuthControllerTest {
     @Test
     @DisplayName("POST /api/auth/login - 로그인 성공")
     void login_Success() throws Exception {
-        // [L3 Refactoring] Record 타입 생성자 사용
         LoginRequest request = new LoginRequest("test@joycrew.com", "password123!");
         LoginResponse successResponse = new LoginResponse(
                 "mocked.jwt.token", "로그인 성공", 1L, "테스트유저", "test@joycrew.com", UserRole.EMPLOYEE
@@ -65,7 +67,8 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTHENTICATION_FAILED"));
     }
 
     @Test
@@ -78,7 +81,8 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTHENTICATION_FAILED"));
     }
 
     @Test
