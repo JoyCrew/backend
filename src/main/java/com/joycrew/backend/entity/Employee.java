@@ -6,8 +6,10 @@ import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -15,9 +17,8 @@ import java.util.List;
 @Entity
 @Table(name = "employee")
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 public class Employee implements UserDetails {
 
@@ -45,8 +46,7 @@ public class Employee implements UserDetails {
     @Column(nullable = false)
     private UserRole role;
 
-    // 사용자 셀프 서비스 필드
-    @Column(length = 2048) // URL은 길 수 있으므로 길이 확장
+    @Column(length = 2048)
     private String profileImageUrl;
     private String personalEmail;
     private String phoneNumber;
@@ -65,14 +65,25 @@ public class Employee implements UserDetails {
     @OneToOne(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Wallet wallet;
 
+    @Builder.Default
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RewardPointTransaction> sentTransactions;
+    private List<RewardPointTransaction> sentTransactions = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RewardPointTransaction> receivedTransactions;
+    private List<RewardPointTransaction> receivedTransactions = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CompanyAdminAccess> adminAccesses;
+    private List<CompanyAdminAccess> adminAccesses = new ArrayList<>();
+
+    public void updateLastLogin() {
+        this.lastLoginAt = LocalDateTime.now();
+    }
+
+    public void assignToDepartment(Department newDepartment) {
+        this.department = newDepartment;
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -122,5 +133,9 @@ public class Employee implements UserDetails {
     @Override
     public boolean isEnabled() {
         return "ACTIVE".equals(this.status);
+    }
+
+    public void changePassword(String rawPassword, PasswordEncoder encoder) {
+        this.passwordHash = encoder.encode(rawPassword);
     }
 }

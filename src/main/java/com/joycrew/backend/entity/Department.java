@@ -3,12 +3,12 @@ package com.joycrew.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "department")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -26,16 +26,30 @@ public class Department {
     private Company company;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_head_id", nullable = true)
+    @JoinColumn(name = "department_head_id", unique = true)
     private Employee departmentHead;
 
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Employee> employees;
+    @Builder.Default
+    @OneToMany(mappedBy = "department")
+    private List<Employee> employees = new ArrayList<>();
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    public void changeName(String newName) {
+        this.name = newName;
+    }
+
+    public void assignHead(Employee head) {
+        this.departmentHead = head;
+    }
+
+    public void addEmployee(Employee employee) {
+        this.employees.add(employee);
+        employee.assignToDepartment(this);
+    }
 
     @PrePersist
     protected void onCreate() {

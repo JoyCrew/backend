@@ -1,17 +1,14 @@
 package com.joycrew.backend.dto;
 
+import com.joycrew.backend.entity.Wallet;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
-@Getter
-@AllArgsConstructor
 @Schema(description = "지갑 잔액 응답 DTO")
-public class PointBalanceResponse {
-
-    @Schema(description = "현재 잔액", example = "12000")
-    private Integer totalBalance;
-
-    @Schema(description = "선물 가능한 포인트", example = "500")
-    private Integer giftableBalance;
+public record PointBalanceResponse(
+        @Schema(description = "현재 잔액") Integer totalBalance,
+        @Schema(description = "선물 가능한 포인트") Integer giftableBalance
+) {
+    public static PointBalanceResponse from(Wallet wallet) {
+        return new PointBalanceResponse(wallet.getBalance(), wallet.getGiftablePoint());
+    }
 }
