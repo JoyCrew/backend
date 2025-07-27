@@ -18,8 +18,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -30,8 +28,6 @@ class AuthServiceIntegrationTest {
 
     @Autowired
     private AuthService authService;
-    @Autowired
-    private EmployeeService employeeService;
     @Autowired
     private EmployeeRepository employeeRepository;
     @Autowired
@@ -51,13 +47,12 @@ class AuthServiceIntegrationTest {
         defaultCompany = companyRepository.save(Company.builder().companyName("테스트컴퍼니").build());
         employeeRepository.findByEmail(testEmail).ifPresent(employeeRepository::delete);
 
-        // [L3 Refactoring] Record 타입 DTO 생성자 사용
         EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
                 testName,
                 testEmail,
                 testPassword,
                 defaultCompany.getCompanyId(),
-                null, // departmentId
+                null,
                 "사원",
                 UserRole.EMPLOYEE
         );

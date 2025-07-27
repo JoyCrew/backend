@@ -1,6 +1,5 @@
 package com.joycrew.backend.service;
 
-import com.joycrew.backend.dto.AdminEmployeeUpdateRequest;
 import com.joycrew.backend.dto.EmployeeRegistrationRequest;
 import com.joycrew.backend.dto.PasswordChangeRequest;
 import com.joycrew.backend.entity.Company;
@@ -20,7 +19,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional

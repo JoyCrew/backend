@@ -1,12 +1,10 @@
 package com.joycrew.backend.service;
 
-import com.joycrew.backend.dto.AdminEmployeeUpdateRequest;
 import com.joycrew.backend.dto.EmployeeRegistrationRequest;
 import com.joycrew.backend.entity.Company;
 import com.joycrew.backend.entity.Department;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.Wallet;
-import com.joycrew.backend.exception.UserNotFoundException;
 import com.joycrew.backend.repository.CompanyRepository;
 import com.joycrew.backend.repository.DepartmentRepository;
 import com.joycrew.backend.repository.EmployeeRepository;

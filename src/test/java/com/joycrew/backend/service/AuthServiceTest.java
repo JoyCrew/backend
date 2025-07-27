@@ -49,7 +49,6 @@ class AuthServiceTest {
                 .status("ACTIVE")
                 .build();
 
-        // [수정] Record 타입 생성자 사용
         testLoginRequest = new LoginRequest("test@joycrew.com", "password123");
     }
 
@@ -57,7 +56,6 @@ class AuthServiceTest {
     @DisplayName("로그인 성공 시 JWT 토큰과 사용자 정보 반환")
     void login_Success() {
         // Given
-        // [수정] 인증 성공 시 UserPrincipal을 포함한 Authentication 객체를 반환하도록 Mocking
         UserPrincipal principal = new UserPrincipal(testEmployee);
         Authentication successfulAuth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
@@ -75,7 +73,6 @@ class AuthServiceTest {
         assertThat(response.userId()).isEqualTo(testEmployee.getEmployeeId());
         assertThat(response.email()).isEqualTo(testEmployee.getEmail());
 
-        // [수정] EmployeeRepository 호출이 없는 것을 검증 (성능 최적화 검증)
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(jwtUtil, times(1)).generateToken(testEmployee.getEmail());
     }
