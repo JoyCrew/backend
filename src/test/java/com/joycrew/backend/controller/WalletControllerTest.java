@@ -1,5 +1,9 @@
 package com.joycrew.backend.controller;
 
+import com.joycrew.backend.dto.PointBalanceResponse;
+import com.joycrew.backend.security.EmployeeDetailsService;
+import com.joycrew.backend.security.JwtUtil;
+import com.joycrew.backend.security.WithMockUserPrincipal;
 import com.joycrew.backend.service.WalletService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -7,15 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import com.joycrew.backend.dto.PointBalanceResponse;
-import com.joycrew.backend.security.EmployeeDetailsService;
-import com.joycrew.backend.security.JwtUtil;
 
 @WebMvcTest(controllers = WalletController.class)
 class WalletControllerTest {
@@ -25,12 +25,14 @@ class WalletControllerTest {
 
     @MockBean
     private WalletService walletService;
-    @MockBean private JwtUtil jwtUtil; // SecurityConfig 구성에 필요
-    @MockBean private EmployeeDetailsService employeeDetailsService; // SecurityConfig 구성에 필요
+    @MockBean
+    private JwtUtil jwtUtil;
+    @MockBean
+    private EmployeeDetailsService employeeDetailsService;
 
     @Test
     @DisplayName("GET /api/wallet/point - 포인트 잔액 조회 성공")
-    @WithMockUser(username = "testuser@joycrew.com")
+    @WithMockUserPrincipal
     void getWalletPoint_Success() throws Exception {
         // Given
         PointBalanceResponse mockResponse = new PointBalanceResponse(1500, 100);
