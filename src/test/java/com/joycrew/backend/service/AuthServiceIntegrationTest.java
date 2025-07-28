@@ -51,7 +51,7 @@ class AuthServiceIntegrationTest {
                 testName,
                 testEmail,
                 testPassword,
-                defaultCompany.getCompanyId(),
+                defaultCompany.getCompanyName(),
                 null,
                 "사원",
                 UserRole.EMPLOYEE
