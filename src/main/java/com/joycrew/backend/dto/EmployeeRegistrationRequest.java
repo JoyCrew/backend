@@ -7,25 +7,25 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record EmployeeRegistrationRequest (
-    @NotBlank(message = "이름은 필수입니다.")
-    String name,
+        @NotBlank(message = "이름은 필수입니다.")
+        String name,
 
-    @NotBlank(message = "이메일은 필수입니다.")
-    @Email(message = "유효한 이메일 형식이 아닙니다.")
-    String email,
+        @NotBlank(message = "이메일은 필수입니다.")
+        @Email(message = "유효한 이메일 형식이 아닙니다.")
+        String email,
 
-    @NotBlank(message = "초기 비밀번호는 필수입니다.")
-    @Size(min = 8, message = "비밀번호는 8자 이상이어야 합니다.")
-    String initialPassword,
+        @NotBlank(message = "초기 비밀번호는 필수입니다.")
+        @Size(min = 8, message = "비밀번호는 8자 이상이어야 합니다.")
+        String initialPassword,
 
-    @NotNull(message = "회사 ID는 필수입니다.")
-    Long companyId,
+        @NotBlank(message = "회사명은 필수입니다.")
+        String companyName,
 
-    Long departmentId,
+        String departmentName, // nullable 가능
 
-    @NotBlank(message = "직책은 필수입니다.")
-    String position,
+        @NotBlank(message = "직책은 필수입니다.")
+        String position,
 
-    @NotNull(message = "역할은 필수입니다.")
-    UserRole role
-){}
+        @NotNull(message = "역할은 필수입니다.")
+        UserRole role
+) {}
