@@ -54,7 +54,7 @@ class EmployeeServiceIntegrationTest {
         // Given
         EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
                 "신규직원", "new.employee@joycrew.com", "password123!",
-                testCompany.getCompanyId(), testDepartment.getDepartmentId(), "사원", UserRole.EMPLOYEE
+                testCompany.getCompanyName(), testDepartment.getName(), "사원", UserRole.EMPLOYEE
         );
 
         // When
