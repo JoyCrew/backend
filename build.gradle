@@ -1,7 +1,7 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.5.3'
-	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.springframework.boot' version '3.3.1'
+	id 'io.spring.dependency-management' version '1.1.5'
 }
 
 group = 'com.joycrew'
@@ -23,62 +23,25 @@ repositories {
 	mavenCentral()
 }
 
-sourceSets {
-	main {
-		java {
-			srcDirs = ['src/main/java']
-		}
-		resources {
-			srcDirs = ['src/main/resources']
-		}
-	}
-	test {
-		java {
-			srcDirs = ['src/test/java']
-		}
-		resources {
-			srcDirs = ['src/test/resources']
-		}
-	}
-}
-
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
-	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-	implementation 'org.springframework.security:spring-security-crypto'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
-	implementation 'org.springframework.boot:spring-boot-starter-test'
-	implementation 'org.springframework.security:spring-security-test'
-
-	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	runtimeOnly 'com.h2database:h2'
-
+	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-jar {
-	enabled = false
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
-
-	filter {
-		includeTestsMatching "com.joycrew.backend.service.*Test"
-		includeTestsMatching "com.joycrew.backend.repository.*Test"
-		includeTestsMatching "com.joycrew.backend.controller.*Test"
-	}
-
-	testLogging {
-		events "passed", "skipped", "failed", "standardOut", "standardError"
-		showStandardStreams = true
-	}
 }
