@@ -10,7 +10,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "인증", description = "로그인 관련 API")
@@ -35,5 +39,14 @@ public class AuthController {
     public ResponseEntity<SuccessResponse> logout(HttpServletRequest request) {
         authService.logout(request);
         return ResponseEntity.ok(new SuccessResponse("로그아웃 되었습니다."));
+    }
+
+    @Bean
+    public CommandLineRunner showPasswordHash(PasswordEncoder passwordEncoder) {
+        return args -> {
+            String rawPassword = "1234";
+            String encoded = passwordEncoder.encode(rawPassword);
+            System.out.println("비밀번호 1234 해시값: " + encoded);
+        };
     }
 }
