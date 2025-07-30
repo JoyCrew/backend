@@ -27,9 +27,8 @@ jobs:
         id: get_jar_path
         run: |
           JAR_FILE=$(find build/libs -name "*.jar" | head -n 1) 
-          
           if [ -z "$JAR_FILE" ]; then
-            echo "Error: No executable JAR file found in build/libs directory!"
+            echo "Error: No executable JAR file found!"
             exit 1
           fi
           echo "jar_path=$JAR_FILE" >> $GITHUB_OUTPUT
@@ -59,20 +58,18 @@ jobs:
 
           script: |
             set -eux
-            
-            export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
-            
+
+            echo "Stopping existing JoyCrew backend service..."
             sudo systemctl stop joycrew-backend || true
 
             DEPLOY_DIR="/home/${{ secrets.SSH_USER }}/app/build/libs"
             JAR_NAME=$(basename "${{ steps.get_jar_path.outputs.jar_path }}")
-
             sudo chmod +x "$DEPLOY_DIR/$JAR_NAME"
 
-            sudo /usr/bin/java -jar "$DEPLOY_DIR/$JAR_NAME" --spring.profiles.active=prod > /dev/null 2>&1 &
-
+            echo "Starting JoyCrew backend service..."
             sudo systemctl start joycrew-backend
 
+            echo "Checking service status..."
             sudo systemctl status joycrew-backend --no-pager || true
 
       - name: Clean up local SSH key file
