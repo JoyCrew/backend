@@ -31,7 +31,8 @@ public class EmployeeQueryService {
                     .append("OR LOWER(d.name) LIKE :keyword ");
         }
 
-        jpql.append("ORDER BY e.createdAt DESC");
+        // ✅ 이름 오름차순 정렬로 고정
+        jpql.append("ORDER BY e.employeeName ASC");
 
         TypedQuery<Employee> query = em.createQuery(jpql.toString(), Employee.class);
 
