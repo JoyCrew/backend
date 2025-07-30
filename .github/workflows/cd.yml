@@ -59,21 +59,18 @@ jobs:
           script: |
             set -eux
 
-            # systemd 서비스를 통해 Spring Boot 애플리케이션을 중지하고 재시작
-            # JWT_SECRET_KEY 환경 변수는 EC2의 systemd 서비스 파일에 직접 설정되어야 합니다.
             echo "Stopping existing JoyCrew backend service..."
-            sudo systemctl stop joycrew-backend || true # systemd를 통해 서비스 중지
+            sudo systemctl stop joycrew-backend || true
 
-            # JAR 파일에 실행 권한 부여 (scp로 전송 후 권한이 유지되지 않을 수 있으므로)
             DEPLOY_DIR="/home/${{ secrets.SSH_USER }}/app/build/libs"
             JAR_NAME=$(basename "${{ steps.get_jar_path.outputs.jar_path }}")
             sudo chmod +x "$DEPLOY_DIR/$JAR_NAME"
 
             echo "Starting JoyCrew backend service..."
-            sudo systemctl start joycrew-backend # systemd를 통해 서비스 시작
+            sudo systemctl start joycrew-backend
 
             echo "Checking service status..."
-            sudo systemctl status joycrew-backend --no-pager || true # 서비스 상태 확인
+            sudo systemctl status joycrew-backend --no-pager || true
 
       - name: Clean up local SSH key file
         if: always()
