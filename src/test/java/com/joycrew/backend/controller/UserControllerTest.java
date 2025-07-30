@@ -40,8 +40,15 @@ class UserControllerTest {
     void getProfile_Success() throws Exception {
         // Given
         UserProfileResponse mockResponse = new UserProfileResponse(
-                1L, "테스트유저", "testuser@joycrew.com", 1500, 100,
-                UserRole.EMPLOYEE, "개발팀", "사원"
+                1L,
+                "테스트유저",
+                "testuser@joycrew.com",
+                "https://cdn.joycrew.com/profile/testuser.jpg",
+                1500,
+                100,
+                UserRole.EMPLOYEE,
+                "개발팀",
+                "사원"
         );
         when(employeeService.getUserProfile("testuser@joycrew.com")).thenReturn(mockResponse);
 
@@ -49,8 +56,10 @@ class UserControllerTest {
         mockMvc.perform(get("/api/user/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("테스트유저"))
+                .andExpect(jsonPath("$.profileImageUrl").value("https://cdn.joycrew.com/profile/testuser.jpg"))
                 .andExpect(jsonPath("$.totalBalance").value(1500));
     }
+
 
     @Test
     @DisplayName("POST /api/user/password - 비밀번호 변경 성공")
