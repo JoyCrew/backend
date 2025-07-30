@@ -10,6 +10,7 @@ public record UserProfileResponse(
         @Schema(description = "사용자 고유 ID") Long employeeId,
         @Schema(description = "사용자 이름") String name,
         @Schema(description = "이메일 주소") String email,
+        @Schema(description = "프로필 이미지 URL") String profileImageUrl,
         @Schema(description = "현재 총 포인트 잔액") Integer totalBalance,
         @Schema(description = "현재 선물 가능한 포인트 잔액") Integer giftableBalance,
         @Schema(description = "사용자 역할") UserRole role,
@@ -22,6 +23,7 @@ public record UserProfileResponse(
                 employee.getEmployeeId(),
                 employee.getEmployeeName(),
                 employee.getEmail(),
+                employee.getProfileImageUrl(), // ✅ 프로필 이미지 추가
                 wallet.getBalance(),
                 wallet.getGiftablePoint(),
                 employee.getRole(),
