@@ -27,9 +27,8 @@ jobs:
         id: get_jar_path
         run: |
           JAR_FILE=$(find build/libs -name "*.jar" | head -n 1) 
-          
           if [ -z "$JAR_FILE" ]; then
-            echo "Error: No executable JAR file found in build/libs directory!"
+            echo "Error: No executable JAR file found!"
             exit 1
           fi
           echo "jar_path=$JAR_FILE" >> $GITHUB_OUTPUT
@@ -59,9 +58,7 @@ jobs:
 
           script: |
             set -eux
-            
-            export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
-            
+
             sudo systemctl stop joycrew-backend || true
 
             DEPLOY_DIR="/home/${{ secrets.SSH_USER }}/app/build/libs"
