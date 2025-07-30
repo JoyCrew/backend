@@ -1,4 +1,4 @@
-name: Java Spring Boot CD
+name: Deploy to EC2
 
 on:
   push:
@@ -27,7 +27,6 @@ jobs:
         id: get_jar_path
         run: |
           JAR_FILE=$(find build/libs -name "*.jar" | head -n 1) 
-          
           if [ -z "$JAR_FILE" ]; then
             echo "Error: No executable JAR file found!"
             exit 1
@@ -50,30 +49,36 @@ jobs:
           target: ~/app/build/libs/
           strip_components: 2
 
-      - name: Deploy and Restart Application on EC2
+      - name: Deploy and Start Application on EC2
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-
           script: |
             set -eux
-            
+
+            # JWT_SECRET_KEY 환경 변수 설정 (Spring Boot가 읽음)
             export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
 
-            echo "Stopping existing JoyCrew backend process..."
+            # 기존 Spring Boot 프로세스 종료 (systemd 사용 안함)
             pkill -f 'java -jar' || true
 
             DEPLOY_DIR="/home/${{ secrets.SSH_USER }}/app/build/libs"
             JAR_NAME=$(basename "${{ steps.get_jar_path.outputs.jar_path }}")
 
-            sudo chmod +x "$DEPLOY_DIR/$JAR_NAME"
+            # JAR 파일에 실행 권한 부여
+            chmod +x "$DEPLOY_DIR/$JAR_NAME"
 
-            echo "Starting JoyCrew backend application directly with prod profile..."
-            nohup /usr/bin/java -jar "$DEPLOY_DIR/$JAR_NAME" --spring.profiles.active=prod > /dev/null 2>&1 &
+            # Spring Boot 애플리케이션을 백그라운드에서 직접 실행 (prod 프로파일 활성화)
+            nohup java -jar "$DEPLOY_DIR/$JAR_NAME" --spring.profiles.active=prod > /dev/null 2>&1 &
 
+            # 애플리케이션이 완전히 시작될 때까지 잠시 대기
             sleep 10
 
-            echo "Checking application process status..."
+            # 프로세스 실행 확인 (systemd 사용 안함)
             ps aux | grep "$JAR_NAME" | grep -v grep || true
+
+      - name: Clean up local SSH key file
+        if: always()
+        run: rm -f private_key.pem
