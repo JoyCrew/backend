@@ -88,6 +88,7 @@ public class SecurityConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.addAllowedOriginPattern("http://localhost:3000");
+        config.addAllowedOriginPattern("http://localhost:5173");
         config.addAllowedOriginPattern("https://joycrew.co.kr");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
