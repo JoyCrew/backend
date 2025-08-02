@@ -1,6 +1,6 @@
 package com.joycrew.backend.dto;
 
-import com.joycrew.backend.entity.enums.UserRole;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "로그인 응답 DTO")
@@ -16,7 +16,7 @@ public record LoginResponse(
         @Schema(description = "사용자 이메일")
         String email,
         @Schema(description = "사용자 역할")
-        UserRole role
+        AdminLevel role
 ) { public static LoginResponse fail(String message) {
     return new LoginResponse(null, message, null, null, null, null);
 }

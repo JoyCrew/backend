@@ -1,6 +1,6 @@
 package com.joycrew.backend.entity;
 
-import com.joycrew.backend.entity.enums.UserRole;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -44,7 +44,7 @@ public class Employee implements UserDetails {
     @Column(nullable = false)
     private String status;
     @Column(nullable = false)
-    private UserRole role;
+    private AdminLevel role;
 
     @Column(length = 2048)
     private String profileImageUrl;
@@ -89,7 +89,7 @@ public class Employee implements UserDetails {
     protected void onCreate() {
         this.createdAt = this.updatedAt = LocalDateTime.now();
         if (this.status == null) this.status = "ACTIVE";
-        if (this.role == null) this.role = UserRole.EMPLOYEE;
+        if (this.role == null) this.role = AdminLevel.EMPLOYEE;
         if (this.emailNotificationEnabled == null) this.emailNotificationEnabled = true;
         if (this.appNotificationEnabled == null) this.appNotificationEnabled = true;
     }

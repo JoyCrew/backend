@@ -1,11 +1,11 @@
 package com.joycrew.backend.dto;
 
-import com.joycrew.backend.entity.enums.UserRole;
+import com.joycrew.backend.entity.enums.AdminLevel;
 
 public record AdminEmployeeUpdateRequest(
         String name,
         Long departmentId,
         String position,
-        UserRole role,
+        AdminLevel level,
         String status
 ) {}
