@@ -44,6 +44,7 @@ public class SecurityConfig {
                         .frameOptions(frameOptions -> frameOptions.disable()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/",
                                 "/h2-console/**",
                                 "/api/auth/login",
                                 "/v3/api-docs/**",
