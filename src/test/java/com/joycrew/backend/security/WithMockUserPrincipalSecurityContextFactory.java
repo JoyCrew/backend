@@ -1,7 +1,6 @@
 package com.joycrew.backend.security;
 
 import com.joycrew.backend.entity.Employee;
-import com.joycrew.backend.entity.enums.UserRole;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;

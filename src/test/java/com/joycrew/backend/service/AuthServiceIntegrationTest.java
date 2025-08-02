@@ -5,7 +5,6 @@ import com.joycrew.backend.dto.EmployeeRegistrationRequest;
 import com.joycrew.backend.dto.LoginRequest;
 import com.joycrew.backend.dto.LoginResponse;
 import com.joycrew.backend.entity.Company;
-import com.joycrew.backend.entity.enums.UserRole;
 import com.joycrew.backend.repository.CompanyRepository;
 import com.joycrew.backend.repository.EmployeeRepository;
 import com.joycrew.backend.security.JwtUtil;
