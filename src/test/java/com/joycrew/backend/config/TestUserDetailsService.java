@@ -1,7 +1,6 @@
 package com.joycrew.backend.config;
 
 import com.joycrew.backend.entity.Employee;
-import com.joycrew.backend.entity.enums.UserRole;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

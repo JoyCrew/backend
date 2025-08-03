@@ -24,11 +24,24 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    /**
+     * 기본 만료 시간(1시간)으로 JWT 토큰을 생성합니다. (로그인용)
+     */
     public String generateToken(String email) {
+        return generateToken(email, expirationTime);
+    }
+
+    /**
+     * 사용자 정의 만료 시간으로 JWT 토큰을 생성합니다. (비밀번호 재설정 등)
+     */
+    public String generateToken(String email, long customExpirationMs) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + customExpirationMs);
+
         return Jwts.builder()
                 .setSubject(email)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

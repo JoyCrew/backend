@@ -3,7 +3,6 @@ package com.joycrew.backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joycrew.backend.dto.PasswordChangeRequest;
 import com.joycrew.backend.dto.UserProfileResponse;
-import com.joycrew.backend.entity.enums.UserRole;
 import com.joycrew.backend.exception.GlobalExceptionHandler;
 import com.joycrew.backend.security.WithMockUserPrincipal;
 import com.joycrew.backend.service.EmployeeService;

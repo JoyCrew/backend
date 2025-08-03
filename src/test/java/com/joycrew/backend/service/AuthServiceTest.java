@@ -3,7 +3,6 @@ package com.joycrew.backend.service;
 import com.joycrew.backend.dto.LoginRequest;
 import com.joycrew.backend.dto.LoginResponse;
 import com.joycrew.backend.entity.Employee;
-import com.joycrew.backend.entity.enums.UserRole;
 import com.joycrew.backend.security.JwtUtil;
 import com.joycrew.backend.security.UserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
