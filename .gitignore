@@ -57,9 +57,7 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.local
-config/application-local.yml
-config/application-dev.yml
-config/application-prod.yml
+src/main/resources/application-dev.yml
 
 # Spring Boot / Maven (if also used)
 /target/
