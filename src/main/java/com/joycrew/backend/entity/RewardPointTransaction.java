@@ -1,10 +1,12 @@
 package com.joycrew.backend.entity;
 
+import com.joycrew.backend.entity.enums.Tag;
 import com.joycrew.backend.entity.enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "reward_point_transaction")
@@ -35,6 +37,13 @@ public class RewardPointTransaction {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private TransactionType type;
+
+    // 태그 저장을 위해 추가된 필드
+    @ElementCollection(targetClass = Tag.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "transaction_tags", joinColumns = @JoinColumn(name = "transaction_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tag", nullable = false)
+    private List<Tag> tags;
 
     @Column(nullable = false)
     private LocalDateTime transactionDate;

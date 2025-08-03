@@ -1,6 +1,6 @@
 package com.joycrew.backend.dto;
 
-import com.joycrew.backend.entity.enums.UserRole;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -27,5 +27,5 @@ public record EmployeeRegistrationRequest (
         String position,
 
         @NotNull(message = "역할은 필수입니다.")
-        UserRole role
+        AdminLevel level
 ) {}

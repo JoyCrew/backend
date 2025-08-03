@@ -5,7 +5,6 @@ import com.joycrew.backend.dto.PasswordChangeRequest;
 import com.joycrew.backend.entity.Company;
 import com.joycrew.backend.entity.Department;
 import com.joycrew.backend.entity.Employee;
-import com.joycrew.backend.entity.enums.UserRole;
 import com.joycrew.backend.repository.CompanyRepository;
 import com.joycrew.backend.repository.DepartmentRepository;
 import com.joycrew.backend.repository.EmployeeRepository;

@@ -44,6 +44,7 @@ public class RecognitionService {
                 .pointAmount(request.points())
                 .message(request.message())
                 .type(TransactionType.AWARD_P2P)
+                .tags(request.tags())
                 .build();
         transactionRepository.save(transaction);
 
