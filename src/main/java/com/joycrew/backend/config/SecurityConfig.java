@@ -45,6 +45,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/h2-console/**",
                                 "/api/auth/login",
+                                "/api/auth/password-reset/request", // 접근 허용 추가
+                                "/api/auth/password-reset/confirm", // 접근 허용 추가
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
