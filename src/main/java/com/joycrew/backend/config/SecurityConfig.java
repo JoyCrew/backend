@@ -43,6 +43,7 @@ public class SecurityConfig {
                         .frameOptions(frameOptions -> frameOptions.disable()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/",
                                 "/h2-console/**",
                                 "/api/auth/login",
                                 "/api/auth/password-reset/request", // 접근 허용 추가
