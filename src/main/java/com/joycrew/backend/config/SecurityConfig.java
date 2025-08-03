@@ -2,6 +2,7 @@ package com.joycrew.backend.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joycrew.backend.dto.ErrorResponse;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.security.JwtAuthenticationFilter;
 import com.joycrew.backend.security.JwtUtil;
 import com.joycrew.backend.security.EmployeeDetailsService;
@@ -22,8 +23,6 @@ import org.springframework.web.filter.CorsFilter;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-
-import static com.joycrew.backend.entity.enums.UserRole.HR_ADMIN;
 
 
 @Configuration
@@ -46,11 +45,13 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/h2-console/**",
                                 "/api/auth/login",
+                                "/api/auth/password-reset/request", // 접근 허용 추가
+                                "/api/auth/password-reset/confirm", // 접근 허용 추가
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
-                        .requestMatchers("/api/admin/**").hasRole(HR_ADMIN.name())
+                        .requestMatchers("/api/admin/**").hasRole(AdminLevel.SUPER_ADMIN.name())
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions

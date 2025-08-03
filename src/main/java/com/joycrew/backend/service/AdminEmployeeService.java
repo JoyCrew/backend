@@ -5,7 +5,7 @@ import com.joycrew.backend.entity.Company;
 import com.joycrew.backend.entity.Department;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.Wallet;
-import com.joycrew.backend.entity.enums.UserRole;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.repository.CompanyRepository;
 import com.joycrew.backend.repository.DepartmentRepository;
 import com.joycrew.backend.repository.EmployeeRepository;
@@ -21,8 +21,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -57,7 +55,7 @@ public class AdminEmployeeService {
                 .company(company)
                 .department(department)
                 .position(request.position())
-                .role(request.role())
+                .role(request.level())
                 .status("ACTIVE")
                 .build();
 
@@ -80,12 +78,14 @@ public class AdminEmployeeService {
                 }
 
                 String[] tokens = line.split(",");
-                if (tokens.length < 7) {
+                if (tokens.length < 6) {  // 최소 6개 필드 필요 (level은 optional)
                     log.warn("누락된 필드가 있는 행 건너뜀: {}", line);
                     continue;
                 }
 
                 try {
+                    AdminLevel adminLevel = parseAdminLevel(tokens.length > 6 ? tokens[6].trim() : "EMPLOYEE");
+
                     EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
                             tokens[0].trim(), // name
                             tokens[1].trim(), // email
@@ -93,7 +93,7 @@ public class AdminEmployeeService {
                             tokens[3].trim(), // companyName
                             tokens[4].trim().isBlank() ? null : tokens[4].trim(), // departmentName (nullable)
                             tokens[5].trim(), // position
-                            UserRole.valueOf(tokens[6].trim().toUpperCase()) // role
+                            adminLevel // level
                     );
                     registerEmployee(request);
                 } catch (Exception e) {
@@ -103,6 +103,22 @@ public class AdminEmployeeService {
 
         } catch (IOException e) {
             throw new RuntimeException("CSV 파일 읽기 실패", e);
+        }
+    }
+
+    /**
+     * 문자열을 AdminLevel enum으로 변환
+     */
+    private AdminLevel parseAdminLevel(String level) {
+        if (level == null || level.isBlank()) {
+            return AdminLevel.EMPLOYEE; // 기본값
+        }
+
+        try {
+            return AdminLevel.valueOf(level.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("유효하지 않은 권한 레벨: {}. 기본값 EMPLOYEE로 설정합니다.", level);
+            return AdminLevel.EMPLOYEE;
         }
     }
 }
