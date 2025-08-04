@@ -1,6 +1,7 @@
 package com.joycrew.backend.security;
 
 import com.joycrew.backend.entity.Employee;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,15 +12,14 @@ public class WithMockUserPrincipalSecurityContextFactory implements WithSecurity
     public SecurityContext createSecurityContext(WithMockUserPrincipal annotation) {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         Employee mockEmployee = Employee.builder()
-                .employeeId(1L)
+                .employeeId(annotation.id())
                 .email(annotation.email())
-                .employeeName("테스트유저")
-                .role(UserRole.EMPLOYEE)
-                .passwordHash("mockPassword")
+                .role(AdminLevel.valueOf(annotation.role()))
                 .build();
+
         UserPrincipal principal = new UserPrincipal(mockEmployee);
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                principal, principal.getPassword(), principal.getAuthorities());
+                principal, null, principal.getAuthorities());
         context.setAuthentication(authentication);
         return context;
     }
