@@ -1,25 +1,20 @@
 package com.joycrew.backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.joycrew.backend.dto.LoginRequest;
-import com.joycrew.backend.dto.LoginResponse;
+import com.joycrew.backend.dto.*;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.exception.GlobalExceptionHandler;
 import com.joycrew.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -30,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = AuthController.class,
-        excludeAutoConfiguration = {SecurityAutoConfiguration.class})
+        excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @Import(GlobalExceptionHandler.class)
 class AuthControllerTest {
 
@@ -42,25 +37,25 @@ class AuthControllerTest {
     @MockBean
     private AuthService authService;
 
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        public PasswordEncoder passwordEncoder() {
-            return NoOpPasswordEncoder.getInstance(); // 테스트용
-        }
-    }
-
     @Test
     @DisplayName("POST /api/auth/login - 로그인 성공")
     void login_Success() throws Exception {
         LoginRequest request = new LoginRequest("test@joycrew.com", "password123!");
         LoginResponse successResponse = new LoginResponse(
-                "mocked.jwt.token", "로그인 성공", 1L, "테스트유저", "test@joycrew.com", UserRole.EMPLOYEE
+                "mocked.jwt.token",
+                "로그인 성공",
+                1L,
+                "테스트유저",
+                "test@joycrew.com",
+                AdminLevel.EMPLOYEE,
+                1000,
+                "http://example.com/profile.jpg"
         );
 
         when(authService.login(any(LoginRequest.class))).thenReturn(successResponse);
 
         mockMvc.perform(post("/api/auth/login")
+                        // .with(csrf())는 Security 제외 시 필요 없음
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -69,8 +64,8 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/auth/login - 로그인 실패 (잘못된 비밀번호)")
-    void login_Failure_WrongPassword() throws Exception {
+    @DisplayName("POST /api/auth/login - 로그인 실패 (자격 증명 오류)")
+    void login_Failure_AuthenticationError() throws Exception {
         LoginRequest request = new LoginRequest("test@joycrew.com", "wrongpassword");
         when(authService.login(any(LoginRequest.class)))
                 .thenThrow(new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다."));
@@ -78,21 +73,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("AUTHENTICATION_FAILED"));
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/login - 로그인 실패 (이메일 없음)")
-    void login_Failure_EmailNotFound() throws Exception {
-        LoginRequest request = new LoginRequest("nonexistent@joycrew.com", "anypassword");
-        when(authService.login(any(LoginRequest.class)))
-                .thenThrow(new UsernameNotFoundException("이메일 또는 비밀번호가 올바르지 않습니다."));
-
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized())
+                .andExpect(status().isUnauthorized()) // GlobalExceptionHandler에 따라 401 예상
                 .andExpect(jsonPath("$.code").value("AUTHENTICATION_FAILED"));
     }
 

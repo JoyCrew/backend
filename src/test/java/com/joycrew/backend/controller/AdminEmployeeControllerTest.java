@@ -5,6 +5,7 @@ import com.joycrew.backend.dto.EmployeeRegistrationRequest;
 import com.joycrew.backend.entity.Company;
 import com.joycrew.backend.entity.Department;
 import com.joycrew.backend.entity.Employee;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.service.AdminEmployeeService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,18 +39,17 @@ class AdminEmployeeControllerTest {
     @WithMockUser(roles = "HR_ADMIN")
     @DisplayName("POST /api/admin/employees - 직원 등록 성공")
     void registerEmployee_success() throws Exception {
-        // Given - 요청 DTO (회사명/부서명 기반)
         EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
-                "김여은",                      // name
-                "kye02@example.com",          // email
-                "password123!",               // initialPassword
-                "조이크루",                   // companyName
-                "인사팀",                     // departmentName
-                "사원",                        // position
-                UserRole.EMPLOYEE             // role
+                "김여은",
+                "kye02@example.com",
+                "password123!",
+                "조이크루",
+                "인사팀",
+                "사원",
+                AdminLevel.EMPLOYEE
         );
 
-        // Given - 서비스가 반환할 Employee mock 객체
+        // Given
         Employee mockEmployee = Employee.builder()
                 .employeeId(1L)
                 .employeeName("김여은")
@@ -57,13 +57,13 @@ class AdminEmployeeControllerTest {
                 .company(Company.builder().companyId(1L).companyName("조이크루").build())
                 .department(Department.builder().departmentId(1L).name("인사팀").build())
                 .position("사원")
-                .role(UserRole.EMPLOYEE)
+                .role(AdminLevel.EMPLOYEE)
                 .build();
 
         when(adminEmployeeService.registerEmployee(any(EmployeeRegistrationRequest.class)))
                 .thenReturn(mockEmployee);
 
-        // When & Then - 요청 수행 및 응답 검증
+        // When & Then
         mockMvc.perform(post("/api/admin/employees")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -75,7 +75,7 @@ class AdminEmployeeControllerTest {
     @WithMockUser(roles = "HR_ADMIN")
     @DisplayName("POST /api/admin/employees/bulk - 직원 일괄 등록 성공")
     void registerEmployeesFromCsv_success() throws Exception {
-        // Given: 예제 CSV 내용
+        // Given
         String csvContent = """
             name,email,initialPassword,companyName,departmentName,position,role
             김여은,kye02@example.com,password123,조이크루,인사팀,사원,EMPLOYEE

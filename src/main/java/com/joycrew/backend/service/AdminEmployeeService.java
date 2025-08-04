@@ -78,7 +78,7 @@ public class AdminEmployeeService {
                 }
 
                 String[] tokens = line.split(",");
-                if (tokens.length < 6) {  // 최소 6개 필드 필요 (level은 optional)
+                if (tokens.length < 6) {
                     log.warn("누락된 필드가 있는 행 건너뜀: {}", line);
                     continue;
                 }
@@ -87,13 +87,13 @@ public class AdminEmployeeService {
                     AdminLevel adminLevel = parseAdminLevel(tokens.length > 6 ? tokens[6].trim() : "EMPLOYEE");
 
                     EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
-                            tokens[0].trim(), // name
-                            tokens[1].trim(), // email
-                            tokens[2].trim(), // password
-                            tokens[3].trim(), // companyName
-                            tokens[4].trim().isBlank() ? null : tokens[4].trim(), // departmentName (nullable)
-                            tokens[5].trim(), // position
-                            adminLevel // level
+                            tokens[0].trim(),
+                            tokens[1].trim(),
+                            tokens[2].trim(),
+                            tokens[3].trim(),
+                            tokens[4].trim().isBlank() ? null : tokens[4].trim(),
+                            tokens[5].trim(),
+                            adminLevel
                     );
                     registerEmployee(request);
                 } catch (Exception e) {
@@ -106,12 +106,9 @@ public class AdminEmployeeService {
         }
     }
 
-    /**
-     * 문자열을 AdminLevel enum으로 변환
-     */
     private AdminLevel parseAdminLevel(String level) {
         if (level == null || level.isBlank()) {
-            return AdminLevel.EMPLOYEE; // 기본값
+            return AdminLevel.EMPLOYEE;
         }
 
         try {
