@@ -15,7 +15,7 @@ public class EmailService {
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
     private final JavaMailSender mailSender;
 
-    @Async("taskExecutor") // 비동기 실행을 위해 Async 어노테이션 추가
+    @Async("taskExecutor")
     public void sendPasswordResetEmail(String toEmail, String token) {
         // TODO: 프론트엔드 URL은 실제 환경에 맞게 수정해야 합니다.
         String frontendUrl = "https://joycrew.co.kr/reset-password?token=" + token;

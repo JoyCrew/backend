@@ -99,7 +99,6 @@ public class Employee implements UserDetails {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // UserDetails 구현 메서드들...
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role));
