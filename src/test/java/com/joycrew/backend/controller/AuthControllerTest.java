@@ -3,6 +3,7 @@ package com.joycrew.backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joycrew.backend.dto.LoginRequest;
 import com.joycrew.backend.dto.LoginResponse;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.exception.GlobalExceptionHandler;
 import com.joycrew.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -55,7 +56,7 @@ class AuthControllerTest {
     void login_Success() throws Exception {
         LoginRequest request = new LoginRequest("test@joycrew.com", "password123!");
         LoginResponse successResponse = new LoginResponse(
-                "mocked.jwt.token", "로그인 성공", 1L, "테스트유저", "test@joycrew.com", UserRole.EMPLOYEE
+                "mocked.jwt.token", "로그인 성공", 1L, "테스트유저", "test@joycrew.com", AdminLevel.EMPLOYEE, 500, "https://example.com/profile.jpg"
         );
 
         when(authService.login(any(LoginRequest.class))).thenReturn(successResponse);

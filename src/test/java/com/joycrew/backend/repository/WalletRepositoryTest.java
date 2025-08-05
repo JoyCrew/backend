@@ -3,6 +3,7 @@ package com.joycrew.backend.repository;
 import com.joycrew.backend.entity.Company;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.Wallet;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ class WalletRepositoryTest {
                 .email("walletuser@joycrew.com")
                 .passwordHash("pass123")
                 .employeeName("지갑유저")
-                .role(UserRole.EMPLOYEE)
+                .role(AdminLevel.EMPLOYEE)
                 .build();
         entityManager.persist(testEmployeeWithWallet);
 
@@ -44,7 +45,7 @@ class WalletRepositoryTest {
                 .email("nowallet@joycrew.com")
                 .passwordHash("pass123")
                 .employeeName("지갑없는유저")
-                .role(UserRole.EMPLOYEE)
+                .role(AdminLevel.EMPLOYEE)
                 .build();
         entityManager.persist(testEmployeeWithoutWallet);
 

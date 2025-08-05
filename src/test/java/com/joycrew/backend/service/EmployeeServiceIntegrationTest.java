@@ -5,6 +5,7 @@ import com.joycrew.backend.dto.PasswordChangeRequest;
 import com.joycrew.backend.entity.Company;
 import com.joycrew.backend.entity.Department;
 import com.joycrew.backend.entity.Employee;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.repository.CompanyRepository;
 import com.joycrew.backend.repository.DepartmentRepository;
 import com.joycrew.backend.repository.EmployeeRepository;
@@ -53,7 +54,7 @@ class EmployeeServiceIntegrationTest {
         // Given
         EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
                 "신규직원", "new.employee@joycrew.com", "password123!",
-                testCompany.getCompanyName(), testDepartment.getName(), "사원", UserRole.EMPLOYEE
+                testCompany.getCompanyName(), testDepartment.getName(), "사원", AdminLevel.EMPLOYEE
         );
 
         // When

@@ -1,6 +1,6 @@
 package com.joycrew.backend.service;
 
-import com.joycrew.backend.dto.RecognitionRequest;
+import com.joycrew.backend.dto.GiftPointRequest;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.RewardPointTransaction;
 import com.joycrew.backend.entity.Wallet;
@@ -17,14 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class RecognitionService {
+public class GiftPointService {
+
     private final EmployeeRepository employeeRepository;
     private final WalletRepository walletRepository;
     private final RewardPointTransactionRepository transactionRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public void sendRecognition(String senderEmail, RecognitionRequest request) {
+    public void giftPointsToColleague(String senderEmail, GiftPointRequest request) {
         Employee sender = employeeRepository.findByEmail(senderEmail)
                 .orElseThrow(() -> new UserNotFoundException("보내는 사용자를 찾을 수 없습니다."));
         Employee receiver = employeeRepository.findById(request.receiverId())
@@ -35,9 +36,11 @@ public class RecognitionService {
         Wallet receiverWallet = walletRepository.findByEmployee_EmployeeId(receiver.getEmployeeId())
                 .orElseThrow(() -> new IllegalStateException("받는 사용자의 지갑이 없습니다."));
 
+        // 포인트 이체
         senderWallet.spendPoints(request.points());
         receiverWallet.addPoints(request.points());
 
+        // 트랜잭션 기록
         RewardPointTransaction transaction = RewardPointTransaction.builder()
                 .sender(sender)
                 .receiver(receiver)
@@ -48,6 +51,9 @@ public class RecognitionService {
                 .build();
         transactionRepository.save(transaction);
 
-        eventPublisher.publishEvent(new RecognitionEvent(this, sender.getEmployeeId(), receiver.getEmployeeId(), request.points(), request.message()));
+        // 이벤트 발행 (예: 알림용)
+        eventPublisher.publishEvent(
+                new RecognitionEvent(this, sender.getEmployeeId(), receiver.getEmployeeId(), request.points(), request.message())
+        );
     }
 }
