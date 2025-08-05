@@ -2,6 +2,7 @@ package com.joycrew.backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joycrew.backend.dto.EmployeeQueryResponse;
+import com.joycrew.backend.dto.PagedEmployeeResponse;
 import com.joycrew.backend.service.EmployeeQueryService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,15 +34,20 @@ class EmployeeQueryControllerTest {
     @DisplayName("GET /api/employee/query - 직원 목록 검색 성공")
     void searchEmployees_success() throws Exception {
         // Given
-        EmployeeQueryResponse mockEmployee = EmployeeQueryResponse.builder()
-                .profileImageUrl("https://cdn.joycrew.com/profile/user1.jpg")
-                .employeeName("김여은")
-                .departmentName("인사팀")
-                .position("사원")
-                .build();
+        EmployeeQueryResponse mockEmployee = new EmployeeQueryResponse(
+                1L,
+                "https://cdn.joycrew.com/profile/user1.jpg",
+                "김여은",
+                "인사팀",
+                "사원"
+        );
 
-        when(employeeQueryService.getEmployees(anyString(), anyInt(), anyInt()))
-                .thenReturn(List.of(mockEmployee));
+
+        when(employeeQueryService.getEmployees(anyString(), anyInt(), anyInt(), anyLong()))
+                .thenReturn(new PagedEmployeeResponse(
+                        List.of(mockEmployee),
+                        0, 1, true
+                ));
 
         // When & Then
         mockMvc.perform(get("/api/employee/query")
@@ -60,15 +66,20 @@ class EmployeeQueryControllerTest {
     @DisplayName("GET /api/employee/query - 검색어 없이도 정상 조회")
     void searchEmployees_noKeyword() throws Exception {
         // Given
-        EmployeeQueryResponse mockEmployee = EmployeeQueryResponse.builder()
-                .profileImageUrl(null)
-                .employeeName("홍길동")
-                .departmentName(null)
-                .position("주임")
-                .build();
+        EmployeeQueryResponse mockEmployee = new EmployeeQueryResponse(
+                2L,
+                null,
+                "홍길동",
+                null,
+                "주임"
+        );
 
-        when(employeeQueryService.getEmployees(isNull(), anyInt(), anyInt()))
-                .thenReturn(List.of(mockEmployee));
+
+        when(employeeQueryService.getEmployees(isNull(), anyInt(), anyInt(), anyLong()))
+                .thenReturn(new PagedEmployeeResponse(
+                        List.of(mockEmployee),
+                        0, 1, true
+                ));
 
         // When & Then
         mockMvc.perform(get("/api/employee/query")
