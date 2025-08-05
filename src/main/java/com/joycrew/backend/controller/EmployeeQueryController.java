@@ -1,6 +1,5 @@
 package com.joycrew.backend.controller;
 
-import com.joycrew.backend.dto.EmployeeQueryResponse;
 import com.joycrew.backend.dto.PagedEmployeeResponse;
 import com.joycrew.backend.security.UserPrincipal;
 import com.joycrew.backend.service.EmployeeQueryService;

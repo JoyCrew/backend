@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
-    private static final long PASSWORD_RESET_EXPIRATION_MS = 15 * 60 * 1000; // 15분
+    private static final long PASSWORD_RESET_EXPIRATION_MS = 15 * 60 * 1000;
 
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
