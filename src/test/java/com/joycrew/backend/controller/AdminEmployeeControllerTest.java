@@ -5,6 +5,7 @@ import com.joycrew.backend.dto.EmployeeRegistrationRequest;
 import com.joycrew.backend.entity.Company;
 import com.joycrew.backend.entity.Department;
 import com.joycrew.backend.entity.Employee;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.service.AdminEmployeeService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,7 @@ class AdminEmployeeControllerTest {
                 "조이크루",                   // companyName
                 "인사팀",                     // departmentName
                 "사원",                        // position
-                UserRole.EMPLOYEE             // role
+                AdminLevel.EMPLOYEE             // role
         );
 
         // Given - 서비스가 반환할 Employee mock 객체
@@ -57,7 +58,7 @@ class AdminEmployeeControllerTest {
                 .company(Company.builder().companyId(1L).companyName("조이크루").build())
                 .department(Department.builder().departmentId(1L).name("인사팀").build())
                 .position("사원")
-                .role(UserRole.EMPLOYEE)
+                .role(AdminLevel.EMPLOYEE)
                 .build();
 
         when(adminEmployeeService.registerEmployee(any(EmployeeRegistrationRequest.class)))

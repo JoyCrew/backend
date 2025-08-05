@@ -4,9 +4,10 @@ import com.joycrew.backend.entity.enums.Tag;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
 import java.util.List;
 
-public record RecognitionRequest(
+public record GiftPointRequest(
         @NotNull(message = "받는 사람 ID는 필수입니다.")
         Long receiverId,
 
@@ -18,5 +19,6 @@ public record RecognitionRequest(
         String message,
 
         @NotNull(message = "태그는 필수입니다.")
+        @Size(min = 1, max = 3, message = "태그는 최소 1개, 최대 3개까지 선택 가능합니다.")
         List<Tag> tags
 ) {}
