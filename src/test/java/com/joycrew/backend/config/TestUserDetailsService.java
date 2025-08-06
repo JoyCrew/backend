@@ -1,6 +1,7 @@
 package com.joycrew.backend.config;
 
 import com.joycrew.backend.entity.Employee;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,7 +20,7 @@ public class TestUserDetailsService implements UserDetailsService {
                 .employeeId(1L)
                 .email("testuser@joycrew.com")
                 .employeeName("테스트유저")
-                .role(UserRole.EMPLOYEE)
+                .role(AdminLevel.EMPLOYEE)
                 .status("ACTIVE")
                 .passwordHash("{noop}password")
                 .build());
@@ -28,7 +29,7 @@ public class TestUserDetailsService implements UserDetailsService {
                 .employeeId(99L)
                 .email("nowallet@joycrew.com")
                 .employeeName("지갑없음")
-                .role(UserRole.EMPLOYEE)
+                .role(AdminLevel.EMPLOYEE)
                 .status("ACTIVE")
                 .passwordHash("{noop}password")
                 .build());

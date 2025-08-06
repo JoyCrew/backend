@@ -3,6 +3,7 @@ package com.joycrew.backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joycrew.backend.dto.PasswordChangeRequest;
 import com.joycrew.backend.dto.UserProfileResponse;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.exception.GlobalExceptionHandler;
 import com.joycrew.backend.security.WithMockUserPrincipal;
 import com.joycrew.backend.service.EmployeeService;
@@ -45,7 +46,7 @@ class UserControllerTest {
                 "https://cdn.joycrew.com/profile/testuser.jpg",
                 1500,
                 100,
-                UserRole.EMPLOYEE,
+                AdminLevel.EMPLOYEE,
                 "개발팀",
                 "사원"
         );
