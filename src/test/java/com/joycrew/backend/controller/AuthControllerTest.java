@@ -60,7 +60,10 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("mocked.jwt.token"))
                 .andExpect(jsonPath("$.message").value("로그인 성공"))
-                .andExpect(jsonPath("$.adminLevel").value("EMPLOYEE"));
+                .andExpect(jsonPath("$.userId").value(1L))
+                .andExpect(jsonPath("$.email").value("test@joycrew.com"))
+                .andExpect(jsonPath("$.name").value("테스트유저"))
+                .andExpect(jsonPath("$.role").value("EMPLOYEE")); // <-- 이 부분을 수정합니다.
     }
 
     @Test
@@ -74,7 +77,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized()) // GlobalExceptionHandler에 따라 401 반환
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("AUTHENTICATION_FAILED"));
     }
 
