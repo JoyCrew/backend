@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors; // <-- 이 import 추가
 
 import java.util.List;
 
@@ -44,13 +45,13 @@ class GiftPointControllerTest {
                 List.of(Tag.TEAMWORK, Tag.INNOVATION)
         );
 
-        // mock 서비스 로직
         doNothing().when(giftPointService).giftPointsToColleague(any(), any());
 
         // when & then
         mockMvc.perform(post("/api/gift-points")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
+                        .with(SecurityMockMvcRequestPostProcessors.csrf()) // <-- 이 라인 추가
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("포인트를 성공적으로 보냈습니다."));
