@@ -1,6 +1,6 @@
 package com.joycrew.backend.service;
 
-import com.joycrew.backend.dto.EmployeeRegistrationRequest;
+import com.joycrew.backend.dto.*;
 import com.joycrew.backend.entity.Company;
 import com.joycrew.backend.entity.Department;
 import com.joycrew.backend.entity.Employee;
@@ -10,6 +10,9 @@ import com.joycrew.backend.repository.CompanyRepository;
 import com.joycrew.backend.repository.DepartmentRepository;
 import com.joycrew.backend.repository.EmployeeRepository;
 import com.joycrew.backend.repository.WalletRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -33,6 +37,9 @@ public class AdminEmployeeService {
     private final DepartmentRepository departmentRepository;
     private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @PersistenceContext
+    private final EntityManager em;
 
     public Employee registerEmployee(EmployeeRegistrationRequest request) {
         if (employeeRepository.findByEmail(request.email()).isPresent()) {
@@ -78,7 +85,7 @@ public class AdminEmployeeService {
                 }
 
                 String[] tokens = line.split(",");
-                if (tokens.length < 6) {  // 최소 6개 필드 필요 (level은 optional)
+                if (tokens.length < 6) {
                     log.warn("누락된 필드가 있는 행 건너뜀: {}", line);
                     continue;
                 }
@@ -87,13 +94,13 @@ public class AdminEmployeeService {
                     AdminLevel adminLevel = parseAdminLevel(tokens.length > 6 ? tokens[6].trim() : "EMPLOYEE");
 
                     EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
-                            tokens[0].trim(), // name
-                            tokens[1].trim(), // email
-                            tokens[2].trim(), // password
-                            tokens[3].trim(), // companyName
-                            tokens[4].trim().isBlank() ? null : tokens[4].trim(), // departmentName (nullable)
-                            tokens[5].trim(), // position
-                            adminLevel // level
+                            tokens[0].trim(),
+                            tokens[1].trim(),
+                            tokens[2].trim(),
+                            tokens[3].trim(),
+                            tokens[4].trim().isBlank() ? null : tokens[4].trim(),
+                            tokens[5].trim(),
+                            adminLevel
                     );
                     registerEmployee(request);
                 } catch (Exception e) {
@@ -106,12 +113,9 @@ public class AdminEmployeeService {
         }
     }
 
-    /**
-     * 문자열을 AdminLevel enum으로 변환
-     */
     private AdminLevel parseAdminLevel(String level) {
         if (level == null || level.isBlank()) {
-            return AdminLevel.EMPLOYEE; // 기본값
+            return AdminLevel.EMPLOYEE;
         }
 
         try {
@@ -120,5 +124,49 @@ public class AdminEmployeeService {
             log.warn("유효하지 않은 권한 레벨: {}. 기본값 EMPLOYEE로 설정합니다.", level);
             return AdminLevel.EMPLOYEE;
         }
+    }
+
+    @Transactional(readOnly = true)
+    public AdminPagedEmployeeResponse searchEmployees(String keyword, int page, int size) {
+        StringBuilder whereClause = new StringBuilder("WHERE 1=1 ");
+        if (keyword != null && !keyword.isBlank()) {
+            whereClause.append("AND (LOWER(e.employeeName) LIKE :keyword ")
+                    .append("OR LOWER(e.email) LIKE :keyword ")
+                    .append("OR LOWER(d.name) LIKE :keyword) ");
+        }
+
+        // 총 개수 조회
+        String countJpql = "SELECT COUNT(e) FROM Employee e LEFT JOIN e.department d " + whereClause;
+        TypedQuery<Long> countQuery = em.createQuery(countJpql, Long.class);
+        if (keyword != null && !keyword.isBlank()) {
+            countQuery.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
+        }
+        long total = countQuery.getSingleResult();
+        int totalPages = (int) Math.ceil((double) total / size);
+
+        // 데이터 조회
+        String dataJpql = "SELECT e FROM Employee e " +
+                "LEFT JOIN FETCH e.department d " +
+                "LEFT JOIN FETCH e.company c " +
+                whereClause +
+                "ORDER BY e.employeeName ASC";
+        TypedQuery<Employee> dataQuery = em.createQuery(dataJpql, Employee.class)
+                .setFirstResult(page * size)
+                .setMaxResults(size);
+        if (keyword != null && !keyword.isBlank()) {
+            dataQuery.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
+        }
+
+        // Admin 전용 DTO로 변환
+        List<AdminEmployeeQueryResponse> employees = dataQuery.getResultList().stream()
+                .map(AdminEmployeeQueryResponse::from)
+                .toList();
+
+        return new AdminPagedEmployeeResponse(
+                employees,
+                page + 1,
+                totalPages,
+                page >= totalPages - 1
+        );
     }
 }

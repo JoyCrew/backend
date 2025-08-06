@@ -5,6 +5,7 @@ import com.joycrew.backend.dto.EmployeeRegistrationRequest;
 import com.joycrew.backend.dto.LoginRequest;
 import com.joycrew.backend.dto.LoginResponse;
 import com.joycrew.backend.entity.Company;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.repository.CompanyRepository;
 import com.joycrew.backend.repository.EmployeeRepository;
 import com.joycrew.backend.security.JwtUtil;
@@ -53,7 +54,7 @@ class AuthServiceIntegrationTest {
                 defaultCompany.getCompanyName(),
                 null,
                 "사원",
-                UserRole.EMPLOYEE
+                AdminLevel.EMPLOYEE
         );
         adminEmployeeService.registerEmployee(request);
     }
@@ -74,7 +75,7 @@ class AuthServiceIntegrationTest {
         assertThat(response.email()).isEqualTo(testEmail);
         assertThat(response.userId()).isEqualTo(employeeRepository.findByEmail(testEmail).get().getEmployeeId());
         assertThat(response.name()).isEqualTo(testName);
-        assertThat(response.role()).isEqualTo(UserRole.EMPLOYEE);
+        assertThat(response.role()).isEqualTo(AdminLevel.EMPLOYEE);
 
         String extractedEmail = jwtUtil.getEmailFromToken(response.accessToken());
         assertThat(extractedEmail).isEqualTo(testEmail);

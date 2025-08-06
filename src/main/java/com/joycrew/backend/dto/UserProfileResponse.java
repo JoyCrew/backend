@@ -23,7 +23,7 @@ public record UserProfileResponse(
                 employee.getEmployeeId(),
                 employee.getEmployeeName(),
                 employee.getEmail(),
-                employee.getProfileImageUrl(), // ✅ 프로필 이미지 추가
+                employee.getProfileImageUrl(),
                 wallet.getBalance(),
                 wallet.getGiftablePoint(),
                 employee.getRole(),
