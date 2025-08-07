@@ -32,12 +32,12 @@ class TransactionHistoryServiceTest {
     private TransactionHistoryService transactionHistoryService;
 
     @Test
-    @DisplayName("[Service] 포인트 거래 내역 조회 성공")
+    @DisplayName("[Unit] Get transaction history successfully")
     void getTransactionHistory_Success() {
         // Given
         String userEmail = "user@joycrew.com";
-        Employee user = Employee.builder().employeeId(1L).employeeName("테스트유저").email(userEmail).build();
-        Employee colleague = Employee.builder().employeeId(2L).employeeName("동료").email("colleague@joycrew.com").build();
+        Employee user = Employee.builder().employeeId(1L).employeeName("Test User").email(userEmail).build();
+        Employee colleague = Employee.builder().employeeId(2L).employeeName("Colleague").email("colleague@joycrew.com").build();
 
         RewardPointTransaction sentTx = RewardPointTransaction.builder()
                 .transactionId(101L).sender(user).receiver(colleague)
@@ -61,10 +61,10 @@ class TransactionHistoryServiceTest {
 
         TransactionHistoryResponse sentResponse = history.get(0);
         assertThat(sentResponse.amount()).isEqualTo(-50);
-        assertThat(sentResponse.counterparty()).isEqualTo("동료");
+        assertThat(sentResponse.counterparty()).isEqualTo("Colleague");
 
         TransactionHistoryResponse receivedResponse = history.get(1);
         assertThat(receivedResponse.amount()).isEqualTo(100);
-        assertThat(receivedResponse.counterparty()).isEqualTo("동료");
+        assertThat(receivedResponse.counterparty()).isEqualTo("Colleague");
     }
 }

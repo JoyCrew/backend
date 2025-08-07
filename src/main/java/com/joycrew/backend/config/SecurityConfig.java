@@ -45,6 +45,7 @@ public class SecurityConfig {
                                 "/",
                                 "/h2-console/**",
                                 "/api/auth/login",
+
                                 "/api/auth/password-reset/request",
                                 "/api/auth/password-reset/confirm",
                                 "/v3/api-docs/**",
