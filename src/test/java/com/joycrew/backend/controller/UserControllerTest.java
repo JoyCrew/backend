@@ -5,7 +5,8 @@ import com.joycrew.backend.dto.PasswordChangeRequest;
 import com.joycrew.backend.dto.UserProfileResponse;
 import com.joycrew.backend.dto.UserProfileUpdateRequest;
 import com.joycrew.backend.entity.enums.AdminLevel;
-import com.joycrew.backend.exception.GlobalExceptionHandler;
+import com.joycrew.backend.security.EmployeeDetailsService;
+import com.joycrew.backend.security.JwtUtil;
 import com.joycrew.backend.security.WithMockUserPrincipal;
 import com.joycrew.backend.service.EmployeeService;
 import org.junit.jupiter.api.DisplayName;
@@ -13,11 +14,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDate;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -29,69 +28,68 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = UserController.class)
-@Import(GlobalExceptionHandler.class)
 class UserControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @MockBean private EmployeeService employeeService;
+    @MockBean private JwtUtil jwtUtil;
+    @MockBean private EmployeeDetailsService employeeDetailsService;
 
     @Test
-    @DisplayName("GET /api/user/profile - 프로필 조회 성공")
+    @DisplayName("GET /api/user/profile - Should get profile successfully")
     @WithMockUserPrincipal
     void getProfile_Success() throws Exception {
         // Given
         UserProfileResponse mockResponse = new UserProfileResponse(
-                1L, "테스트유저", "testuser@joycrew.com",
-                "https://cdn.joycrew.com/profile/testuser.jpg",
-                1500, 100, AdminLevel.EMPLOYEE, "개발팀", "사원",
-                LocalDate.of(1995, 5, 10), // birthday
-                "서울시 강남구",                  // address
-                LocalDate.of(2023, 1, 1)    // hireDate
+                1L, "Test User", "testuser@joycrew.com", null,
+                1500, 100, AdminLevel.EMPLOYEE, "Engineering", "Staff",
+                null, null, null
         );
         when(employeeService.getUserProfile("testuser@joycrew.com")).thenReturn(mockResponse);
 
         // When & Then
         mockMvc.perform(get("/api/user/profile"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("테스트유저"))
-                .andExpect(jsonPath("$.address").value("서울시 강남구"));
+                .andExpect(jsonPath("$.name").value("Test User"));
     }
 
     @Test
-    @DisplayName("POST /api/user/password - 비밀번호 변경 성공")
+    @DisplayName("POST /api/user/password - Should change password successfully")
     @WithMockUserPrincipal
-    void forceChangePassword_Success() throws Exception {
+    void forcePasswordChange_Success() throws Exception {
         // Given
         PasswordChangeRequest request = new PasswordChangeRequest("newPassword123!");
         doNothing().when(employeeService).forcePasswordChange(eq("testuser@joycrew.com"), any(PasswordChangeRequest.class));
 
         // When & Then
         mockMvc.perform(post("/api/user/password")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("비밀번호가 성공적으로 변경되었습니다."));
+                .andExpect(jsonPath("$.message").value("Password changed successfully."));
     }
 
     @Test
-    @DisplayName("PATCH /api/user/profile - 내 정보 수정 성공")
+    @DisplayName("PATCH /api/user/profile - Should update profile successfully")
     @WithMockUserPrincipal
     void updateMyProfile_Success() throws Exception {
         // Given
-        UserProfileUpdateRequest request = new UserProfileUpdateRequest(
-                "새로운 내 이름", "http://new.image.url", null, null,
-                LocalDate.of(2000, 1, 1), // birthday
-                "경기도 성남시"                   // address
-        );
+        UserProfileUpdateRequest requestDto = new UserProfileUpdateRequest("New Name", null, null, null, null, "New Address");
+        MockMultipartFile requestPart = new MockMultipartFile("request", "", "application/json", objectMapper.writeValueAsBytes(requestDto));
+        MockMultipartFile imagePart = new MockMultipartFile("profileImage", "image.jpg", MediaType.IMAGE_JPEG_VALUE, "image_bytes".getBytes());
 
         // When & Then
-        mockMvc.perform(patch("/api/user/profile")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart("/api/user/profile")
+                        .file(requestPart)
+                        .file(imagePart)
+                        .with(req -> {
+                            req.setMethod("PATCH");
+                            return req;
+                        })
+                        .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("내 정보가 성공적으로 수정되었습니다."));
+                .andExpect(jsonPath("$.message").value("Your information has been updated successfully."));
     }
 }

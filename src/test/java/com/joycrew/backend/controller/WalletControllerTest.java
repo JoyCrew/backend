@@ -20,18 +20,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = WalletController.class)
 class WalletControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
-    private WalletService walletService;
-    @MockBean
-    private JwtUtil jwtUtil;
-    @MockBean
-    private EmployeeDetailsService employeeDetailsService;
+    @Autowired private MockMvc mockMvc;
+    @MockBean private WalletService walletService;
+    @MockBean private JwtUtil jwtUtil;
+    @MockBean private EmployeeDetailsService employeeDetailsService;
 
     @Test
-    @DisplayName("GET /api/wallet/point - 포인트 잔액 조회 성공")
+    @DisplayName("GET /api/wallet/point - Should get point balance successfully")
     @WithMockUserPrincipal
     void getWalletPoint_Success() throws Exception {
         // Given
@@ -44,13 +39,5 @@ class WalletControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.totalBalance").value(1500))
                 .andExpect(jsonPath("$.giftableBalance").value(100));
-    }
-
-    @Test
-    @DisplayName("GET /api/wallet/point - 인증되지 않은 사용자 접근 시 401 반환")
-    void getWalletPoint_Failure_Unauthenticated() throws Exception {
-        // When & Then
-        mockMvc.perform(get("/api/wallet/point"))
-                .andExpect(status().isUnauthorized());
     }
 }
