@@ -24,12 +24,12 @@ public class TransactionHistoryService {
         Employee user = employeeRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + userEmail));
 
+        // This call now efficiently fetches transactions with related sender/receiver data.
         return transactionRepository.findBySenderOrReceiverOrderByTransactionDateDesc(user, user)
                 .stream()
                 .map(tx -> {
                     boolean isSender = user.equals(tx.getSender());
                     int amount = isSender ? -tx.getPointAmount() : tx.getPointAmount();
-                    // Use "System" for transactions where the sender is null (e.g., admin awards).
                     String counterparty = isSender ? tx.getReceiver().getEmployeeName() : (tx.getSender() != null ? tx.getSender().getEmployeeName() : "System");
 
                     return TransactionHistoryResponse.builder()

@@ -24,7 +24,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
