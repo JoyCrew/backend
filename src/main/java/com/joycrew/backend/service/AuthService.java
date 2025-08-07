@@ -62,7 +62,7 @@ public class AuthService {
 
             return new LoginResponse(
                     accessToken,
-                    "로그인 성공",
+                    "Login successful",
                     employee.getEmployeeId(),
                     employee.getEmployeeName(),
                     employee.getEmail(),
@@ -81,7 +81,7 @@ public class AuthService {
         final String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String jwt = authHeader.substring(7);
-            log.info("Logout request received. Token blacklisting can be implemented here.");
+            log.info("Logout request received. Token blacklisting can be implemented here if needed.");
         }
     }
 
@@ -100,13 +100,13 @@ public class AuthService {
         try {
             email = jwtUtil.getEmailFromToken(token);
         } catch (JwtException e) {
-            throw new BadCredentialsException("유효하지 않거나 만료된 토큰입니다.", e);
+            throw new BadCredentialsException("Invalid or expired token.", e);
         }
 
         Employee employee = employeeRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException("User not found."));
 
         employee.changePassword(newPassword, passwordEncoder);
-        log.info("비밀번호 재설정 완료: {}", email);
+        log.info("Password has been reset for: {}", email);
     }
 }

@@ -111,7 +111,6 @@ public class AdminEmployeeController {
     public ResponseEntity<SuccessResponse> updateEmployee(
             @PathVariable Long employeeId,
             @RequestBody AdminEmployeeUpdateRequest request) {
-        // 'adminEmployeeService'를 'managementService'로 수정
         managementService.updateEmployee(employeeId, request);
         return ResponseEntity.ok(new SuccessResponse("Employee information updated successfully."));
     }

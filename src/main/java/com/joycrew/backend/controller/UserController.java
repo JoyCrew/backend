@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "사용자", description = "사용자 정보 관련 API")
+@Tag(name = "User", description = "APIs related to user information")
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class UserController {
 
     private final EmployeeService employeeService;
 
-    @Operation(summary = "사용자 프로필 조회", security = @SecurityRequirement(name = "Authorization"))
+    @Operation(summary = "Get user profile", security = @SecurityRequirement(name = "Authorization"))
     @GetMapping("/profile")
     public ResponseEntity<UserProfileResponse> getProfile(
             @AuthenticationPrincipal UserPrincipal principal
@@ -31,22 +31,22 @@ public class UserController {
         return ResponseEntity.ok(employeeService.getUserProfile(principal.getUsername()));
     }
 
-    @Operation(summary = "비밀번호 변경", security = @SecurityRequirement(name = "Authorization"))
+    @Operation(summary = "Change password", security = @SecurityRequirement(name = "Authorization"))
     @PostMapping("/password")
     public ResponseEntity<SuccessResponse> forceChangePassword(
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody PasswordChangeRequest request
     ) {
         employeeService.forcePasswordChange(principal.getUsername(), request);
-        return ResponseEntity.ok(new SuccessResponse("비밀번호가 성공적으로 변경되었습니다."));
+        return ResponseEntity.ok(new SuccessResponse("Password changed successfully."));
     }
 
-    @Operation(summary = "내 정보 수정", description = "변경을 원하는 필드만 요청 본문에 포함하여 전송합니다.", security = @SecurityRequirement(name = "Authorization"))
+    @Operation(summary = "Update my information", description = "Send only the fields you want to change in the request body.", security = @SecurityRequirement(name = "Authorization"))
     @PatchMapping("/profile")
     public ResponseEntity<SuccessResponse> updateMyProfile(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestBody UserProfileUpdateRequest request) {
         employeeService.updateUserProfile(principal.getUsername(), request);
-        return ResponseEntity.ok(new SuccessResponse("내 정보가 성공적으로 수정되었습니다."));
+        return ResponseEntity.ok(new SuccessResponse("Your information has been updated successfully."));
     }
 }

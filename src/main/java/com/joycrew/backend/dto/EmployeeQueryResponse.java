@@ -1,23 +1,21 @@
 package com.joycrew.backend.dto;
 
-import com.joycrew.backend.entity.Employee;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "직원 검색 결과 응답 DTO")
+@Schema(description = "Employee Search Result DTO")
 public record EmployeeQueryResponse(
-        @Schema(description = "직원 고유 ID", example = "1")
+        @Schema(description = "Unique ID of the employee", example = "1")
         Long employeeId,
 
-        @Schema(description = "프로필 이미지 URL", example = "https://cdn.joycrew.com/profile/user123.jpg")
+        @Schema(description = "URL of the profile image", example = "https://cdn.joycrew.com/profile/user123.jpg")
         String profileImageUrl,
 
-        @Schema(description = "직원 이름", example = "김조이")
+        @Schema(description = "Name of the employee", example = "John Doe")
         String employeeName,
 
-        @Schema(description = "부서명", example = "개발팀")
+        @Schema(description = "Department name", example = "Engineering")
         String departmentName,
 
-        @Schema(description = "직책", example = "백엔드 개발자")
+        @Schema(description = "Position or title", example = "Backend Developer")
         String position
-) {
-}
+) {}

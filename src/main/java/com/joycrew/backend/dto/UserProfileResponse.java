@@ -5,19 +5,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 
-@Schema(description = "사용자 프로필 응답 DTO")
+@Schema(description = "User Profile Response DTO")
 public record UserProfileResponse(
-        @Schema(description = "사용자 고유 ID") Long employeeId,
-        @Schema(description = "사용자 이름") String name,
-        @Schema(description = "이메일 주소") String email,
-        @Schema(description = "프로필 이미지 URL") String profileImageUrl,
-        @Schema(description = "현재 총 포인트 잔액") Integer totalBalance,
-        @Schema(description = "현재 선물 가능한 포인트 잔액") Integer giftableBalance,
-        @Schema(description = "사용자 권한")AdminLevel level,
-        @Schema(description = "소속 부서") String department,
-        @Schema(description = "직책") String position,
-        @Schema(description = "생년월일") LocalDate birthday,
-        @Schema(description = "주소") String address,
-        @Schema(description = "입사일") LocalDate hireDate
-) {
-}
+        @Schema(description = "Unique ID of the user") Long employeeId,
+        @Schema(description = "Name of the user") String name,
+        @Schema(description = "Email address of the user") String email,
+        @Schema(description = "URL of the profile image") String profileImageUrl,
+        @Schema(description = "Current total point balance") Integer totalBalance,
+        @Schema(description = "Current giftable point balance") Integer giftableBalance,
+        @Schema(description = "Role or permission level of the user") AdminLevel level,
+        @Schema(description = "Department name") String department,
+        @Schema(description = "Position or title of the user") String position,
+        @Schema(description = "Birth date of the user") LocalDate birthday,
+        @Schema(description = "Address of the user") String address,
+        @Schema(description = "Hire date of the user") LocalDate hireDate
+) {}

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Tag(name = "거래 내역", description = "포인트 거래 내역 조회 API")
+@Tag(name = "Transaction History", description = "API for retrieving point transaction history")
 @RestController
 @RequestMapping("/api/transactions")
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class TransactionHistoryController {
 
     private final TransactionHistoryService transactionHistoryService;
 
-    @Operation(summary = "포인트 거래 내역 조회", security = @SecurityRequirement(name = "Authorization"))
+    @Operation(summary = "Get point transaction history", security = @SecurityRequirement(name = "Authorization"))
     @GetMapping
     public ResponseEntity<List<TransactionHistoryResponse>> getMyTransactions(
             @AuthenticationPrincipal UserPrincipal principal) {
