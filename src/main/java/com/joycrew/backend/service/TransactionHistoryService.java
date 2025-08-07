@@ -22,14 +22,15 @@ public class TransactionHistoryService {
 
     public List<TransactionHistoryResponse> getTransactionHistory(String userEmail) {
         Employee user = employeeRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다: " + userEmail));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + userEmail));
 
+        // This call now efficiently fetches transactions with related sender/receiver data.
         return transactionRepository.findBySenderOrReceiverOrderByTransactionDateDesc(user, user)
                 .stream()
                 .map(tx -> {
                     boolean isSender = user.equals(tx.getSender());
                     int amount = isSender ? -tx.getPointAmount() : tx.getPointAmount();
-                    String counterparty = isSender ? tx.getReceiver().getEmployeeName() : (tx.getSender() != null ? tx.getSender().getEmployeeName() : "시스템");
+                    String counterparty = isSender ? tx.getReceiver().getEmployeeName() : (tx.getSender() != null ? tx.getSender().getEmployeeName() : "System");
 
                     return TransactionHistoryResponse.builder()
                             .transactionId(tx.getTransactionId())

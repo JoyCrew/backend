@@ -187,7 +187,7 @@ class AdminEmployeeServiceTest {
         when(employeeRepository.findById(employeeId)).thenReturn(Optional.of(mockEmployee));
 
         // When
-        adminEmployeeService.deleteEmployee(employeeId);
+        adminEmployeeService.disableEmployee(employeeId);
 
         // Then
         verify(mockEmployee).updateStatus("DELETED");

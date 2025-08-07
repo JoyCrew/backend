@@ -12,13 +12,14 @@ public class NotificationListener {
     @Async
     @EventListener
     public void handleRecognitionEvent(RecognitionEvent event) {
-        log.info("포인트 전송 이벤트 수신 (비동기 처리 시작)");
+        log.info("Recognition event received. Starting asynchronous processing.");
         try {
+            // Simulate a delay for notification processing (e.g., sending a push notification).
             Thread.sleep(2000);
-            log.info("{}님이 {}님에게 {} 포인트를 선물했습니다. 메시지: {}",
-                    event.getSenderId(), event.getReceiverId(), event.getPoints(), event.getMessage());
+            log.info("User {} gifted {} points to user {}. Message: {}",
+                    event.getSenderId(), event.getPoints(), event.getReceiverId(), event.getMessage());
         } catch (InterruptedException e) {
-            log.error("알림 처리 중 오류 발생", e);
+            log.error("Error occurred while processing notification", e);
             Thread.currentThread().interrupt();
         }
     }

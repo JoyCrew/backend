@@ -3,6 +3,7 @@ package com.joycrew.backend.service;
 import com.joycrew.backend.dto.EmployeeQueryResponse;
 import com.joycrew.backend.dto.PagedEmployeeResponse;
 import com.joycrew.backend.entity.Employee;
+import com.joycrew.backend.service.mapper.EmployeeMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +22,7 @@ public class EmployeeQueryService {
 
     @PersistenceContext
     private final EntityManager em;
+    private final EmployeeMapper employeeMapper;
 
     public PagedEmployeeResponse getEmployees(String keyword, int page, int size, Long currentUserId) {
         StringBuilder whereClause = new StringBuilder();
@@ -58,8 +61,8 @@ public class EmployeeQueryService {
         dataQuery.setMaxResults(size);
 
         List<EmployeeQueryResponse> employees = dataQuery.getResultList().stream()
-                .map(EmployeeQueryResponse::from)
-                .toList();
+                .map(employeeMapper::toEmployeeQueryResponse)
+                .collect(Collectors.toList());
 
         return new PagedEmployeeResponse(
                 employees,

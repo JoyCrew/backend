@@ -38,7 +38,7 @@ public class RewardPointTransaction {
     @Enumerated(EnumType.STRING)
     private TransactionType type;
 
-    // 태그 저장을 위해 추가된 필드
+    // A collection of tags associated with the transaction.
     @ElementCollection(targetClass = Tag.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "transaction_tags", joinColumns = @JoinColumn(name = "transaction_id"))
     @Enumerated(EnumType.STRING)
