@@ -1,7 +1,5 @@
 package com.joycrew.backend.dto;
 
-import com.joycrew.backend.entity.Employee;
-import com.joycrew.backend.entity.Wallet;
 import com.joycrew.backend.entity.enums.AdminLevel;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -22,21 +20,4 @@ public record UserProfileResponse(
         @Schema(description = "주소") String address,
         @Schema(description = "입사일") LocalDate hireDate
 ) {
-    public static UserProfileResponse from(Employee employee, Wallet wallet) {
-        String departmentName = employee.getDepartment() != null ? employee.getDepartment().getName() : null;
-        return new UserProfileResponse(
-                employee.getEmployeeId(),
-                employee.getEmployeeName(),
-                employee.getEmail(),
-                employee.getProfileImageUrl(),
-                wallet.getBalance(),
-                wallet.getGiftablePoint(),
-                employee.getRole(),
-                departmentName,
-                employee.getPosition(),
-                employee.getBirthday(),
-                employee.getAddress(),
-                employee.getHireDate()
-        );
-    }
 }

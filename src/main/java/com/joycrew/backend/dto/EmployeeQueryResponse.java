@@ -20,15 +20,4 @@ public record EmployeeQueryResponse(
         @Schema(description = "직책", example = "백엔드 개발자")
         String position
 ) {
-    public static EmployeeQueryResponse from(Employee employee) {
-        String departmentName = (employee.getDepartment() != null) ? employee.getDepartment().getName() : null;
-
-        return new EmployeeQueryResponse(
-                employee.getEmployeeId(),
-                employee.getProfileImageUrl(),
-                employee.getEmployeeName(),
-                departmentName,
-                employee.getPosition()
-        );
-    }
 }

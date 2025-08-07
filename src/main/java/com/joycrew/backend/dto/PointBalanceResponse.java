@@ -8,7 +8,4 @@ public record PointBalanceResponse(
         @Schema(description = "현재 잔액") Integer totalBalance,
         @Schema(description = "선물 가능한 포인트") Integer giftableBalance
 ) {
-    public static PointBalanceResponse from(Wallet wallet) {
-        return new PointBalanceResponse(wallet.getBalance(), wallet.getGiftablePoint());
-    }
 }

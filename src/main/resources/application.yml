@@ -1,3 +1,9 @@
+# ===================================================================
+# COMMON CONFIGURATION
+#
+# This file contains default properties shared across all profiles (dev, prod, etc.).
+# Profile-specific properties in files like 'application-dev.yml' will override these values.
+# ===================================================================
 server:
   port: 8082
   tomcat:
@@ -11,21 +17,42 @@ server:
 spring:
   application:
     name: joycrew
+  # Specifies the default active profile.
   profiles:
     active: dev
+  # Common mail server settings used by all profiles.
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
-app:
-  # Base URL of the frontend application for generating links in emails
-  frontend-url: http://localhost:3000
+# API documentation (Swagger/OpenAPI) settings.
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 
+# Default JWT settings.
 jwt:
-  # Default token expiration time: 1 hour
+  # Default access token expiration: 1 hour (3,600,000 ms)
   expiration-ms: 3600000
-  # Password reset token expiration time: 15 minutes
+  # Password reset token expiration: 15 minutes (900,000 ms)
   password-reset-expiration-ms: 900000
 
+# Common logging settings.
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
   level:
     com.joycrew.backend: INFO
+
+# Application-specific common properties.
+app:
+  # Default frontend URL, primarily for the 'dev' environment.
+  frontend-url: http://localhost:3000
