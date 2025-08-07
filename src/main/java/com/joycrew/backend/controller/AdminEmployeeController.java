@@ -1,8 +1,7 @@
 package com.joycrew.backend.controller;
 
-import com.joycrew.backend.dto.AdminPagedEmployeeResponse;
-import com.joycrew.backend.dto.EmployeeRegistrationRequest;
-import com.joycrew.backend.dto.EmployeeRegistrationSuccessResponse;
+import com.joycrew.backend.dto.*;
+import com.joycrew.backend.security.UserPrincipal;
 import com.joycrew.backend.service.AdminEmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,6 +16,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -97,5 +97,30 @@ public class AdminEmployeeController {
     ) {
         AdminPagedEmployeeResponse result = adminEmployeeService.searchEmployees(keyword, page, size);
         return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "직원 정보 업데이트", security = @SecurityRequirement(name = "Authorization"))
+    @PatchMapping("/{employeeId}")
+    public ResponseEntity<SuccessResponse> updateEmployee(
+            @PathVariable Long employeeId,
+            @RequestBody AdminEmployeeUpdateRequest request) {
+        adminEmployeeService.updateEmployee(employeeId, request);
+        return ResponseEntity.ok(new SuccessResponse("직원 정보가 성공적으로 업데이트되었습니다."));
+    }
+
+    @Operation(summary = "직원 삭제 (비활성화)", security = @SecurityRequirement(name = "Authorization"))
+    @DeleteMapping("/{employeeId}")
+    public ResponseEntity<SuccessResponse> deleteEmployee(@PathVariable Long employeeId) {
+        adminEmployeeService.deleteEmployee(employeeId);
+        return ResponseEntity.ok(new SuccessResponse("직원이 성공적으로 삭제(비활성화) 처리되었습니다."));
+    }
+
+    @Operation(summary = "포인트 일괄 분배 및 회수", description = "포인트에 양수 값을 넣으면 분배, 음수 값을 넣으면 회수(반대 거래)됩니다.", security = @SecurityRequirement(name = "Authorization"))
+    @PostMapping("/points/distribute")
+    public ResponseEntity<SuccessResponse> distributePoints(
+            @Valid @RequestBody AdminPointDistributionRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        adminEmployeeService.distributePoints(request, principal.getEmployee());
+        return ResponseEntity.ok(new SuccessResponse("포인트 분배(회수) 작업이 완료되었습니다."));
     }
 }

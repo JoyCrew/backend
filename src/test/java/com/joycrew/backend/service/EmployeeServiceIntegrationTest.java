@@ -18,6 +18,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -54,7 +56,8 @@ class EmployeeServiceIntegrationTest {
         // Given
         EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
                 "신규직원", "new.employee@joycrew.com", "password123!",
-                testCompany.getCompanyName(), testDepartment.getName(), "사원", AdminLevel.EMPLOYEE
+                testCompany.getCompanyName(), testDepartment.getName(), "사원", AdminLevel.EMPLOYEE,
+                LocalDate.of(1998,1,1), "서울", LocalDate.now() // birthday, address, hireDate
         );
 
         // When

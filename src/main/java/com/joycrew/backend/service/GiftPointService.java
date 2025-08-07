@@ -51,7 +51,6 @@ public class GiftPointService {
                 .build();
         transactionRepository.save(transaction);
 
-        // 이벤트 발행 (예: 알림용)
         eventPublisher.publishEvent(
                 new RecognitionEvent(this, sender.getEmployeeId(), receiver.getEmployeeId(), request.points(), request.message())
         );
