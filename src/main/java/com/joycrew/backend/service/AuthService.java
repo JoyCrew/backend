@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,7 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
-    private static final long PASSWORD_RESET_EXPIRATION_MS = 15 * 60 * 1000;
+
+    @Value("${jwt.password-reset-expiration-ms}")
+    private long passwordResetExpirationMs;
 
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
@@ -85,9 +88,9 @@ public class AuthService {
     @Transactional(readOnly = true)
     public void requestPasswordReset(String email) {
         employeeRepository.findByEmail(email).ifPresent(employee -> {
-            String token = jwtUtil.generateToken(email, PASSWORD_RESET_EXPIRATION_MS);
+            String token = jwtUtil.generateToken(email, passwordResetExpirationMs);
             emailService.sendPasswordResetEmail(email, token);
-            log.info("비밀번호 재설정 요청 처리: {}", email);
+            log.info("Password reset requested for email: {}", email);
         });
     }
 

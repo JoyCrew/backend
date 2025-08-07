@@ -11,12 +11,18 @@ server:
 spring:
   application:
     name: joycrew
-
   profiles:
     active: dev
 
+app:
+  # Base URL of the frontend application for generating links in emails
+  frontend-url: http://localhost:3000
+
 jwt:
+  # Default token expiration time: 1 hour
   expiration-ms: 3600000
+  # Password reset token expiration time: 15 minutes
+  password-reset-expiration-ms: 900000
 
 logging:
   pattern:
