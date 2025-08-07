@@ -3,6 +3,8 @@ package com.joycrew.backend.dto;
 import com.joycrew.backend.entity.Employee;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.time.LocalDate;
+
 @Schema(description = "관리자용 직원 검색 응답 DTO")
 public record AdminEmployeeQueryResponse(
         @Schema(description = "직원 ID", example = "1")
@@ -24,7 +26,16 @@ public record AdminEmployeeQueryResponse(
         String profileImageUrl,
 
         @Schema(description = "직원 권한 등급", example = "HR_ADMIN")
-                String adminLevel
+                String adminLevel,
+
+        @Schema(description = "생년월일", example = "1995-05-10")
+        LocalDate birthday,
+
+        @Schema(description = "주소", example = "서울시 강남구 테헤란로 123")
+        String address,
+
+        @Schema(description = "입사일", example = "2023-01-10")
+        LocalDate hireDate
 ) {
     public static AdminEmployeeQueryResponse from(Employee employee) {
         return new AdminEmployeeQueryResponse(
@@ -34,7 +45,10 @@ public record AdminEmployeeQueryResponse(
                 employee.getDepartment() != null ? employee.getDepartment().getName() : null,
                 employee.getPosition(),
                 employee.getProfileImageUrl(),
-                employee.getRole().name()
+                employee.getRole().name(),
+                employee.getBirthday(),
+                employee.getAddress(),
+                employee.getHireDate()
         );
     }
 }
