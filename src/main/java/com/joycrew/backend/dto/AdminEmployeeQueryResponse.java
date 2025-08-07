@@ -26,7 +26,7 @@ public record AdminEmployeeQueryResponse(
         String profileImageUrl,
 
         @Schema(description = "직원 권한 등급", example = "HR_ADMIN")
-                String adminLevel,
+        String adminLevel,
 
         @Schema(description = "생년월일", example = "1995-05-10")
         LocalDate birthday,
@@ -37,18 +37,4 @@ public record AdminEmployeeQueryResponse(
         @Schema(description = "입사일", example = "2023-01-10")
         LocalDate hireDate
 ) {
-    public static AdminEmployeeQueryResponse from(Employee employee) {
-        return new AdminEmployeeQueryResponse(
-                employee.getEmployeeId(),
-                employee.getEmployeeName(),
-                employee.getEmail(),
-                employee.getDepartment() != null ? employee.getDepartment().getName() : null,
-                employee.getPosition(),
-                employee.getProfileImageUrl(),
-                employee.getRole().name(),
-                employee.getBirthday(),
-                employee.getAddress(),
-                employee.getHireDate()
-        );
-    }
 }
