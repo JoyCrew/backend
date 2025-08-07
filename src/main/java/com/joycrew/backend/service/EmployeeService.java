@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class EmployeeService {
     private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmployeeMapper employeeMapper;
+    private final S3FileStorageService s3FileStorageService;
 
     @Transactional(readOnly = true)
     public UserProfileResponse getUserProfile(String userEmail) {
@@ -40,15 +42,16 @@ public class EmployeeService {
         employee.changePassword(request.newPassword(), passwordEncoder);
     }
 
-    public void updateUserProfile(String userEmail, UserProfileUpdateRequest request) {
+    public void updateUserProfile(String userEmail, UserProfileUpdateRequest request, MultipartFile profileImage) {
         Employee employee = employeeRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("Authenticated user not found."));
 
         if (request.name() != null) {
             employee.updateName(request.name());
         }
-        if (request.profileImageUrl() != null) {
-            employee.updateProfileImageUrl(request.profileImageUrl());
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String profileImageUrl = s3FileStorageService.uploadFile(profileImage);
+            employee.updateProfileImageUrl(profileImageUrl);
         }
         if (request.personalEmail() != null) {
             employee.updatePersonalEmail(request.personalEmail());

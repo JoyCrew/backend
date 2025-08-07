@@ -11,9 +11,11 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "User", description = "APIs related to user information")
 @RestController
@@ -41,12 +43,14 @@ public class UserController {
         return ResponseEntity.ok(new SuccessResponse("Password changed successfully."));
     }
 
-    @Operation(summary = "Update my information", description = "Send only the fields you want to change in the request body.", security = @SecurityRequirement(name = "Authorization"))
-    @PatchMapping("/profile")
+    @Operation(summary = "Update my information", description = "Send profile data as 'request' part and image as 'profileImage' part in a multipart/form-data request.", security = @SecurityRequirement(name = "Authorization"))
+    @PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponse> updateMyProfile(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestBody UserProfileUpdateRequest request) {
-        employeeService.updateUserProfile(principal.getUsername(), request);
+            @RequestPart("request") UserProfileUpdateRequest request,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+
+        employeeService.updateUserProfile(principal.getUsername(), request, profileImage);
         return ResponseEntity.ok(new SuccessResponse("Your information has been updated successfully."));
     }
 }

@@ -35,6 +35,7 @@ public class EmployeeRegistrationService {
     private final DepartmentRepository departmentRepository;
     private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
+    private final S3FileStorageService s3FileStorageService;
 
     public Employee registerEmployee(EmployeeRegistrationRequest request) {
         if (employeeRepository.findByEmail(request.email()).isPresent()) {
