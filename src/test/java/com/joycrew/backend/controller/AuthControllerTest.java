@@ -63,7 +63,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.userId").value(1L))
                 .andExpect(jsonPath("$.email").value("test@joycrew.com"))
                 .andExpect(jsonPath("$.name").value("테스트유저"))
-                .andExpect(jsonPath("$.role").value("EMPLOYEE")); // <-- 이 부분을 수정합니다.
+                .andExpect(jsonPath("$.role").value("EMPLOYEE"));
     }
 
     @Test

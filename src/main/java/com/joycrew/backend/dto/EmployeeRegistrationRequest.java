@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDate;
+
 public record EmployeeRegistrationRequest (
         @NotBlank(message = "이름은 필수입니다.")
         String name,
@@ -21,11 +23,17 @@ public record EmployeeRegistrationRequest (
         @NotBlank(message = "회사명은 필수입니다.")
         String companyName,
 
-        String departmentName, // nullable 가능
+        String departmentName,
 
         @NotBlank(message = "직책은 필수입니다.")
         String position,
 
         @NotNull(message = "역할은 필수입니다.")
-        AdminLevel level
+        AdminLevel level,
+
+        LocalDate birthday,
+
+        String address,
+
+        LocalDate hireDate
 ) {}

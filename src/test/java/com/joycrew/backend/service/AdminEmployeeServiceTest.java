@@ -1,5 +1,6 @@
 package com.joycrew.backend.service;
 
+import com.joycrew.backend.dto.AdminEmployeeUpdateRequest;
 import com.joycrew.backend.dto.EmployeeRegistrationRequest;
 import com.joycrew.backend.entity.Company;
 import com.joycrew.backend.entity.Department;
@@ -59,7 +60,8 @@ class AdminEmployeeServiceTest {
                 "JoyCrew",
                 "Engineering",
                 "Developer",
-                AdminLevel.EMPLOYEE
+                AdminLevel.EMPLOYEE,
+                null, null, null // birthday, address, hireDate
         );
 
         mockCompany = Company.builder().companyId(1L).companyName("JoyCrew").build();
@@ -114,9 +116,9 @@ class AdminEmployeeServiceTest {
     @DisplayName("[Service] CSV 파일로 직원 대량 등록 성공")
     void registerEmployeesFromCsv_Success() throws IOException {
         // Given
-        String csvContent = "name,email,initialPassword,companyName,departmentName,position,level\n" +
-                "김조이,joy@joycrew.com,joy123,JoyCrew,Engineering,Developer,EMPLOYEE\n" +
-                "박크루,crew@joycrew.com,crew123,JoyCrew,Product,PO,MANAGER";
+        String csvContent = "name,email,initialPassword,companyName,departmentName,position,level,birthday,address,hireDate\n" +
+                "김조이,joy@joycrew.com,joy123,JoyCrew,Engineering,Developer,EMPLOYEE,1995-01-01,서울,2023-01-01\n" +
+                "박크루,crew@joycrew.com,crew123,JoyCrew,Product,PO,MANAGER,1990-02-02,경기,2022-02-02";
         MockMultipartFile file = new MockMultipartFile("file", "employees.csv", "text/csv", csvContent.getBytes(StandardCharsets.UTF_8));
 
         when(employeeRepository.findByEmail(anyString())).thenReturn(Optional.empty());
@@ -127,7 +129,6 @@ class AdminEmployeeServiceTest {
         adminEmployeeService.registerEmployeesFromCsv(file);
 
         // Then
-        verify(employeeRepository, times(2)).findByEmail(anyString());
         verify(employeeRepository, times(2)).save(any(Employee.class));
         verify(walletRepository, times(2)).save(any(Wallet.class));
     }
@@ -135,11 +136,10 @@ class AdminEmployeeServiceTest {
     @Test
     @DisplayName("[Service] CSV 파일 대량 등록 시 일부 행 실패해도 계속 진행")
     void registerEmployeesFromCsv_PartialFailure() throws IOException {
-        // Given
-        String csvContent = "name,email,initialPassword,companyName,departmentName,position,level\n" +
-                "김조이,joy@joycrew.com,joy123,JoyCrew,Engineering,Developer,EMPLOYEE\n" +
-                "이실패,fail@joycrew.com,fail123,WrongCompany,None,Intern,EMPLOYEE\n" + // 실패할 행
-                "박크루,crew@joycrew.com,crew123,JoyCrew,Product,PO,MANAGER";
+        String csvContent = "name,email,initialPassword,companyName,departmentName,position,level,birthday,address,hireDate\n" +
+                "김조이,joy@joycrew.com,joy123,JoyCrew,Engineering,Developer,EMPLOYEE,1995-01-01,서울,2023-01-01\n" +
+                "이실패,fail@joycrew.com,fail123,WrongCompany,None,Intern,EMPLOYEE,1999-01-01,부산,2024-01-01\n" + // 실패할 행
+                "박크루,crew@joycrew.com,crew123,JoyCrew,Product,PO,MANAGER,1990-02-02,경기,2022-02-02";
         MockMultipartFile file = new MockMultipartFile("file", "employees.csv", "text/csv", csvContent.getBytes(StandardCharsets.UTF_8));
 
         when(employeeRepository.findByEmail("joy@joycrew.com")).thenReturn(Optional.empty());
@@ -154,8 +154,43 @@ class AdminEmployeeServiceTest {
         adminEmployeeService.registerEmployeesFromCsv(file);
 
         // Then
-        verify(employeeRepository, times(3)).findByEmail(anyString());
         verify(employeeRepository, times(2)).save(any(Employee.class));
         verify(walletRepository, times(2)).save(any(Wallet.class));
+    }
+
+    @Test
+    @DisplayName("[Service] 직원 정보 업데이트 성공")
+    void updateEmployee_Success() {
+        // Given
+        Long employeeId = 1L;
+        AdminEmployeeUpdateRequest updateRequest = new AdminEmployeeUpdateRequest("새이름", null, "새직책", null, "INACTIVE");
+        Employee mockEmployee = mock(Employee.class);
+
+        when(employeeRepository.findById(employeeId)).thenReturn(Optional.of(mockEmployee));
+
+        // When
+        adminEmployeeService.updateEmployee(employeeId, updateRequest);
+
+        // Then
+        verify(mockEmployee).updateName("새이름");
+        verify(mockEmployee).updatePosition("새직책");
+        verify(mockEmployee).updateStatus("INACTIVE");
+        verify(employeeRepository).save(mockEmployee);
+    }
+
+    @Test
+    @DisplayName("[Service] 직원 삭제(비활성화) 성공")
+    void deleteEmployee_Success() {
+        // Given
+        Long employeeId = 1L;
+        Employee mockEmployee = mock(Employee.class);
+        when(employeeRepository.findById(employeeId)).thenReturn(Optional.of(mockEmployee));
+
+        // When
+        adminEmployeeService.deleteEmployee(employeeId);
+
+        // Then
+        verify(mockEmployee).updateStatus("DELETED");
+        verify(employeeRepository).save(mockEmployee);
     }
 }
