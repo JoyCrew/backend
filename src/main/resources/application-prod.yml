@@ -38,3 +38,9 @@ logging:
 # The frontend service URL for the production environment.
 app:
   frontend-url: https://joycrew.co.kr
+
+# AWS specific settings for production
+aws:
+  s3:
+    # Production S3 bucket name
+    bucket-name: 'joycrew-prod-bucket'

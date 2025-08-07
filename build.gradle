@@ -46,6 +46,11 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
+    // AWS SDK for S3 and Secrets Manager Integration
+    implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:3.1.1')
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
+    implementation 'software.amazon.awssdk:s3'
+
     // Database Drivers
     runtimeOnly 'com.mysql:mysql-connector-j' // For production
     runtimeOnly 'com.h2database:h2'           // For development

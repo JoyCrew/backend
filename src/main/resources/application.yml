@@ -56,3 +56,9 @@ logging:
 app:
   # Default frontend URL, primarily for the 'dev' environment.
   frontend-url: http://localhost:3000
+
+# AWS specific settings
+aws:
+  region: 'ap-northeast-2'
+  s3:
+    bucket-name: 'joycrew-dev-bucket'
