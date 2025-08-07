@@ -19,6 +19,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Slf4j
@@ -60,6 +62,9 @@ public class AdminEmployeeService {
                 .position(request.position())
                 .role(request.level())
                 .status("ACTIVE")
+                .birthday(request.birthday())
+                .address(request.address())
+                .hireDate(request.hireDate())
                 .build();
 
         Employee savedEmployee = employeeRepository.save(newEmployee);
@@ -87,16 +92,22 @@ public class AdminEmployeeService {
                 }
 
                 try {
-                    AdminLevel adminLevel = parseAdminLevel(tokens.length > 6 ? tokens[6].trim() : "EMPLOYEE");
+                    AdminLevel adminLevel = parseAdminLevel(tokens[6].trim());
+                    LocalDate birthday = parseDate(tokens[7].trim());
+                    String address = tokens[8].trim();
+                    LocalDate hireDate = parseDate(tokens[9].trim());
 
                     EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
-                            tokens[0].trim(),
-                            tokens[1].trim(),
-                            tokens[2].trim(),
-                            tokens[3].trim(),
-                            tokens[4].trim().isBlank() ? null : tokens[4].trim(),
-                            tokens[5].trim(),
-                            adminLevel
+                            tokens[0].trim(), // name
+                            tokens[1].trim(), // email
+                            tokens[2].trim(), // initialPassword
+                            tokens[3].trim(), // companyName
+                            tokens[4].trim().isBlank() ? null : tokens[4].trim(), // departmentName
+                            tokens[5].trim(), // position
+                            adminLevel,       // level
+                            birthday,         // birthday
+                            address,          // address
+                            hireDate          // hireDate
                     );
                     registerEmployee(request);
                 } catch (Exception e) {
@@ -106,6 +117,18 @@ public class AdminEmployeeService {
 
         } catch (IOException e) {
             throw new RuntimeException("CSV 파일 읽기 실패", e);
+        }
+    }
+
+    private LocalDate parseDate(String dateStr) {
+        if (dateStr == null || dateStr.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(dateStr); // YYYY-MM-DD 형식
+        } catch (DateTimeParseException e) {
+            log.warn("잘못된 날짜 형식: {}. null로 처리합니다.", dateStr);
+            return null;
         }
     }
 
@@ -131,7 +154,6 @@ public class AdminEmployeeService {
                     .append("OR LOWER(d.name) LIKE :keyword) ");
         }
 
-        // 총 개수 조회
         String countJpql = "SELECT COUNT(e) FROM Employee e LEFT JOIN e.department d " + whereClause;
         TypedQuery<Long> countQuery = em.createQuery(countJpql, Long.class);
         if (keyword != null && !keyword.isBlank()) {
@@ -140,7 +162,6 @@ public class AdminEmployeeService {
         long total = countQuery.getSingleResult();
         int totalPages = (int) Math.ceil((double) total / size);
 
-        // 데이터 조회
         String dataJpql = "SELECT e FROM Employee e " +
                 "LEFT JOIN FETCH e.department d " +
                 "LEFT JOIN FETCH e.company c " +
@@ -153,7 +174,6 @@ public class AdminEmployeeService {
             dataQuery.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
         }
 
-        // Admin 전용 DTO로 변환
         List<AdminEmployeeQueryResponse> employees = dataQuery.getResultList().stream()
                 .map(AdminEmployeeQueryResponse::from)
                 .toList();

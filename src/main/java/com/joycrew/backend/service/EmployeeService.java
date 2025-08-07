@@ -54,6 +54,12 @@ public class EmployeeService {
         if (request.phoneNumber() != null) {
             employee.updatePhoneNumber(request.phoneNumber());
         }
+        if (request.birthday() != null) {
+            employee.updateBirthday(request.birthday());
+        }
+        if (request.address() != null) {
+            employee.updateAddress(request.address());
+        }
         employeeRepository.save(employee);
     }
 }

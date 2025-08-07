@@ -58,7 +58,7 @@ class EmployeeQueryControllerTest {
                 .andExpect(jsonPath("$.employees[0].departmentName").value("인사팀"))
                 .andExpect(jsonPath("$.currentPage").value(0))
                 .andExpect(jsonPath("$.totalPages").value(1))
-                .andExpect(jsonPath("$.isLastPage").value(true)); // 수정: lastPage -> isLastPage
+                .andExpect(jsonPath("$.isLastPage").value(true));
     }
 
     @Test

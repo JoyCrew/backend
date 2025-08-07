@@ -169,4 +169,12 @@ public class Employee implements UserDetails {
     public void updatePhoneNumber(String newNumber) {
         this.phoneNumber = newNumber;
     }
+
+    public void updateBirthday(LocalDate birthday) {
+        this.birthday = birthday;
+    }
+
+    public void updateAddress(String address) {
+        this.address = address;
+    }
 }
