@@ -210,7 +210,7 @@ public class AdminEmployeeService {
         return employeeRepository.save(employee);
     }
 
-    public void deleteEmployee(Long employeeId) {
+    public void disableEmployee(Long employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new UserNotFoundException("ID가 " + employeeId + "인 직원을 찾을 수 없습니다."));
         employee.updateStatus("DELETED");

@@ -111,7 +111,7 @@ public class AdminEmployeeController {
     @Operation(summary = "직원 삭제 (비활성화)", security = @SecurityRequirement(name = "Authorization"))
     @DeleteMapping("/{employeeId}")
     public ResponseEntity<SuccessResponse> deleteEmployee(@PathVariable Long employeeId) {
-        adminEmployeeService.deleteEmployee(employeeId);
+        adminEmployeeService.disableEmployee(employeeId);
         return ResponseEntity.ok(new SuccessResponse("직원이 성공적으로 삭제(비활성화) 처리되었습니다."));
     }
 
