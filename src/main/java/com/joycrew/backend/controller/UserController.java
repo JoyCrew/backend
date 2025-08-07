@@ -3,6 +3,7 @@ package com.joycrew.backend.controller;
 import com.joycrew.backend.dto.PasswordChangeRequest;
 import com.joycrew.backend.dto.SuccessResponse;
 import com.joycrew.backend.dto.UserProfileResponse;
+import com.joycrew.backend.dto.UserProfileUpdateRequest;
 import com.joycrew.backend.security.UserPrincipal;
 import com.joycrew.backend.service.EmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,5 +39,14 @@ public class UserController {
     ) {
         employeeService.forcePasswordChange(principal.getUsername(), request);
         return ResponseEntity.ok(new SuccessResponse("비밀번호가 성공적으로 변경되었습니다."));
+    }
+
+    @Operation(summary = "내 정보 수정", description = "변경을 원하는 필드만 요청 본문에 포함하여 전송합니다.", security = @SecurityRequirement(name = "Authorization"))
+    @PatchMapping("/profile")
+    public ResponseEntity<SuccessResponse> updateMyProfile(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody UserProfileUpdateRequest request) {
+        employeeService.updateUserProfile(principal.getUsername(), request);
+        return ResponseEntity.ok(new SuccessResponse("내 정보가 성공적으로 수정되었습니다."));
     }
 }

@@ -2,6 +2,7 @@ package com.joycrew.backend.service;
 
 import com.joycrew.backend.dto.PasswordChangeRequest;
 import com.joycrew.backend.dto.UserProfileResponse;
+import com.joycrew.backend.dto.UserProfileUpdateRequest;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.Wallet;
 import com.joycrew.backend.exception.UserNotFoundException;
@@ -35,5 +36,24 @@ public class EmployeeService {
         Employee employee = employeeRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("인증된 사용자를 찾을 수 없습니다."));
         employee.changePassword(request.newPassword(), passwordEncoder);
+    }
+
+    public void updateUserProfile(String userEmail, UserProfileUpdateRequest request) {
+        Employee employee = employeeRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("인증된 사용자를 찾을 수 없습니다."));
+
+        if (request.name() != null) {
+            employee.updateName(request.name());
+        }
+        if (request.profileImageUrl() != null) {
+            employee.updateProfileImageUrl(request.profileImageUrl());
+        }
+        if (request.personalEmail() != null) {
+            employee.updatePersonalEmail(request.personalEmail());
+        }
+        if (request.phoneNumber() != null) {
+            employee.updatePhoneNumber(request.phoneNumber());
+        }
+        employeeRepository.save(employee);
     }
 }
