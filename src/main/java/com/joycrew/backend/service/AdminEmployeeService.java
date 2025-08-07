@@ -1,15 +1,10 @@
 package com.joycrew.backend.service;
 
 import com.joycrew.backend.dto.*;
-import com.joycrew.backend.entity.Company;
-import com.joycrew.backend.entity.Department;
-import com.joycrew.backend.entity.Employee;
-import com.joycrew.backend.entity.Wallet;
+import com.joycrew.backend.entity.*;
 import com.joycrew.backend.entity.enums.AdminLevel;
-import com.joycrew.backend.repository.CompanyRepository;
-import com.joycrew.backend.repository.DepartmentRepository;
-import com.joycrew.backend.repository.EmployeeRepository;
-import com.joycrew.backend.repository.WalletRepository;
+import com.joycrew.backend.exception.UserNotFoundException;
+import com.joycrew.backend.repository.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -24,6 +19,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Slf4j
@@ -35,6 +32,7 @@ public class AdminEmployeeService {
     private final EmployeeRepository employeeRepository;
     private final CompanyRepository companyRepository;
     private final DepartmentRepository departmentRepository;
+    private final RewardPointTransactionRepository transactionRepository;
     private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -64,6 +62,9 @@ public class AdminEmployeeService {
                 .position(request.position())
                 .role(request.level())
                 .status("ACTIVE")
+                .birthday(request.birthday())
+                .address(request.address())
+                .hireDate(request.hireDate())
                 .build();
 
         Employee savedEmployee = employeeRepository.save(newEmployee);
@@ -91,16 +92,22 @@ public class AdminEmployeeService {
                 }
 
                 try {
-                    AdminLevel adminLevel = parseAdminLevel(tokens.length > 6 ? tokens[6].trim() : "EMPLOYEE");
+                    AdminLevel adminLevel = parseAdminLevel(tokens[6].trim());
+                    LocalDate birthday = parseDate(tokens[7].trim());
+                    String address = tokens[8].trim();
+                    LocalDate hireDate = parseDate(tokens[9].trim());
 
                     EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
-                            tokens[0].trim(),
-                            tokens[1].trim(),
-                            tokens[2].trim(),
-                            tokens[3].trim(),
-                            tokens[4].trim().isBlank() ? null : tokens[4].trim(),
-                            tokens[5].trim(),
-                            adminLevel
+                            tokens[0].trim(), // name
+                            tokens[1].trim(), // email
+                            tokens[2].trim(), // initialPassword
+                            tokens[3].trim(), // companyName
+                            tokens[4].trim().isBlank() ? null : tokens[4].trim(), // departmentName
+                            tokens[5].trim(), // position
+                            adminLevel,       // level
+                            birthday,         // birthday
+                            address,          // address
+                            hireDate          // hireDate
                     );
                     registerEmployee(request);
                 } catch (Exception e) {
@@ -110,6 +117,18 @@ public class AdminEmployeeService {
 
         } catch (IOException e) {
             throw new RuntimeException("CSV 파일 읽기 실패", e);
+        }
+    }
+
+    private LocalDate parseDate(String dateStr) {
+        if (dateStr == null || dateStr.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(dateStr); // YYYY-MM-DD 형식
+        } catch (DateTimeParseException e) {
+            log.warn("잘못된 날짜 형식: {}. null로 처리합니다.", dateStr);
+            return null;
         }
     }
 
@@ -135,7 +154,6 @@ public class AdminEmployeeService {
                     .append("OR LOWER(d.name) LIKE :keyword) ");
         }
 
-        // 총 개수 조회
         String countJpql = "SELECT COUNT(e) FROM Employee e LEFT JOIN e.department d " + whereClause;
         TypedQuery<Long> countQuery = em.createQuery(countJpql, Long.class);
         if (keyword != null && !keyword.isBlank()) {
@@ -144,7 +162,6 @@ public class AdminEmployeeService {
         long total = countQuery.getSingleResult();
         int totalPages = (int) Math.ceil((double) total / size);
 
-        // 데이터 조회
         String dataJpql = "SELECT e FROM Employee e " +
                 "LEFT JOIN FETCH e.department d " +
                 "LEFT JOIN FETCH e.company c " +
@@ -157,7 +174,6 @@ public class AdminEmployeeService {
             dataQuery.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
         }
 
-        // Admin 전용 DTO로 변환
         List<AdminEmployeeQueryResponse> employees = dataQuery.getResultList().stream()
                 .map(AdminEmployeeQueryResponse::from)
                 .toList();
@@ -168,5 +184,70 @@ public class AdminEmployeeService {
                 totalPages,
                 page >= totalPages - 1
         );
+    }
+
+    public Employee updateEmployee(Long employeeId, AdminEmployeeUpdateRequest request) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new UserNotFoundException("ID가 " + employeeId + "인 직원을 찾을 수 없습니다."));
+
+        if (request.name() != null) {
+            employee.updateName(request.name());
+        }
+        if (request.departmentId() != null) {
+            Department department = departmentRepository.findById(request.departmentId())
+                    .orElseThrow(() -> new IllegalArgumentException("ID가 " + request.departmentId() + "인 부서를 찾을 수 없습니다."));
+            employee.assignToDepartment(department);
+        }
+        if (request.position() != null) {
+            employee.updatePosition(request.position());
+        }
+        if (request.level() != null) {
+            employee.updateRole(request.level());
+        }
+        if (request.status() != null) {
+            employee.updateStatus(request.status());
+        }
+        return employeeRepository.save(employee);
+    }
+
+    public void deleteEmployee(Long employeeId) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new UserNotFoundException("ID가 " + employeeId + "인 직원을 찾을 수 없습니다."));
+        employee.updateStatus("DELETED");
+        employeeRepository.save(employee);
+    }
+
+    public void distributePoints(AdminPointDistributionRequest request, Employee admin) {
+        List<Employee> employees = employeeRepository.findAllById(request.employeeIds());
+        if (employees.size() != request.employeeIds().size()) {
+            throw new UserNotFoundException("일부 직원을 찾을 수 없습니다. 요청을 확인해주세요.");
+        }
+
+        for (Employee employee : employees) {
+            Wallet wallet = walletRepository.findByEmployee_EmployeeId(employee.getEmployeeId())
+                    .orElseThrow(() -> new IllegalStateException(employee.getEmployeeName() + "님의 지갑이 없습니다."));
+
+            if (request.points() > 0) {
+                wallet.addPoints(request.points());
+            } else {
+                wallet.spendPoints(Math.abs(request.points()));
+            }
+
+            RewardPointTransaction transaction = RewardPointTransaction.builder()
+                    .sender(admin)
+                    .receiver(employee)
+                    .pointAmount(request.points())
+                    .message(request.message())
+                    .type(request.type())
+                    .build();
+            transactionRepository.save(transaction);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminEmployeeQueryResponse> getAllEmployees() {
+        return employeeRepository.findAll().stream()
+                .map(AdminEmployeeQueryResponse::from)
+                .toList();
     }
 }

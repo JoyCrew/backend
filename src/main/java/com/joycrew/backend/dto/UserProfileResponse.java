@@ -5,6 +5,8 @@ import com.joycrew.backend.entity.Wallet;
 import com.joycrew.backend.entity.enums.AdminLevel;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.time.LocalDate;
+
 @Schema(description = "사용자 프로필 응답 DTO")
 public record UserProfileResponse(
         @Schema(description = "사용자 고유 ID") Long employeeId,
@@ -15,7 +17,10 @@ public record UserProfileResponse(
         @Schema(description = "현재 선물 가능한 포인트 잔액") Integer giftableBalance,
         @Schema(description = "사용자 권한")AdminLevel level,
         @Schema(description = "소속 부서") String department,
-        @Schema(description = "직책") String position
+        @Schema(description = "직책") String position,
+        @Schema(description = "생년월일") LocalDate birthday,
+        @Schema(description = "주소") String address,
+        @Schema(description = "입사일") LocalDate hireDate
 ) {
     public static UserProfileResponse from(Employee employee, Wallet wallet) {
         String departmentName = employee.getDepartment() != null ? employee.getDepartment().getName() : null;
@@ -28,7 +33,10 @@ public record UserProfileResponse(
                 wallet.getGiftablePoint(),
                 employee.getRole(),
                 departmentName,
-                employee.getPosition()
+                employee.getPosition(),
+                employee.getBirthday(),
+                employee.getAddress(),
+                employee.getHireDate()
         );
     }
 }
