@@ -54,7 +54,8 @@ class AuthServiceIntegrationTest {
                 defaultCompany.getCompanyName(),
                 null,
                 "사원",
-                AdminLevel.EMPLOYEE
+                AdminLevel.EMPLOYEE,
+                null, null, null // birthday, address, hireDate
         );
         adminEmployeeService.registerEmployee(request);
     }

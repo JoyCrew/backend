@@ -51,7 +51,7 @@ class GiftPointControllerTest {
         mockMvc.perform(post("/api/gift-points")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
-                        .with(SecurityMockMvcRequestPostProcessors.csrf()) // <-- 이 라인 추가
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("포인트를 성공적으로 보냈습니다."));
