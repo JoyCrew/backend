@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,6 +52,9 @@ public class Employee implements UserDetails {
     private String personalEmail;
     private String phoneNumber;
     private String shippingAddress;
+    private LocalDate birthday;      // 생일
+    private String address;          // 주소
+    private LocalDate hireDate;
     private Boolean emailNotificationEnabled;
     private Boolean appNotificationEnabled;
     private String language;
@@ -136,5 +140,33 @@ public class Employee implements UserDetails {
 
     public void changePassword(String rawPassword, PasswordEncoder encoder) {
         this.passwordHash = encoder.encode(rawPassword);
+    }
+
+    public void updateName(String newName) {
+        this.employeeName = newName;
+    }
+
+    public void updatePosition(String newPosition) {
+        this.position = newPosition;
+    }
+
+    public void updateRole(AdminLevel newRole) {
+        this.role = newRole;
+    }
+
+    public void updateStatus(String newStatus) {
+        this.status = newStatus;
+    }
+
+    public void updateProfileImageUrl(String newUrl) {
+        this.profileImageUrl = newUrl;
+    }
+
+    public void updatePersonalEmail(String newEmail) {
+        this.personalEmail = newEmail;
+    }
+
+    public void updatePhoneNumber(String newNumber) {
+        this.phoneNumber = newNumber;
     }
 }

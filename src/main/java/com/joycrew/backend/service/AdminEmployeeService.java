@@ -1,15 +1,10 @@
 package com.joycrew.backend.service;
 
 import com.joycrew.backend.dto.*;
-import com.joycrew.backend.entity.Company;
-import com.joycrew.backend.entity.Department;
-import com.joycrew.backend.entity.Employee;
-import com.joycrew.backend.entity.Wallet;
+import com.joycrew.backend.entity.*;
 import com.joycrew.backend.entity.enums.AdminLevel;
-import com.joycrew.backend.repository.CompanyRepository;
-import com.joycrew.backend.repository.DepartmentRepository;
-import com.joycrew.backend.repository.EmployeeRepository;
-import com.joycrew.backend.repository.WalletRepository;
+import com.joycrew.backend.exception.UserNotFoundException;
+import com.joycrew.backend.repository.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -35,6 +30,7 @@ public class AdminEmployeeService {
     private final EmployeeRepository employeeRepository;
     private final CompanyRepository companyRepository;
     private final DepartmentRepository departmentRepository;
+    private final RewardPointTransactionRepository transactionRepository;
     private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -168,5 +164,70 @@ public class AdminEmployeeService {
                 totalPages,
                 page >= totalPages - 1
         );
+    }
+
+    public Employee updateEmployee(Long employeeId, AdminEmployeeUpdateRequest request) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new UserNotFoundException("ID가 " + employeeId + "인 직원을 찾을 수 없습니다."));
+
+        if (request.name() != null) {
+            employee.updateName(request.name());
+        }
+        if (request.departmentId() != null) {
+            Department department = departmentRepository.findById(request.departmentId())
+                    .orElseThrow(() -> new IllegalArgumentException("ID가 " + request.departmentId() + "인 부서를 찾을 수 없습니다."));
+            employee.assignToDepartment(department);
+        }
+        if (request.position() != null) {
+            employee.updatePosition(request.position());
+        }
+        if (request.level() != null) {
+            employee.updateRole(request.level());
+        }
+        if (request.status() != null) {
+            employee.updateStatus(request.status());
+        }
+        return employeeRepository.save(employee);
+    }
+
+    public void deleteEmployee(Long employeeId) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new UserNotFoundException("ID가 " + employeeId + "인 직원을 찾을 수 없습니다."));
+        employee.updateStatus("DELETED");
+        employeeRepository.save(employee);
+    }
+
+    public void distributePoints(AdminPointDistributionRequest request, Employee admin) {
+        List<Employee> employees = employeeRepository.findAllById(request.employeeIds());
+        if (employees.size() != request.employeeIds().size()) {
+            throw new UserNotFoundException("일부 직원을 찾을 수 없습니다. 요청을 확인해주세요.");
+        }
+
+        for (Employee employee : employees) {
+            Wallet wallet = walletRepository.findByEmployee_EmployeeId(employee.getEmployeeId())
+                    .orElseThrow(() -> new IllegalStateException(employee.getEmployeeName() + "님의 지갑이 없습니다."));
+
+            if (request.points() > 0) {
+                wallet.addPoints(request.points());
+            } else {
+                wallet.spendPoints(Math.abs(request.points()));
+            }
+
+            RewardPointTransaction transaction = RewardPointTransaction.builder()
+                    .sender(admin)
+                    .receiver(employee)
+                    .pointAmount(request.points())
+                    .message(request.message())
+                    .type(request.type())
+                    .build();
+            transactionRepository.save(transaction);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminEmployeeQueryResponse> getAllEmployees() {
+        return employeeRepository.findAll().stream()
+                .map(AdminEmployeeQueryResponse::from)
+                .toList();
     }
 }
