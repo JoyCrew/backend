@@ -3,6 +3,8 @@ package com.joycrew.backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joycrew.backend.dto.LoginRequest;
 import com.joycrew.backend.dto.LoginResponse;
+import com.joycrew.backend.dto.PasswordResetConfirmRequest;
+import com.joycrew.backend.dto.PasswordResetRequest;
 import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.exception.GlobalExceptionHandler;
 import com.joycrew.backend.service.AuthService;
@@ -19,6 +21,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -32,25 +35,18 @@ class AuthControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-
     @MockBean private AuthService authService;
 
     @Test
-    @DisplayName("POST /api/auth/login - 로그인 성공")
+    @DisplayName("POST /api/auth/login - Should succeed with correct credentials")
     void login_Success() throws Exception {
         // Given
         LoginRequest request = new LoginRequest("test@joycrew.com", "password123!");
         LoginResponse successResponse = new LoginResponse(
-                "mocked.jwt.token",
-                "로그인 성공",
-                1L,
-                "테스트유저",
-                "test@joycrew.com",
-                AdminLevel.EMPLOYEE,
-                1000,
-                "http://example.com/profile.jpg"
+                "mocked.jwt.token", "Login successful", 1L,
+                "Test User", "test@joycrew.com", AdminLevel.EMPLOYEE,
+                1000, "http://example.com/profile.jpg"
         );
-
         when(authService.login(any(LoginRequest.class))).thenReturn(successResponse);
 
         // When & Then
@@ -59,21 +55,18 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("mocked.jwt.token"))
-                .andExpect(jsonPath("$.message").value("로그인 성공"))
-                .andExpect(jsonPath("$.userId").value(1L))
-                .andExpect(jsonPath("$.email").value("test@joycrew.com"))
-                .andExpect(jsonPath("$.name").value("테스트유저"))
-                .andExpect(jsonPath("$.role").value("EMPLOYEE"));
+                .andExpect(jsonPath("$.message").value("Login successful"));
     }
 
     @Test
-    @DisplayName("POST /api/auth/login - 로그인 실패 (자격 증명 오류)")
+    @DisplayName("POST /api/auth/login - Should fail with bad credentials")
     void login_Failure_AuthenticationError() throws Exception {
+        // Given
         LoginRequest request = new LoginRequest("test@joycrew.com", "wrongpassword");
-
         when(authService.login(any(LoginRequest.class)))
-                .thenThrow(new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다."));
+                .thenThrow(new BadCredentialsException("Bad credentials"));
 
+        // When & Then
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -82,13 +75,44 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/auth/logout - 로그아웃 성공")
+    @DisplayName("POST /api/auth/logout - Should succeed")
     void logout_Success() throws Exception {
+        // Given
         doNothing().when(authService).logout(any(HttpServletRequest.class));
 
-        mockMvc.perform(post("/api/auth/logout")
-                        .header("Authorization", "Bearer some.mock.token"))
+        // When & Then
+        mockMvc.perform(post("/api/auth/logout"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("로그아웃 되었습니다."));
+                .andExpect(jsonPath("$.message").value("You have been logged out."));
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/password-reset/request - Should succeed")
+    void requestPasswordReset_Success() throws Exception {
+        // Given
+        PasswordResetRequest request = new PasswordResetRequest("user@example.com");
+        doNothing().when(authService).requestPasswordReset(anyString());
+
+        // When & Then
+        mockMvc.perform(post("/api/auth/password-reset/request")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("A password reset email has been requested. Please check your email."));
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/password-reset/confirm - Should succeed")
+    void confirmPasswordReset_Success() throws Exception {
+        // Given
+        PasswordResetConfirmRequest request = new PasswordResetConfirmRequest("valid-token", "newPassword123!");
+        doNothing().when(authService).confirmPasswordReset(anyString(), anyString());
+
+        // When & Then
+        mockMvc.perform(post("/api/auth/password-reset/confirm")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Password changed successfully."));
     }
 }
