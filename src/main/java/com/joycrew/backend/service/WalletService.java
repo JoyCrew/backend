@@ -6,6 +6,7 @@ import com.joycrew.backend.entity.Wallet;
 import com.joycrew.backend.exception.UserNotFoundException;
 import com.joycrew.backend.repository.EmployeeRepository;
 import com.joycrew.backend.repository.WalletRepository;
+import com.joycrew.backend.service.mapper.EmployeeMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,14 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class WalletService {
     private final WalletRepository walletRepository;
     private final EmployeeRepository employeeRepository;
+    private final EmployeeMapper employeeMapper;
 
     public PointBalanceResponse getPointBalance(String userEmail) {
         Employee employee = employeeRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("인증된 사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException("Authenticated user not found."));
 
         Wallet wallet = walletRepository.findByEmployee_EmployeeId(employee.getEmployeeId())
                 .orElse(new Wallet(employee));
 
-        return PointBalanceResponse.from(wallet);
+        return employeeMapper.toPointBalanceResponse(wallet);
     }
 }

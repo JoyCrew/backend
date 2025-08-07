@@ -60,7 +60,7 @@ public class SecurityConfig {
                             response.setStatus(HttpStatus.UNAUTHORIZED.value());
                             response.setContentType("application/json;charset=UTF-8");
                             String jsonResponse = objectMapper.writeValueAsString(
-                                    new ErrorResponse("UNAUTHENTICATED", "인증이 필요합니다. 로그인을 진행해주세요.")
+                                    new ErrorResponse("UNAUTHENTICATED", "Authentication is required. Please log in.")
                             );
                             response.getWriter().write(jsonResponse);
                         })
@@ -68,7 +68,7 @@ public class SecurityConfig {
                             response.setStatus(HttpStatus.FORBIDDEN.value());
                             response.setContentType("application/json;charset=UTF-8");
                             String jsonResponse = objectMapper.writeValueAsString(
-                                    new ErrorResponse("ACCESS_DENIED", "해당 리소스에 접근할 권한이 없습니다.")
+                                    new ErrorResponse("ACCESS_DENIED", "You do not have permission to access this resource.")
                             );
                             response.getWriter().write(jsonResponse);
                         })

@@ -2,6 +2,7 @@ package com.joycrew.backend.service.mapper;
 
 import com.joycrew.backend.dto.AdminEmployeeQueryResponse;
 import com.joycrew.backend.dto.EmployeeQueryResponse;
+import com.joycrew.backend.dto.PointBalanceResponse;
 import com.joycrew.backend.dto.UserProfileResponse;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.Wallet;
@@ -53,5 +54,9 @@ public class EmployeeMapper {
                 employee.getAddress(),
                 employee.getHireDate()
         );
+    }
+
+    public PointBalanceResponse toPointBalanceResponse(Wallet wallet) {
+        return new PointBalanceResponse(wallet.getBalance(), wallet.getGiftablePoint());
     }
 }

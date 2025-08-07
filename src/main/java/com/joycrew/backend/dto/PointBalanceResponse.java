@@ -1,11 +1,9 @@
 package com.joycrew.backend.dto;
 
-import com.joycrew.backend.entity.Wallet;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "지갑 잔액 응답 DTO")
+@Schema(description = "Wallet Balance Response DTO")
 public record PointBalanceResponse(
-        @Schema(description = "현재 잔액") Integer totalBalance,
-        @Schema(description = "선물 가능한 포인트") Integer giftableBalance
-) {
-}
+        @Schema(description = "Current total balance") Integer totalBalance,
+        @Schema(description = "Current giftable points") Integer giftableBalance
+) {}

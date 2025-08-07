@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "인증", description = "로그인 및 비밀번호 재설정 관련 API")
+@Tag(name = "Authentication", description = "APIs for login and password reset")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -19,36 +19,36 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @Operation(summary = "로그인")
-    @ApiResponse(responseCode = "200", description = "로그인 성공")
-    @ApiResponse(responseCode = "401", description = "인증 실패")
+    @Operation(summary = "Login")
+    @ApiResponse(responseCode = "200", description = "Login successful")
+    @ApiResponse(responseCode = "401", description = "Authentication failed")
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
         LoginResponse loginResponse = authService.login(request);
         return ResponseEntity.ok(loginResponse);
     }
 
-    @Operation(summary = "로그아웃")
+    @Operation(summary = "Logout")
     @PostMapping("/logout")
     public ResponseEntity<SuccessResponse> logout(HttpServletRequest request) {
         authService.logout(request);
-        return ResponseEntity.ok(new SuccessResponse("로그아웃 되었습니다."));
+        return ResponseEntity.ok(new SuccessResponse("You have been logged out."));
     }
 
-    @Operation(summary = "비밀번호 재설정 요청 (이메일 발송)", description = "사용자 이메일로 비밀번호를 재설정할 수 있는 매직 링크를 보냅니다.")
-    @ApiResponse(responseCode = "200", description = "요청이 성공적으로 처리되었습니다. (이메일 존재 여부와 상관없이 동일한 응답)")
+    @Operation(summary = "Request password reset (sends email)", description = "Sends a magic link to the user's email to reset the password.")
+    @ApiResponse(responseCode = "200", description = "The request was processed successfully (the response is the same regardless of whether the email exists).")
     @PostMapping("/password-reset/request")
     public ResponseEntity<SuccessResponse> requestPasswordReset(@RequestBody @Valid PasswordResetRequest request) {
         authService.requestPasswordReset(request.email());
-        return ResponseEntity.ok(new SuccessResponse("비밀번호 재설정 이메일이 요청되었습니다. 이메일을 확인해주세요."));
+        return ResponseEntity.ok(new SuccessResponse("A password reset email has been requested. Please check your email."));
     }
 
-    @Operation(summary = "비밀번호 재설정 확인", description = "이메일로 받은 토큰과 새로운 비밀번호로 비밀번호를 최종 변경합니다.")
-    @ApiResponse(responseCode = "200", description = "비밀번호가 성공적으로 변경되었습니다.")
-    @ApiResponse(responseCode = "400", description = "토큰이 유효하지 않거나 만료되었습니다.")
+    @Operation(summary = "Confirm password reset", description = "Finalizes the password change using the token from the email and the new password.")
+    @ApiResponse(responseCode = "200", description = "Password changed successfully.")
+    @ApiResponse(responseCode = "400", description = "The token is invalid or has expired.")
     @PostMapping("/password-reset/confirm")
     public ResponseEntity<SuccessResponse> confirmPasswordReset(@RequestBody @Valid PasswordResetConfirmRequest request) {
         authService.confirmPasswordReset(request.token(), request.newPassword());
-        return ResponseEntity.ok(new SuccessResponse("비밀번호가 성공적으로 변경되었습니다."));
+        return ResponseEntity.ok(new SuccessResponse("Password changed successfully."));
     }
 }
