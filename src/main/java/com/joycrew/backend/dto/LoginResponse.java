@@ -3,23 +3,23 @@ package com.joycrew.backend.dto;
 import com.joycrew.backend.entity.enums.AdminLevel;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "로그인 응답 DTO")
+@Schema(description = "Login Response DTO")
 public record LoginResponse(
-        @Schema(description = "JWT 토큰")
+        @Schema(description = "JWT access token")
         String accessToken,
-        @Schema(description = "응답 메시지")
+        @Schema(description = "Response message")
         String message,
-        @Schema(description = "사용자 고유 ID")
+        @Schema(description = "Unique ID of the user")
         Long userId,
-        @Schema(description = "사용자 이름")
+        @Schema(description = "Name of the user")
         String name,
-        @Schema(description = "사용자 이메일")
+        @Schema(description = "Email of the user")
         String email,
-        @Schema(description = "사용자 역할")
+        @Schema(description = "Role of the user")
         AdminLevel role,
-        @Schema(description = "보유 포인트")
+        @Schema(description = "Total points balance")
         Integer totalPoint,
-        @Schema(description = "프로필 이미지 URL")
+        @Schema(description = "URL of the profile image")
         String profileImageUrl
 ) {
         public static LoginResponse fail(String message) {

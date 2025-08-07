@@ -5,9 +5,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 public record PasswordResetRequest(
-        @Schema(description = "비밀번호를 재설정할 계정의 이메일", example = "user@example.com")
-        @NotBlank(message = "이메일은 필수입니다.")
-        @Email(message = "유효한 이메일 형식이 아닙니다.")
+        @Schema(description = "Email of the account to reset the password for", example = "user@example.com")
+        @NotBlank(message = "Email is required.")
+        @Email(message = "Must be a valid email format.")
         String email
-) {
-}
+) {}

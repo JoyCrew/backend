@@ -3,17 +3,17 @@ package com.joycrew.backend.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
-@Schema(description = "관리자용 직원 목록 페이징 응답 DTO")
+@Schema(description = "Admin-specific Paginated Employee List Response DTO")
 public record AdminPagedEmployeeResponse(
-        @Schema(description = "직원 목록")
+        @Schema(description = "List of employees")
         List<AdminEmployeeQueryResponse> employees,
 
-        @Schema(description = "현재 페이지 번호")
+        @Schema(description = "Current page number (0-based)")
         int currentPage,
 
-        @Schema(description = "전체 페이지 수")
+        @Schema(description = "Total number of pages")
         int totalPages,
 
-        @Schema(description = "마지막 페이지 여부")
+        @Schema(description = "Indicates if this is the last page")
         boolean last
 ) {}

@@ -26,6 +26,6 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("JoyCrew API")
                         .version("v1.0.0")
-                        .description("JoyCrew 백엔드 API 명세서입니다."));
+                        .description("JoyCrew Backend API Specification."));
     }
 }

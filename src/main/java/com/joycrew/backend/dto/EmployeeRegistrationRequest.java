@@ -9,26 +9,26 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
 public record EmployeeRegistrationRequest (
-        @NotBlank(message = "이름은 필수입니다.")
+        @NotBlank(message = "Name is required.")
         String name,
 
-        @NotBlank(message = "이메일은 필수입니다.")
-        @Email(message = "유효한 이메일 형식이 아닙니다.")
+        @NotBlank(message = "Email is required.")
+        @Email(message = "Must be a valid email format.")
         String email,
 
-        @NotBlank(message = "초기 비밀번호는 필수입니다.")
-        @Size(min = 8, message = "비밀번호는 8자 이상이어야 합니다.")
+        @NotBlank(message = "Initial password is required.")
+        @Size(min = 8, message = "Password must be at least 8 characters long.")
         String initialPassword,
 
-        @NotBlank(message = "회사명은 필수입니다.")
+        @NotBlank(message = "Company name is required.")
         String companyName,
 
         String departmentName,
 
-        @NotBlank(message = "직책은 필수입니다.")
+        @NotBlank(message = "Position is required.")
         String position,
 
-        @NotNull(message = "역할은 필수입니다.")
+        @NotNull(message = "Role is required.")
         AdminLevel level,
 
         LocalDate birthday,

@@ -5,14 +5,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 public record PasswordResetConfirmRequest(
-        @Schema(description = "이메일로 받은 비밀번호 재설정 토큰")
-        @NotBlank(message = "토큰은 필수입니다.")
+        @Schema(description = "Password reset token received via email")
+        @NotBlank(message = "Token is required.")
         String token,
 
-        @Schema(description = "새로운 비밀번호")
-        @NotBlank(message = "새로운 비밀번호는 필수입니다.")
+        @Schema(description = "The new password")
+        @NotBlank(message = "New password is required.")
         @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,20}$",
-                message = "비밀번호는 영문, 숫자, 특수문자를 포함하여 8자 이상 20자 이하여야 합니다.")
+                message = "Password must be 8-20 characters long and include at least one letter, one number, and one special character.")
         String newPassword
-) {
-}
+) {}
