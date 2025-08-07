@@ -82,7 +82,7 @@ class AdminFeaturesIntegrationTest {
     @DisplayName("[Integration] 관리자가 직원의 상태를 성공적으로 DELETED로 변경 (소프트 삭제)")
     void deleteEmployee_Success() {
         // When
-        adminEmployeeService.deleteEmployee(employee1.getEmployeeId());
+        adminEmployeeService.disableEmployee(employee1.getEmployeeId());
 
         // Then
         Employee deletedEmployee = employeeRepository.findById(employee1.getEmployeeId()).get();
