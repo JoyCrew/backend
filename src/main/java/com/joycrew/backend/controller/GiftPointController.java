@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "포인트 선물", description = "동료 간 포인트 선물 API")
+@Tag(name = "Gift Points", description = "APIs for gifting points between colleagues")
 @RestController
 @RequestMapping("/api/gift-points")
 @RequiredArgsConstructor
@@ -21,13 +21,13 @@ public class GiftPointController {
 
     private final GiftPointService giftPointService;
 
-    @Operation(summary = "동료에게 포인트 선물하기", security = @SecurityRequirement(name = "Authorization"))
+    @Operation(summary = "Gift points to a colleague", security = @SecurityRequirement(name = "Authorization"))
     @PostMapping
     public ResponseEntity<SuccessResponse> giftPoints(
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody GiftPointRequest request
     ) {
         giftPointService.giftPointsToColleague(principal.getUsername(), request);
-        return ResponseEntity.ok(new SuccessResponse("포인트를 성공적으로 보냈습니다."));
+        return ResponseEntity.ok(new SuccessResponse("Points sent successfully."));
     }
 }

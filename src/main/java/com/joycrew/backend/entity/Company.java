@@ -51,7 +51,7 @@ public class Company {
 
     public void addBudget(double amount) {
         if (amount < 0) {
-            throw new IllegalArgumentException("예산은 음수일 수 없습니다.");
+            throw new IllegalArgumentException("Budget amount cannot be negative.");
         }
         this.totalCompanyBalance += amount;
     }
