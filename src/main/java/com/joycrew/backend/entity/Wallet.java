@@ -35,7 +35,7 @@ public class Wallet {
 
     public void addPoints(int amount) {
         if (amount < 0) {
-            throw new IllegalArgumentException("포인트는 음수일 수 없습니다.");
+            throw new IllegalArgumentException("Points to add cannot be negative.");
         }
         this.balance += amount;
         this.giftablePoint += amount;
@@ -43,10 +43,10 @@ public class Wallet {
 
     public void spendPoints(int amount) {
         if (amount < 0) {
-            throw new IllegalArgumentException("포인트는 음수일 수 없습니다.");
+            throw new IllegalArgumentException("Points to spend cannot be negative.");
         }
         if (this.balance < amount || this.giftablePoint < amount) {
-            throw new InsufficientPointsException("선물 가능한 포인트가 부족합니다.");
+            throw new InsufficientPointsException("Insufficient giftable points.");
         }
         this.balance -= amount;
         this.giftablePoint -= amount;

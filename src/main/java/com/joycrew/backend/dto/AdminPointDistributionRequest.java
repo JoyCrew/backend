@@ -6,15 +6,15 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record AdminPointDistributionRequest(
-        @NotEmpty(message = "직원 ID 목록은 비어있을 수 없습니다.")
+        @NotEmpty(message = "Employee ID list cannot be empty.")
         List<Long> employeeIds,
 
-        @NotNull(message = "포인트는 필수입니다.")
+        @NotNull(message = "Points are required.")
         int points,
 
-        @NotNull(message = "메시지는 필수입니다.")
+        @NotNull(message = "Message is required.")
         String message,
 
-        @NotNull(message = "거래 유형은 필수입니다.")
+        @NotNull(message = "Transaction type is required.")
         TransactionType type
 ) {}

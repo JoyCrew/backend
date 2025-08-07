@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({BadCredentialsException.class, UsernameNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleAuthenticationException(Exception ex) {
         log.warn("Authentication failed: {}", ex.getMessage());
-        ErrorResponse response = new ErrorResponse("AUTHENTICATION_FAILED", "이메일 또는 비밀번호가 올바르지 않습니다.");
+        ErrorResponse response = new ErrorResponse("AUTHENTICATION_FAILED", "The email or password provided is incorrect.");
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAllUncaughtException(Exception ex) {
         log.error("Unhandled internal server error occurred", ex);
-        ErrorResponse response = new ErrorResponse("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다. 관리자에게 문의하세요.");
+        ErrorResponse response = new ErrorResponse("INTERNAL_SERVER_ERROR", "An internal server error occurred. Please contact an administrator.");
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

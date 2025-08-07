@@ -1,56 +1,81 @@
+// Defines the plugins required for the project.
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.1'
     id 'io.spring.dependency-management' version '1.1.5'
 }
 
+// Project metadata
 group = 'com.joycrew'
 version = '0.0.1-SNAPSHOT'
 
+// Specifies the Java version to be used for the project.
 java {
     toolchain {
-       languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
+// Configuration for dependencies.
 configurations {
+    // Ensures that compile-only dependencies (like Lombok) are available for the annotation processor.
     compileOnly {
-       extendsFrom annotationProcessor
+        extendsFrom annotationProcessor
     }
 }
 
+// Specifies the repository to fetch dependencies from.
 repositories {
     mavenCentral()
 }
 
+// Defines the project's dependencies.
 dependencies {
+    // Spring Boot Starters for core functionalities
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // API Documentation (Swagger/OpenAPI)
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+
+    // JSON Web Token (JWT) support
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-    runtimeOnly 'com.mysql:mysql-connector-j'
-    runtimeOnly 'com.h2database:h2'
+
+    // AWS SDK for S3 and Secrets Manager Integration
+    implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:3.1.1')
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
+    implementation 'software.amazon.awssdk:s3'
+
+    // Database Drivers
+    runtimeOnly 'com.mysql:mysql-connector-j' // For production
+    runtimeOnly 'com.h2database:h2'           // For development
+
+    // Developer Tools
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
+    // Testing Dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
 }
 
+// Configures the executable JAR generation.
 bootJar {
     enabled = true
 }
 
+// Disables the plain JAR generation as the bootJar is sufficient.
 jar {
     enabled = false
 }
 
+// Configures the test task to use the JUnit Platform.
 tasks.named('test') {
     useJUnitPlatform()
 }

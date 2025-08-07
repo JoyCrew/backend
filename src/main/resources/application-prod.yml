@@ -1,28 +1,32 @@
+# ===================================================================
+# PRODUCTION PROFILE
+#
+# Properties that are active when the 'prod' profile is enabled.
+# ===================================================================
 spring:
+  # In production, the application connects to an external MySQL database.
+  # For security, database credentials are read from environment variables.
   datasource:
     url: ${DB_HOST}?zeroDateTimeBehavior=CONVERT_TO_NULL
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DB_USER}
     password: ${DB_PASSWORD}
+  # Updates the schema on application start if it differs from the entities.
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
+
+  # Production Gmail credentials are read from environment variables.
   mail:
-    host: smtp.gmail.com
-    port: 587
     username: ${GMAIL_USERNAME}
     password: ${GMAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+
+# For security, the production JWT secret key MUST be set via an environment variable.
 jwt:
   secret: ${JWT_SECRET_KEY}
-  expiration-ms: 3600000
 
+# In production, logs are written to a file for persistence and analysis.
 logging:
   level:
     com.joycrew.backend: INFO
@@ -31,9 +35,12 @@ logging:
     max-size: 10MB
     max-history: 7
 
-# [중요] 최종 출시 시점에는 삭제 필요
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
+# The frontend service URL for the production environment.
+app:
+  frontend-url: https://joycrew.co.kr
+
+# AWS specific settings for production
+aws:
+  s3:
+    # Production S3 bucket name
+    bucket-name: 'joycrew-prod-bucket'

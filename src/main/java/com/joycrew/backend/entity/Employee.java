@@ -3,16 +3,12 @@ package com.joycrew.backend.entity;
 import com.joycrew.backend.entity.enums.AdminLevel;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -21,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-public class Employee implements UserDetails {
+public class Employee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,8 +48,8 @@ public class Employee implements UserDetails {
     private String personalEmail;
     private String phoneNumber;
     private String shippingAddress;
-    private LocalDate birthday;      // 생일
-    private String address;          // 주소
+    private LocalDate birthday;
+    private String address;
     private LocalDate hireDate;
     private Boolean emailNotificationEnabled;
     private Boolean appNotificationEnabled;
@@ -81,6 +77,10 @@ public class Employee implements UserDetails {
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CompanyAdminAccess> adminAccesses = new ArrayList<>();
 
+    public boolean isActive() {
+        return "ACTIVE".equals(this.status);
+    }
+
     public void updateLastLogin() {
         this.lastLoginAt = LocalDateTime.now();
     }
@@ -101,41 +101,6 @@ public class Employee implements UserDetails {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role));
-    }
-
-    @Override
-    public String getPassword() {
-        return this.passwordHash;
-    }
-
-    @Override
-    public String getUsername() {
-        return this.email;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return "ACTIVE".equals(this.status);
     }
 
     public void changePassword(String rawPassword, PasswordEncoder encoder) {

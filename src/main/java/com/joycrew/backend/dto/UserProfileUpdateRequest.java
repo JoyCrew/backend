@@ -4,22 +4,23 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 
+@Schema(description = "User Profile Update Request DTO")
 public record UserProfileUpdateRequest(
-        @Schema(description = "변경할 직원 이름", example = "김조이")
+        @Schema(description = "The employee's new name", example = "John Doe")
         String name,
 
-        @Schema(description = "변경할 프로필 이미지 URL")
+        @Schema(description = "The new profile image URL")
         String profileImageUrl,
 
-        @Schema(description = "변경할 개인 이메일")
+        @Schema(description = "The new personal email address")
         String personalEmail,
 
-        @Schema(description = "변경할 연락처")
+        @Schema(description = "The new phone number")
         String phoneNumber,
 
-        @Schema(description = "변경할 생년월일")
+        @Schema(description = "The new birth date")
         LocalDate birthday,
 
-        @Schema(description = "변경할 주소")
+        @Schema(description = "The new address")
         String address
 ) {}

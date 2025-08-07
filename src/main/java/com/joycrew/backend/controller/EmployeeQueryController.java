@@ -17,23 +17,23 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/employee/query")
-@Tag(name = "직원 조회", description = "직원 목록 검색 API")
+@Tag(name = "Employee Query", description = "API for searching employees")
 public class EmployeeQueryController {
 
     private final EmployeeQueryService employeeQueryService;
 
     @Operation(
-            summary = "직원 목록 검색",
-            description = "이름, 이메일, 부서명을 기준으로 통합 검색을 수행합니다. 검색 결과에서는 본인이 제외됩니다.",
+            summary = "Search employee list",
+            description = "Performs a unified search by name, email, or department. The current user is excluded from the search results.",
             parameters = {
-                    @Parameter(name = "keyword", description = "검색 키워드", example = "김"),
-                    @Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
-                    @Parameter(name = "size", description = "페이지당 개수", example = "20")
+                    @Parameter(name = "keyword", description = "Search keyword", example = "John"),
+                    @Parameter(name = "page", description = "Page number (0-based)", example = "0"),
+                    @Parameter(name = "size", description = "Items per page", example = "20")
             },
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "직원 목록 조회 성공",
+                            description = "Employee list retrieved successfully",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = PagedEmployeeResponse.class)

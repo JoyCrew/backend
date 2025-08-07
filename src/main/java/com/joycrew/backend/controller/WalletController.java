@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "지갑", description = "포인트 관련 API")
+@Tag(name = "Wallet", description = "APIs related to points and wallet")
 @RestController
 @RequestMapping("/api/wallet")
 @RequiredArgsConstructor
@@ -21,7 +21,7 @@ public class WalletController {
 
     private final WalletService walletService;
 
-    @Operation(summary = "포인트 잔액 조회", security = @SecurityRequirement(name = "Authorization"))
+    @Operation(summary = "Get point balance", security = @SecurityRequirement(name = "Authorization"))
     @GetMapping("/point")
     public ResponseEntity<PointBalanceResponse> getWalletPoint(
             @AuthenticationPrincipal UserPrincipal principal

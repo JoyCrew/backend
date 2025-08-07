@@ -1,39 +1,37 @@
+# ===================================================================
+# DEVELOPMENT PROFILE
+#
+# Properties that are active when the 'dev' profile is enabled.
+# ===================================================================
 spring:
+  # For development, an in-memory H2 database is used.
   datasource:
     url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
     username: sa
     password:
+  # Enables the H2 database web console for direct access.
   h2:
     console:
       enabled: true
+  # The database schema is created from scratch on every application start.
   jpa:
     hibernate:
       ddl-auto: create
-    show-sql: false
+
+  # Uses development-specific Gmail credentials.
+  # NOTE: Using an App Password instead of the actual password is recommended.
   mail:
-    host: smtp.gmail.com
-    port: 587
     username: joycrew.team@gmail.com
     password: abcd efgh ijkl mnop
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
 
+# Development JWT secret key (safe to expose for local development).
 jwt:
   secret: dev-test-secret-key-for-joycrew-backend-at-least-256-bits-long!
 
+# Log levels are adjusted for detailed output during development.
 logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql: TRACE
     com.joycrew.backend: DEBUG
-
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
