@@ -8,4 +8,4 @@ spring:
   config:
     # Imports secrets from the specified path in AWS Secrets Manager.
     # The application must have the appropriate IAM role to access this.
-    import: "aws-secretsmanager:/security"
+    import: "aws-secretsmanager:security"
