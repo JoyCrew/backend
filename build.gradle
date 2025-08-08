@@ -51,6 +51,8 @@ dependencies {
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
     implementation 'software.amazon.awssdk:s3'
 
+    implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
+
     // Database Drivers
     runtimeOnly 'com.mysql:mysql-connector-j' // For production
     runtimeOnly 'com.h2database:h2'           // For development
