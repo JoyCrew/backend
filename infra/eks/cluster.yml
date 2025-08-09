@@ -1,0 +1,82 @@
+  # ===================================================================
+  # EKS Cluster Configuration for JoyCrew Backend
+  # ===================================================================
+  apiVersion: eksctl.io/v1alpha5
+  kind: ClusterConfig
+
+  metadata:
+    # The name of the EKS cluster
+    name: joycrew-cluster
+    # The AWS region where the cluster will be created
+    region: ap-northeast-2
+    # The desired Kubernetes version (consider using 1.29 or 1.30 for latest features)
+    version: "1.29"
+
+  # Enable IAM Roles for Service Accounts (IRSA) for secure pod-to-AWS service authentication
+  iam:
+    withOIDC: true
+
+  # VPC configuration (optional: eksctl will create a new VPC if not specified)
+  vpc:
+    # CIDR block for the VPC
+    cidr: 10.0.0.0/16
+
+  # Configuration for managed node groups
+  managedNodeGroups:
+    - name: app-workers
+      # Instance type - consider t3.large for better performance in production
+      instanceType: t3.medium
+      # Node group scaling configuration
+      desiredCapacity: 2
+      minSize: 1
+      maxSize: 4
+      # Use private subnets for better security
+      privateNetworking: true
+
+      # SSH access configuration
+      ssh:
+        allow: true
+        publicKeyName: joycrew-deploy-key
+
+      # Node labels for workload scheduling
+      labels:
+        role: application
+        environment: production
+
+      # Volume configuration
+      volumeSize: 20
+      volumeType: gp3
+
+      # IAM policies for worker nodes
+      iam:
+        attachPolicyARNs:
+          - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+          - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+          - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+          # Add CloudWatch policy if you want container insights
+          - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+
+  # Manage essential EKS add-ons
+  addons:
+    - name: vpc-cni
+      version: latest
+      configurationValues: |-
+        enableNetworkPolicy: "true"
+    - name: coredns
+      version: latest
+    - name: kube-proxy
+      version: latest
+    - name: aws-ebs-csi-driver
+      version: latest
+      wellKnownPolicies:
+        ebsCSIController: true
+
+  # CloudWatch logging configuration
+  cloudWatch:
+    clusterLogging:
+      enableTypes:
+        - api
+        - audit
+        - authenticator
+        - controllerManager
+        - scheduler
