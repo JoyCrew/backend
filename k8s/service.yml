@@ -1,0 +1,17 @@
+# Creates a stable internal endpoint for the backend pods.
+apiVersion: v1
+kind: Service
+metadata:
+  name: joycrew-backend-service
+spec:
+  # Selects pods with the label 'app: joycrew-backend'.
+  selector:
+    app: joycrew-backend
+  ports:
+    - protocol: TCP
+      # The service listens on port 80.
+      port: 80
+      # It forwards traffic to the container's port 8082.
+      targetPort: 8082
+  # Creates an internal IP address, making the service reachable only from within the cluster.
+  type: ClusterIP
