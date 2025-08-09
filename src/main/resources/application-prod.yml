@@ -7,24 +7,12 @@ spring:
   # In production, the application connects to an external MySQL database.
   # For security, database credentials are read from environment variables.
   datasource:
-    url: ${DB_HOST}?zeroDateTimeBehavior=CONVERT_TO_NULL
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
   # Updates the schema on application start if it differs from the entities.
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
-
-  # Production Gmail credentials are read from environment variables.
-  mail:
-    username: ${GMAIL_USERNAME}
-    password: ${GMAIL_PASSWORD}
-
-# For security, the production JWT secret key MUST be set via an environment variable.
-jwt:
-  secret: ${JWT_SECRET_KEY}
 
 # In production, logs are written to a file for persistence and analysis.
 logging:
