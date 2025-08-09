@@ -1,5 +1,6 @@
 package com.joycrew.backend.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
@@ -23,13 +25,18 @@ class EmailServiceTest {
     @InjectMocks
     private EmailService emailService;
 
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(emailService, "frontendUrlBase", "https://test.joycrew.co.kr");
+    }
+
     @Test
-    @DisplayName("[Service] 비밀번호 재설정 이메일 발송 - MailSender 호출 검증")
+    @DisplayName("[Unit] Send password reset email - Verify MailSender call")
     void sendPasswordResetEmail_Success() {
         // Given
         String toEmail = "test@joycrew.com";
         String token = "test-token";
-        String expectedFrontendUrl = "https://joycrew.co.kr/reset-password?token=" + token;
+        String expectedResetUrl = "https://test.joycrew.co.kr/reset-password?token=" + token;
 
         // When
         emailService.sendPasswordResetEmail(toEmail, token);
@@ -40,7 +47,7 @@ class EmailServiceTest {
 
         SimpleMailMessage sentMessage = messageCaptor.getValue();
         assertThat(sentMessage.getTo()).contains(toEmail);
-        assertThat(sentMessage.getSubject()).isEqualTo("[JoyCrew] 비밀번호 재설정 안내");
-        assertThat(sentMessage.getText()).contains(expectedFrontendUrl);
+        assertThat(sentMessage.getSubject()).isEqualTo("[JoyCrew] Password Reset Instructions");
+        assertThat(sentMessage.getText()).contains(expectedResetUrl);
     }
 }

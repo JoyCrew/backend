@@ -1,0 +1,50 @@
+# Defines the desired state for the application pods.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: joycrew-backend-deployment
+  labels:
+    app: joycrew-backend
+spec:
+  # Runs 2 replicas of the pod for high availability.
+  replicas: 2
+  selector:
+    matchLabels:
+      app: joycrew-backend
+  template:
+    metadata:
+      labels:
+        app: joycrew-backend
+    spec:
+      # Use a dedicated service account for the application pods.
+      # This is crucial for securely granting AWS permissions via IRSA.
+      serviceAccountName: joycrew-service-account
+      containers:
+        - name: backend-container
+          # ❗️ IMPORTANT: Use the correct URI of your Docker image pushed to ECR.
+          image: "566105751077.dkr.ecr.ap-northeast-2.amazonaws.com/joycrew-backend:latest"
+          ports:
+            - containerPort: 8082
+          # Define resource requests and limits for better scheduling and stability.
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          # Readiness probe checks if the container is ready to accept traffic.
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          # Liveness probe checks if the container is still running correctly.
+          # If it fails, Kubernetes will restart the container.
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8082
+            initialDelaySeconds: 60
+            periodSeconds: 20
