@@ -12,11 +12,12 @@ public class WithMockUserPrincipalSecurityContextFactory implements WithSecurity
     public SecurityContext createSecurityContext(WithMockUserPrincipal annotation) {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         Employee mockEmployee = Employee.builder()
-                .employeeId(1L)
+                .employeeId(annotation.id())
                 .email(annotation.email())
-                .employeeName("테스트유저")
-                .role(AdminLevel.EMPLOYEE)
+                .employeeName("Test User")
+                .role(AdminLevel.valueOf(annotation.role()))
                 .passwordHash("mockPassword")
+                .status("ACTIVE")
                 .build();
         UserPrincipal principal = new UserPrincipal(mockEmployee);
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

@@ -26,42 +26,35 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Transactional
 class EmployeeServiceIntegrationTest {
 
-    @Autowired
-    private EmployeeService employeeService;
-    @Autowired
-    private EmployeeRepository employeeRepository;
-    @Autowired
-    private WalletRepository walletRepository;
-    @Autowired
-    private CompanyRepository companyRepository;
-    @Autowired
-    private DepartmentRepository departmentRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    @Autowired private EmployeeService employeeService;
+    @Autowired private EmployeeRepository employeeRepository;
+    @Autowired private WalletRepository walletRepository;
+    @Autowired private CompanyRepository companyRepository;
+    @Autowired private DepartmentRepository departmentRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private EmployeeRegistrationService registrationService;
 
     private Company testCompany;
     private Department testDepartment;
-    @Autowired
-    private AdminEmployeeService adminEmployeeService;
 
     @BeforeEach
     void setUp() {
-        testCompany = companyRepository.save(Company.builder().companyName("테스트 회사").build());
-        testDepartment = departmentRepository.save(Department.builder().name("테스트 부서").company(testCompany).build());
+        testCompany = companyRepository.save(Company.builder().companyName("Test Company").build());
+        testDepartment = departmentRepository.save(Department.builder().name("Test Department").company(testCompany).build());
     }
 
     @Test
-    @DisplayName("[Integration] 신규 직원 등록 성공")
+    @DisplayName("[Integration] Register new employee successfully")
     void registerEmployee_Success() {
         // Given
         EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
-                "신규직원", "new.employee@joycrew.com", "password123!",
-                testCompany.getCompanyName(), testDepartment.getName(), "사원", AdminLevel.EMPLOYEE,
-                LocalDate.of(1998,1,1), "서울", LocalDate.now() // birthday, address, hireDate
+                "New Employee", "new.employee@joycrew.com", "password123!",
+                testCompany.getCompanyName(), testDepartment.getName(), "Staff", AdminLevel.EMPLOYEE,
+                LocalDate.of(1998, 1, 1), "Seoul", LocalDate.now()
         );
 
         // When
-        Employee savedEmployee = adminEmployeeService.registerEmployee(request);
+        Employee savedEmployee = registrationService.registerEmployee(request);
 
         // Then
         assertThat(savedEmployee.getEmployeeId()).isNotNull();
@@ -70,12 +63,12 @@ class EmployeeServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("[Integration] 직원 비밀번호 변경 성공")
+    @DisplayName("[Integration] Change employee password successfully")
     void forcePasswordChange_Success() {
         // Given
         Employee employee = employeeRepository.save(Employee.builder()
                 .email("pw.change@joycrew.com")
-                .employeeName("패스워드변경")
+                .employeeName("Password Changer")
                 .passwordHash(passwordEncoder.encode("oldPassword"))
                 .company(testCompany)
                 .build());
