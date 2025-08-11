@@ -1,82 +1,75 @@
-  # ===================================================================
-  # EKS Cluster Configuration for JoyCrew Backend
-  # ===================================================================
-  apiVersion: eksctl.io/v1alpha5
-  kind: ClusterConfig
+# ===================================================================
+# EKS Cluster Configuration for JoyCrew Backend
+# This version is configured to use your EXISTING VPC and subnets.
+# ===================================================================
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
 
-  metadata:
-    # The name of the EKS cluster
-    name: joycrew-cluster
-    # The AWS region where the cluster will be created
-    region: ap-northeast-2
-    # The desired Kubernetes version (consider using 1.29 or 1.30 for latest features)
-    version: "1.29"
+metadata:
+  name: joycrew-cluster
+  region: ap-northeast-2
+  version: "1.29"
 
-  # Enable IAM Roles for Service Accounts (IRSA) for secure pod-to-AWS service authentication
-  iam:
-    withOIDC: true
+# Enable IAM Roles for Service Accounts (IRSA)
+iam:
+  withOIDC: true
 
-  # VPC configuration (optional: eksctl will create a new VPC if not specified)
-  vpc:
-    # CIDR block for the VPC
-    cidr: 10.0.0.0/16
+vpc:
+  id: "vpc-067968d8c7f0de694"
+  subnets:
+    # The worker nodes will be placed in the private subnets.
+    private:
+      ap-northeast-2b: { id: "subnet-0b1c4ed704fe8809c" }
+      ap-northeast-2d: { id: "subnet-00394d1c845cc1187" }
+    public:
+      ap-northeast-2a: { id: "subnet-03e9e38db1457d819" }
+      ap-northeast-2c: { id: "subnet-0283caa043409b846" }
 
-  # Configuration for managed node groups
-  managedNodeGroups:
-    - name: app-workers
-      # Instance type - consider t3.large for better performance in production
-      instanceType: t3.medium
-      # Node group scaling configuration
-      desiredCapacity: 2
-      minSize: 1
-      maxSize: 4
-      # Use private subnets for better security
-      privateNetworking: true
+# Configuration for managed node groups
+managedNodeGroups:
+  - name: app-workers
+    instanceType: t3.small
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 4
+    # 'privateNetworking' is not needed when subnets are specified above.
+    # eksctl will automatically use the private subnets for the nodes.
+    ssh:
+      allow: true
+      publicKeyName: joycrew-deploy-key
+    labels:
+      role: application
+      environment: production
+    volumeSize: 20
+    volumeType: gp3
+    iam:
+      attachPolicyARNs:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
 
-      # SSH access configuration
-      ssh:
-        allow: true
-        publicKeyName: joycrew-deploy-key
+# Manage essential EKS add-ons
+addons:
+  - name: vpc-cni
+    version: latest
+    configurationValues: |-
+      enableNetworkPolicy: "true"
+  - name: coredns
+    version: latest
+  - name: kube-proxy
+    version: latest
+  - name: aws-ebs-csi-driver
+    version: latest
+    wellKnownPolicies:
+      ebsCSIController: true
 
-      # Node labels for workload scheduling
-      labels:
-        role: application
-        environment: production
-
-      # Volume configuration
-      volumeSize: 20
-      volumeType: gp3
-
-      # IAM policies for worker nodes
-      iam:
-        attachPolicyARNs:
-          - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
-          - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
-          - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-          # Add CloudWatch policy if you want container insights
-          - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
-
-  # Manage essential EKS add-ons
-  addons:
-    - name: vpc-cni
-      version: latest
-      configurationValues: |-
-        enableNetworkPolicy: "true"
-    - name: coredns
-      version: latest
-    - name: kube-proxy
-      version: latest
-    - name: aws-ebs-csi-driver
-      version: latest
-      wellKnownPolicies:
-        ebsCSIController: true
-
-  # CloudWatch logging configuration
-  cloudWatch:
-    clusterLogging:
-      enableTypes:
-        - api
-        - audit
-        - authenticator
-        - controllerManager
-        - scheduler
+# CloudWatch logging configuration
+cloudWatch:
+  clusterLogging:
+    enableTypes:
+      - api
+      - audit
+      - authenticator
+      - controllerManager
+      - scheduler

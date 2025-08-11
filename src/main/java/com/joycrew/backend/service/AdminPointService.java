@@ -1,10 +1,13 @@
 package com.joycrew.backend.service;
 
 import com.joycrew.backend.dto.AdminPointDistributionRequest;
+import com.joycrew.backend.dto.PointDistributionDetail;
+import com.joycrew.backend.entity.Company;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.RewardPointTransaction;
 import com.joycrew.backend.entity.Wallet;
 import com.joycrew.backend.exception.UserNotFoundException;
+import com.joycrew.backend.repository.CompanyRepository;
 import com.joycrew.backend.repository.EmployeeRepository;
 import com.joycrew.backend.repository.RewardPointTransactionRepository;
 import com.joycrew.backend.repository.WalletRepository;
@@ -13,6 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,31 +28,55 @@ public class AdminPointService {
     private final EmployeeRepository employeeRepository;
     private final WalletRepository walletRepository;
     private final RewardPointTransactionRepository transactionRepository;
+    private final CompanyRepository companyRepository;
 
     public void distributePoints(AdminPointDistributionRequest request, Employee admin) {
-        List<Employee> employees = employeeRepository.findAllById(request.employeeIds());
-        if (employees.size() != request.employeeIds().size()) {
+        int netPointsChange = request.distributions().stream()
+                .mapToInt(PointDistributionDetail::points)
+                .sum();
+
+        Company company = admin.getCompany();
+        if (netPointsChange > 0) {
+            company.spendBudget(netPointsChange);
+        } else if (netPointsChange < 0) {
+            company.addBudget(Math.abs(netPointsChange));
+        }
+        companyRepository.save(company);
+
+        List<Long> employeeIds = request.distributions().stream()
+                .map(PointDistributionDetail::employeeId)
+                .toList();
+
+        Map<Long, Employee> employeeMap = employeeRepository.findAllById(employeeIds).stream()
+                .collect(Collectors.toMap(Employee::getEmployeeId, Function.identity()));
+
+        if (employeeMap.size() != employeeIds.size()) {
             throw new UserNotFoundException("Could not find some of the requested employees. Please verify the IDs.");
         }
 
-        for (Employee employee : employees) {
+        for (PointDistributionDetail detail : request.distributions()) {
+            Employee employee = employeeMap.get(detail.employeeId());
             Wallet wallet = walletRepository.findByEmployee_EmployeeId(employee.getEmployeeId())
                     .orElseThrow(() -> new IllegalStateException("Wallet not found for employee: " + employee.getEmployeeName()));
 
-            if (request.points() > 0) {
-                wallet.addPoints(request.points());
-            } else {
-                wallet.spendPoints(Math.abs(request.points()));
+            int pointsToProcess = detail.points();
+
+            if (pointsToProcess > 0) {
+                wallet.addPoints(pointsToProcess);
+            } else if (pointsToProcess < 0) {
+                wallet.spendPoints(Math.abs(pointsToProcess));
             }
 
-            RewardPointTransaction transaction = RewardPointTransaction.builder()
-                    .sender(admin)
-                    .receiver(employee)
-                    .pointAmount(request.points())
-                    .message(request.message())
-                    .type(request.type())
-                    .build();
-            transactionRepository.save(transaction);
+            if (pointsToProcess != 0) {
+                RewardPointTransaction transaction = RewardPointTransaction.builder()
+                        .sender(admin)
+                        .receiver(employee)
+                        .pointAmount(pointsToProcess)
+                        .message(request.message())
+                        .type(request.type())
+                        .build();
+                transactionRepository.save(transaction);
+            }
         }
     }
 }
