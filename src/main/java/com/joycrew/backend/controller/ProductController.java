@@ -1,5 +1,6 @@
 package com.joycrew.backend.controller;
 
+import com.joycrew.backend.dto.ErrorResponse;
 import com.joycrew.backend.dto.PagedProductResponse;
 import com.joycrew.backend.dto.ProductResponse;
 import com.joycrew.backend.entity.enums.Category;
@@ -99,7 +100,11 @@ public class ProductController {
                                     )
                             )
                     ),
-                    @ApiResponse(responseCode = "404", description = "Product not found")
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Product not found",
+                            content = @Content // empty body for 404
+                    )
             }
     )
     @GetMapping("/{id}")
@@ -152,7 +157,23 @@ public class ProductController {
                                     )
                             )
                     ),
-                    @ApiResponse(responseCode = "400", description = "Invalid category")
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Invalid category",
+                            content = @Content(
+                                    schema = @Schema(implementation = ErrorResponse.class),
+                                    examples = @ExampleObject(
+                                            value = """
+                                            {
+                                              "code": "INVALID_CATEGORY",
+                                              "message": "Category value is invalid.",
+                                              "timestamp": "2025-08-11T10:45:00",
+                                              "path": "/api/products/category/FOO"
+                                            }
+                                            """
+                                    )
+                            )
+                    )
             }
     )
     @GetMapping("/category/{category}")

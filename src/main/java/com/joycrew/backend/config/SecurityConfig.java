@@ -25,6 +25,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 
+import java.time.LocalDateTime;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -62,7 +64,12 @@ public class SecurityConfig {
                             response.setStatus(HttpStatus.UNAUTHORIZED.value());
                             response.setContentType("application/json;charset=UTF-8");
                             String jsonResponse = objectMapper.writeValueAsString(
-                                    new ErrorResponse("UNAUTHENTICATED", "Authentication is required. Please log in.")
+                                    new ErrorResponse(
+                                            "UNAUTHENTICATED",
+                                            "Authentication is required. Please log in.",
+                                            LocalDateTime.now(),
+                                            request.getRequestURI()
+                                    )
                             );
                             response.getWriter().write(jsonResponse);
                         })
@@ -70,7 +77,12 @@ public class SecurityConfig {
                             response.setStatus(HttpStatus.FORBIDDEN.value());
                             response.setContentType("application/json;charset=UTF-8");
                             String jsonResponse = objectMapper.writeValueAsString(
-                                    new ErrorResponse("ACCESS_DENIED", "You do not have permission to access this resource.")
+                                    new ErrorResponse(
+                                            "ACCESS_DENIED",
+                                            "You do not have permission to access this resource.",
+                                            LocalDateTime.now(),
+                                            request.getRequestURI()
+                                    )
                             );
                             response.getWriter().write(jsonResponse);
                         })
