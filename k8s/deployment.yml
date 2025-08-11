@@ -21,14 +21,13 @@ spec:
       serviceAccountName: joycrew-service-account
       containers:
         - name: backend-container
-          # ❗️ IMPORTANT: Use the correct URI of your Docker image pushed to ECR.
-          image: "566105751077.dkr.ecr.ap-northeast-2.amazonaws.com/joycrew-backend:latest"
+          image: "566105751077.dkr.ecr.ap-northeast-2.amazonaws.com/joycrew-backend:a761bbb-1754808557"
           ports:
             - containerPort: 8082
           # Define resource requests and limits for better scheduling and stability.
           resources:
             requests:
-              memory: "512Mi"
+              memory: "256Mi"
               cpu: "250m"
             limits:
               memory: "1Gi"

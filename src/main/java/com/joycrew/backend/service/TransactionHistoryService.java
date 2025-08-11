@@ -30,7 +30,25 @@ public class TransactionHistoryService {
                 .map(tx -> {
                     boolean isSender = user.equals(tx.getSender());
                     int amount = isSender ? -tx.getPointAmount() : tx.getPointAmount();
-                    String counterparty = isSender ? tx.getReceiver().getEmployeeName() : (tx.getSender() != null ? tx.getSender().getEmployeeName() : "System");
+
+                    String counterparty;
+                    switch (tx.getType()) {
+                        case REDEEM_ITEM:
+                            counterparty = tx.getMessage() != null ? tx.getMessage() : "상품 구매";
+                            break;
+                        case AWARD_P2P:
+                        case AWARD_MANAGER_SPOT:
+                        case ADMIN_ADJUSTMENT:
+                            counterparty = isSender
+                                    ? tx.getReceiver().getEmployeeName()
+                                    : (tx.getSender() != null ? tx.getSender().getEmployeeName() : "System");
+                            break;
+                        case AWARD_AUTOMATED:
+                        case EXPIRE_POINTS:
+                        default:
+                            counterparty = "System";
+                            break;
+                    }
 
                     return TransactionHistoryResponse.builder()
                             .transactionId(tx.getTransactionId())

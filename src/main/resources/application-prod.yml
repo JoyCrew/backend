@@ -4,6 +4,8 @@
 # Properties that are active when the 'prod' profile is enabled.
 # ===================================================================
 spring:
+  config:
+    import: optional:aws-secretsmanager:security
   # In production, the application connects to an external MySQL database.
   # For security, database credentials are read from environment variables.
   datasource:
@@ -25,7 +27,7 @@ logging:
 
 # The frontend service URL for the production environment.
 app:
-  frontend-url: https://joycrew.co.kr
+  frontend-url: https://www.joycrew.co.kr
 
 # AWS specific settings for production
 aws:
