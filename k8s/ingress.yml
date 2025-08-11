@@ -20,7 +20,7 @@ spec:
   # Specifies that the 'alb' ingress controller should handle this Ingress. (Modern way)
   ingressClassName: alb
   rules:
-    - host: api.joycrew.com
+    - host: api.joycrew.co.kr
       http:
         paths:
           - path: /

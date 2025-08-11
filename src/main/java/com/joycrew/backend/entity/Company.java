@@ -1,5 +1,6 @@
 package com.joycrew.backend.entity;
 
+import com.joycrew.backend.exception.InsufficientPointsException;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -54,6 +55,16 @@ public class Company {
             throw new IllegalArgumentException("Budget amount cannot be negative.");
         }
         this.totalCompanyBalance += amount;
+    }
+
+    public void spendBudget(double amount) {
+        if (amount < 0) {
+            throw new IllegalArgumentException("Amount to spend cannot be negative.");
+        }
+        if (this.totalCompanyBalance < amount) {
+            throw new InsufficientPointsException("The company does not have enough budget to distribute the points.");
+        }
+        this.totalCompanyBalance -= amount;
     }
 
     @PrePersist
