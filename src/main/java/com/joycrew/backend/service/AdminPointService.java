@@ -6,6 +6,7 @@ import com.joycrew.backend.entity.Company;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.RewardPointTransaction;
 import com.joycrew.backend.entity.Wallet;
+import com.joycrew.backend.entity.enums.TransactionType;
 import com.joycrew.backend.exception.UserNotFoundException;
 import com.joycrew.backend.repository.CompanyRepository;
 import com.joycrew.backend.repository.EmployeeRepository;
@@ -73,7 +74,7 @@ public class AdminPointService {
                         .receiver(employee)
                         .pointAmount(pointsToProcess)
                         .message(request.message())
-                        .type(request.type())
+                        .type(TransactionType.AWARD_MANAGER_SPOT)
                         .build();
                 transactionRepository.save(transaction);
             }
