@@ -2,9 +2,7 @@ package com.joycrew.backend.controller;
 
 import com.joycrew.backend.dto.*;
 import com.joycrew.backend.security.UserPrincipal;
-import com.joycrew.backend.service.AdminPointService;
-import com.joycrew.backend.service.EmployeeManagementService;
-import com.joycrew.backend.service.EmployeeRegistrationService;
+import com.joycrew.backend.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -31,6 +29,7 @@ public class AdminEmployeeController {
     private final EmployeeRegistrationService registrationService;
     private final EmployeeManagementService managementService;
     private final AdminPointService pointService;
+    private final AdminDashboardService adminDashboardService;
 
     @Operation(
             summary = "Register a single employee",
@@ -129,5 +128,13 @@ public class AdminEmployeeController {
             @AuthenticationPrincipal UserPrincipal principal) {
         pointService.distributePoints(request, principal.getEmployee());
         return ResponseEntity.ok(new SuccessResponse("Point distribution process completed successfully."));
+    }
+
+    @Operation(summary = "Get admin's personal and company point balance", description = "Gets the admin's personal wallet balance and the total budget of the company they belong to.", security = @SecurityRequirement(name = "Authorization"))
+    @GetMapping("/points/balance")
+    public ResponseEntity<AdminPointBudgetResponse> getAdminAndCompanyBalance(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        AdminPointBudgetResponse response = adminDashboardService.getAdminAndCompanyBalance(principal.getUsername());
+        return ResponseEntity.ok(response);
     }
 }
