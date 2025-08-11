@@ -62,3 +62,9 @@ aws:
   region: 'ap-northeast-2'
   s3:
     bucket-name: 'joycrew-dev-bucket'
+
+#view-cleanup-scheduling
+jobs:
+  recent-view-cleanup:
+    enabled: true
+    cron: "0 0 3 * * *"
