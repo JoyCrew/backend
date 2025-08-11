@@ -20,10 +20,13 @@ public class Wallet {
 
     @Column(nullable = false)
     private Integer balance;
+
     @Column(nullable = false)
     private Integer giftablePoint;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
@@ -52,15 +55,20 @@ public class Wallet {
         this.giftablePoint -= amount;
     }
 
+    // Refund purchase points back to wallet
+    public void refundPoints(int amount) {
+        if (amount < 0) {
+            throw new IllegalArgumentException("Refund amount cannot be negative.");
+        }
+        this.balance += amount;
+        this.giftablePoint += amount;
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = this.updatedAt = LocalDateTime.now();
-        if (this.balance == null) {
-            this.balance = 0;
-        }
-        if (this.giftablePoint == null) {
-            this.giftablePoint = 0;
-        }
+        if (this.balance == null) this.balance = 0;
+        if (this.giftablePoint == null) this.giftablePoint = 0;
     }
 
     @PreUpdate
