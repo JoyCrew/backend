@@ -1,5 +1,6 @@
 package com.joycrew.backend.config;
 
+import org.springframework.http.HttpMethod;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joycrew.backend.dto.ErrorResponse;
 import com.joycrew.backend.entity.enums.AdminLevel;
@@ -52,6 +53,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/crawl/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole(AdminLevel.SUPER_ADMIN.name())
                         .anyRequest().authenticated()
                 )
