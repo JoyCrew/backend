@@ -12,4 +12,7 @@ public interface RewardPointTransactionRepository extends JpaRepository<RewardPo
     List<RewardPointTransaction> findBySenderOrReceiverOrderByTransactionDateDesc(Employee sender, Employee receiver);
 
     List<RewardPointTransaction> findAllByOrderByTransactionDateDesc();
+
+    @EntityGraph(attributePaths = {"sender", "receiver"})
+    List<RewardPointTransaction> findBySenderOrReceiver(Employee sender, Employee receiver);
 }
