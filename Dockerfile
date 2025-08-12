@@ -25,20 +25,23 @@ WORKDIR /app
 
 # Create a dedicated, non-root user and group for enhanced security.
 RUN addgroup -S joycrew && adduser -S joycrew -G joycrew
-USER joycrew
+
+# Create log directory and set permissions
+RUN mkdir -p /var/log/joycrew && chown -R joycrew:joycrew /var/log/joycrew
 
 # Copy the executable .jar file from the builder stage.
 COPY --from=builder /workspace/build/libs/app.jar .
+
+# Change ownership to joycrew user
+RUN chown joycrew:joycrew app.jar
+
+USER joycrew
 
 # Set the active Spring profile to 'prod'
 ENV SPRING_PROFILES_ACTIVE=prod
 
 # Document the port that the container exposes at runtime
 EXPOSE 8082
-
-# Health check to ensure the application is running and healthy.
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD curl -f http://localhost:8082/actuator/health || exit 1
 
 # The command to run when the container starts
 ENTRYPOINT ["java", "-jar", "app.jar"]
