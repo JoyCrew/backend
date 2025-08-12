@@ -2,6 +2,7 @@ package com.joycrew.backend.service;
 
 import com.joycrew.backend.dto.AdminEmployeeUpdateRequest;
 import com.joycrew.backend.dto.AdminPointDistributionRequest;
+import com.joycrew.backend.dto.PointDistributionDetail;
 import com.joycrew.backend.entity.Company;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.Wallet;
@@ -60,11 +61,15 @@ class AdminFeaturesIntegrationTest {
     @DisplayName("[Integration] Admin successfully distributes points to employees")
     void distributePoints_Success() {
         // Given
+        List<PointDistributionDetail> distributions = List.of(
+                new PointDistributionDetail(employee1.getEmployeeId(), 500),
+                new PointDistributionDetail(employee2.getEmployeeId(), 500)
+        );
+
         AdminPointDistributionRequest request = new AdminPointDistributionRequest(
-                List.of(employee1.getEmployeeId(), employee2.getEmployeeId()),
-                500,
+                distributions,
                 "Bonus Payout",
-                TransactionType.ADMIN_ADJUSTMENT
+                TransactionType.AWARD_MANAGER_SPOT
         );
 
         // When

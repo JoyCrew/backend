@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joycrew.backend.dto.AdminEmployeeUpdateRequest;
 import com.joycrew.backend.dto.AdminPointDistributionRequest;
 import com.joycrew.backend.dto.EmployeeRegistrationRequest;
+import com.joycrew.backend.dto.PointDistributionDetail;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.entity.enums.TransactionType;
@@ -113,9 +114,16 @@ class AdminEmployeeControllerTest {
     @WithMockUserPrincipal(role="SUPER_ADMIN")
     void distributePoints_Success() throws Exception {
         // Given
-        AdminPointDistributionRequest request = new AdminPointDistributionRequest(
-                List.of(1L, 2L), 100, "Bonus", TransactionType.ADMIN_ADJUSTMENT);
+        List<PointDistributionDetail> distributions = List.of(
+                new PointDistributionDetail(1L, 100),
+                new PointDistributionDetail(2L, 100)
+        );
 
+        AdminPointDistributionRequest request = new AdminPointDistributionRequest(
+                distributions,
+                "Bonus",
+                TransactionType.AWARD_MANAGER_SPOT
+        );
         // When & Then
         mockMvc.perform(post("/api/admin/employees/points/distribute")
                         .contentType(MediaType.APPLICATION_JSON)
