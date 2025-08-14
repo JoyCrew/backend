@@ -20,24 +20,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = WalletController.class)
 class WalletControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @MockBean private WalletService walletService;
-    @MockBean private JwtUtil jwtUtil;
-    @MockBean private EmployeeDetailsService employeeDetailsService;
+  @Autowired
+  private MockMvc mockMvc;
+  @MockBean
+  private WalletService walletService;
+  @MockBean
+  private JwtUtil jwtUtil;
+  @MockBean
+  private EmployeeDetailsService employeeDetailsService;
 
-    @Test
-    @DisplayName("GET /api/wallet/point - Should get point balance successfully")
-    @WithMockUserPrincipal
-    void getWalletPoint_Success() throws Exception {
-        // Given
-        PointBalanceResponse mockResponse = new PointBalanceResponse(1500, 100);
-        when(walletService.getPointBalance("testuser@joycrew.com")).thenReturn(mockResponse);
+  @Test
+  @DisplayName("GET /api/wallet/point - Should get point balance successfully")
+  @WithMockUserPrincipal
+  void getWalletPoint_Success() throws Exception {
+    // Given
+    PointBalanceResponse mockResponse = new PointBalanceResponse(1500, 100);
+    when(walletService.getPointBalance("testuser@joycrew.com")).thenReturn(mockResponse);
 
-        // When & Then
-        mockMvc.perform(get("/api/wallet/point"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.totalBalance").value(1500))
-                .andExpect(jsonPath("$.giftableBalance").value(100));
-    }
+    // When & Then
+    mockMvc.perform(get("/api/wallet/point"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.totalBalance").value(1500))
+        .andExpect(jsonPath("$.giftableBalance").value(100));
+  }
 }

@@ -19,30 +19,30 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RecentProductViewController {
 
-    private final RecentProductViewService recentProductViewService;
+  private final RecentProductViewService recentProductViewService;
 
-    @Operation(summary = "Record a recent view", description = "Records a product as recently viewed by the current user.")
-    @PostMapping("/{productId}")
-    public ResponseEntity<Void> recordView(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long productId
-    ) {
-        Long employeeId = principal.getEmployee().getEmployeeId();
-        recentProductViewService.recordView(employeeId, productId);
-        return ResponseEntity.ok().build();
-    }
+  @Operation(summary = "Record a recent view", description = "Records a product as recently viewed by the current user.")
+  @PostMapping("/{productId}")
+  public ResponseEntity<Void> recordView(
+      @AuthenticationPrincipal UserPrincipal principal,
+      @PathVariable Long productId
+  ) {
+    Long employeeId = principal.getEmployee().getEmployeeId();
+    recentProductViewService.recordView(employeeId, productId);
+    return ResponseEntity.ok().build();
+  }
 
-    @Operation(
-            summary = "Get recent views",
-            description = "Returns the current user's recently viewed products within the last 3 months.",
-            parameters = @Parameter(name = "limit", description = "Max items to return (default 20, max 100)", example = "20")
-    )
-    @GetMapping
-    public ResponseEntity<List<RecentViewedProductResponse>> getRecentViews(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam(required = false) Integer limit
-    ) {
-        Long employeeId = principal.getEmployee().getEmployeeId();
-        return ResponseEntity.ok(recentProductViewService.getRecentViews(employeeId, limit));
-    }
+  @Operation(
+      summary = "Get recent views",
+      description = "Returns the current user's recently viewed products within the last 3 months.",
+      parameters = @Parameter(name = "limit", description = "Max items to return (default 20, max 100)", example = "20")
+  )
+  @GetMapping
+  public ResponseEntity<List<RecentViewedProductResponse>> getRecentViews(
+      @AuthenticationPrincipal UserPrincipal principal,
+      @RequestParam(required = false) Integer limit
+  ) {
+    Long employeeId = principal.getEmployee().getEmployeeId();
+    return ResponseEntity.ok(recentProductViewService.getRecentViews(employeeId, limit));
+  }
 }

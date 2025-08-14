@@ -13,39 +13,39 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
-    private String secretKey;
+  @Value("${jwt.secret}")
+  private String secretKey;
 
-    @Value("${jwt.expiration-ms}")
-    private long expirationTime;
+  @Value("${jwt.expiration-ms}")
+  private long expirationTime;
 
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
+  private SecretKey getSigningKey() {
+    byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
+    return Keys.hmacShaKeyFor(keyBytes);
+  }
 
-    public String generateToken(String email) {
-        return generateToken(email, expirationTime);
-    }
+  public String generateToken(String email) {
+    return generateToken(email, expirationTime);
+  }
 
-    public String generateToken(String email, long customExpirationMs) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + customExpirationMs);
+  public String generateToken(String email, long customExpirationMs) {
+    Date now = new Date();
+    Date expiryDate = new Date(now.getTime() + customExpirationMs);
 
-        return Jwts.builder()
-                .setSubject(email)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
+    return Jwts.builder()
+        .setSubject(email)
+        .setIssuedAt(now)
+        .setExpiration(expiryDate)
+        .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+        .compact();
+  }
 
-    public String getEmailFromToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
-    }
+  public String getEmailFromToken(String token) {
+    return Jwts.parserBuilder()
+        .setSigningKey(getSigningKey())
+        .build()
+        .parseClaimsJws(token)
+        .getBody()
+        .getSubject();
+  }
 }

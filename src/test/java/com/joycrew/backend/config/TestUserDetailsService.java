@@ -14,33 +14,33 @@ import java.util.Map;
 @Service
 public class TestUserDetailsService implements UserDetailsService {
 
-    private final Map<String, Employee> users = new HashMap<>();
+  private final Map<String, Employee> users = new HashMap<>();
 
-    public TestUserDetailsService() {
-        users.put("testuser@joycrew.com", Employee.builder()
-                .employeeId(1L)
-                .email("testuser@joycrew.com")
-                .employeeName("Test User")
-                .role(AdminLevel.EMPLOYEE)
-                .status("ACTIVE")
-                .passwordHash("{noop}password")
-                .build());
+  public TestUserDetailsService() {
+    users.put("testuser@joycrew.com", Employee.builder()
+        .employeeId(1L)
+        .email("testuser@joycrew.com")
+        .employeeName("Test User")
+        .role(AdminLevel.EMPLOYEE)
+        .status("ACTIVE")
+        .passwordHash("{noop}password")
+        .build());
 
-        users.put("nowallet@joycrew.com", Employee.builder()
-                .employeeId(99L)
-                .email("nowallet@joycrew.com")
-                .employeeName("No Wallet User")
-                .role(AdminLevel.EMPLOYEE)
-                .status("ACTIVE")
-                .passwordHash("{noop}password")
-                .build());
+    users.put("nowallet@joycrew.com", Employee.builder()
+        .employeeId(99L)
+        .email("nowallet@joycrew.com")
+        .employeeName("No Wallet User")
+        .role(AdminLevel.EMPLOYEE)
+        .status("ACTIVE")
+        .passwordHash("{noop}password")
+        .build());
+  }
+
+  @Override
+  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    if (!users.containsKey(username)) {
+      throw new UsernameNotFoundException("User not found: " + username);
     }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        if (!users.containsKey(username)) {
-            throw new UsernameNotFoundException("User not found: " + username);
-        }
-        return new UserPrincipal(users.get(username));
-    }
+    return new UserPrincipal(users.get(username));
+  }
 }

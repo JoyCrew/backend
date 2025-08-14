@@ -1,29 +1,29 @@
 package com.joycrew.backend.config;
 
-import org.springframework.http.HttpMethod;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joycrew.backend.dto.ErrorResponse;
 import com.joycrew.backend.entity.enums.AdminLevel;
+import com.joycrew.backend.security.EmployeeDetailsService;
 import com.joycrew.backend.security.JwtAuthenticationFilter;
 import com.joycrew.backend.security.JwtUtil;
-import com.joycrew.backend.security.EmployeeDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 
 import java.time.LocalDateTime;
 
@@ -32,95 +32,96 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtUtil jwtUtil;
-    private final EmployeeDetailsService employeeDetailsService;
-    private final ObjectMapper objectMapper;
+  private final JwtUtil jwtUtil;
+  private final EmployeeDetailsService employeeDetailsService;
+  private final ObjectMapper objectMapper;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> {})
-                .csrf(csrf -> csrf.disable())
-                .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.disable()))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/",
-                                "/h2-console/**",
-                                "/api/auth/login",
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .cors(cors -> {})
+        .csrf(csrf -> csrf.disable())
+        .headers(headers -> headers
+            .frameOptions(frameOptions -> frameOptions.disable()))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(
+                "/",
+                "/h2-console/**",
+                "/api/auth/login",
+                "/api/auth/password-reset/request",
+                "/api/auth/password-reset/confirm",
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html"
+            ).permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/crawl/**").permitAll()
+            .requestMatchers("/api/admin/**").hasRole(AdminLevel.SUPER_ADMIN.name())
+            .anyRequest().authenticated()
+        )
+        .exceptionHandling(exceptions -> exceptions
+            .authenticationEntryPoint((request, response, authException) -> {
+              response.setStatus(HttpStatus.UNAUTHORIZED.value());
+              response.setContentType("application/json;charset=UTF-8");
+              String jsonResponse = objectMapper.writeValueAsString(
+                  new ErrorResponse(
+                      "UNAUTHENTICATED",
+                      "Authentication is required. Please log in.",
+                      LocalDateTime.now(),
+                      request.getRequestURI()
+                  )
+              );
+              response.getWriter().write(jsonResponse);
+            })
+            .accessDeniedHandler((request, response, accessDeniedException) -> {
+              response.setStatus(HttpStatus.FORBIDDEN.value());
+              response.setContentType("application/json;charset=UTF-8");
+              String jsonResponse = objectMapper.writeValueAsString(
+                  new ErrorResponse(
+                      "ACCESS_DENIED",
+                      "You do not have permission to access this resource.",
+                      LocalDateTime.now(),
+                      request.getRequestURI()
+                  )
+              );
+              response.getWriter().write(jsonResponse);
+            })
+        )
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, employeeDetailsService),
+            UsernamePasswordAuthenticationFilter.class);
 
-                                "/api/auth/password-reset/request",
-                                "/api/auth/password-reset/confirm",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/crawl/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole(AdminLevel.SUPER_ADMIN.name())
-                        .anyRequest().authenticated()
-                )
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                            response.setContentType("application/json;charset=UTF-8");
-                            String jsonResponse = objectMapper.writeValueAsString(
-                                    new ErrorResponse(
-                                            "UNAUTHENTICATED",
-                                            "Authentication is required. Please log in.",
-                                            LocalDateTime.now(),
-                                            request.getRequestURI()
-                                    )
-                            );
-                            response.getWriter().write(jsonResponse);
-                        })
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            response.setStatus(HttpStatus.FORBIDDEN.value());
-                            response.setContentType("application/json;charset=UTF-8");
-                            String jsonResponse = objectMapper.writeValueAsString(
-                                    new ErrorResponse(
-                                            "ACCESS_DENIED",
-                                            "You do not have permission to access this resource.",
-                                            LocalDateTime.now(),
-                                            request.getRequestURI()
-                                    )
-                            );
-                            response.getWriter().write(jsonResponse);
-                        })
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, employeeDetailsService),
-                        UsernamePasswordAuthenticationFilter.class);
+    return http.build();
+  }
 
-        return http.build();
-    }
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+  @Bean
+  public CorsFilter corsFilter() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.addAllowedOriginPattern("http://localhost:3000");
+    config.addAllowedOriginPattern("http://localhost:5173");
+    config.addAllowedOriginPattern("https://www.joycrew.co.kr");
+    config.addAllowedOriginPattern("https://joycrew.co.kr");
+    config.addAllowedOriginPattern("http://localhost:8082");
+    config.addAllowedHeader("*");
+    config.addAllowedMethod("*");
+    config.setAllowCredentials(true);
 
-    @Bean
-    public CorsFilter corsFilter() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOriginPattern("http://localhost:3000");
-        config.addAllowedOriginPattern("http://localhost:5173");
-        config.addAllowedOriginPattern("https://www.joycrew.co.kr");
-        config.addAllowedOriginPattern("https://joycrew.co.kr");
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-        config.setAllowCredentials(true);
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return new CorsFilter(source);
+  }
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder) {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(employeeDetailsService);
-        authenticationProvider.setPasswordEncoder(passwordEncoder);
-        return new ProviderManager(authenticationProvider);
-    }
+  @Bean
+  public AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder) {
+    DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+    authenticationProvider.setUserDetailsService(employeeDetailsService);
+    authenticationProvider.setPasswordEncoder(passwordEncoder);
+    return new ProviderManager(authenticationProvider);
+  }
 }
