@@ -21,13 +21,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TransactionHistoryController {
 
-    private final TransactionHistoryService transactionHistoryService;
+  private final TransactionHistoryService transactionHistoryService;
 
-    @Operation(summary = "Get point transaction history", security = @SecurityRequirement(name = "Authorization"))
-    @GetMapping
-    public ResponseEntity<List<TransactionHistoryResponse>> getMyTransactions(
-            @AuthenticationPrincipal UserPrincipal principal) {
-        List<TransactionHistoryResponse> history = transactionHistoryService.getTransactionHistory(principal.getUsername());
-        return ResponseEntity.ok(history);
-    }
+  @Operation(summary = "Get point transaction history", security = @SecurityRequirement(name = "Authorization"))
+  @GetMapping
+  public ResponseEntity<List<TransactionHistoryResponse>> getMyTransactions(
+      @AuthenticationPrincipal UserPrincipal principal) {
+    List<TransactionHistoryResponse> history = transactionHistoryService.getTransactionHistory(principal.getUsername());
+    return ResponseEntity.ok(history);
+  }
 }

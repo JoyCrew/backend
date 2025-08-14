@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joycrew.backend.dto.AdminEmployeeUpdateRequest;
 import com.joycrew.backend.dto.AdminPointDistributionRequest;
 import com.joycrew.backend.dto.EmployeeRegistrationRequest;
+import com.joycrew.backend.dto.PointDistributionDetail;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.entity.enums.TransactionType;
 import com.joycrew.backend.security.WithMockUserPrincipal;
+import com.joycrew.backend.service.AdminDashboardService;
 import com.joycrew.backend.service.AdminPointService;
 import com.joycrew.backend.service.EmployeeManagementService;
 import com.joycrew.backend.service.EmployeeRegistrationService;
@@ -39,6 +41,7 @@ class AdminEmployeeControllerTest {
     @MockBean private EmployeeRegistrationService registrationService;
     @MockBean private EmployeeManagementService managementService;
     @MockBean private AdminPointService pointService;
+    @MockBean private AdminDashboardService adminDashboardService; // MockBean 추가
 
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")
@@ -58,7 +61,7 @@ class AdminEmployeeControllerTest {
         mockMvc.perform(post("/api/admin/employees")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
-                        .with(csrf())) // CSRF 토큰 추가
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Employee created successfully (ID: 1)"));
     }
@@ -76,7 +79,7 @@ class AdminEmployeeControllerTest {
         // When & Then
         mockMvc.perform(multipart("/api/admin/employees/bulk")
                         .file(file)
-                        .with(csrf())) // CSRF 토큰 추가
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("CSV processed and employee registration completed."));
     }
@@ -92,7 +95,7 @@ class AdminEmployeeControllerTest {
         mockMvc.perform(patch("/api/admin/employees/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
-                        .with(csrf())) // CSRF 토큰 추가
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Employee information updated successfully."));
     }
@@ -103,7 +106,7 @@ class AdminEmployeeControllerTest {
     void deleteEmployee_Success() throws Exception {
         // When & Then
         mockMvc.perform(delete("/api/admin/employees/1")
-                        .with(csrf())) // CSRF 토큰 추가
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Employee successfully deactivated."));
     }
@@ -113,14 +116,21 @@ class AdminEmployeeControllerTest {
     @WithMockUserPrincipal(role="SUPER_ADMIN")
     void distributePoints_Success() throws Exception {
         // Given
-        AdminPointDistributionRequest request = new AdminPointDistributionRequest(
-                List.of(1L, 2L), 100, "Bonus", TransactionType.ADMIN_ADJUSTMENT);
+        List<PointDistributionDetail> distributions = List.of(
+                new PointDistributionDetail(1L, 100),
+                new PointDistributionDetail(2L, 100)
+        );
 
+        AdminPointDistributionRequest request = new AdminPointDistributionRequest(
+                distributions,
+                "Bonus",
+                TransactionType.ADMIN_ADJUSTMENT
+        );
         // When & Then
         mockMvc.perform(post("/api/admin/employees/points/distribute")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
-                        .with(csrf())) // CSRF 토큰 추가
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Point distribution process completed successfully."));
     }

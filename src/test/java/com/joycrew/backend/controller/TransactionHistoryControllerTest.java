@@ -24,29 +24,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = TransactionHistoryController.class)
 class TransactionHistoryControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @MockBean private TransactionHistoryService transactionHistoryService;
-    @MockBean private JwtUtil jwtUtil;
-    @MockBean private EmployeeDetailsService employeeDetailsService;
+  @Autowired
+  private MockMvc mockMvc;
+  @MockBean
+  private TransactionHistoryService transactionHistoryService;
+  @MockBean
+  private JwtUtil jwtUtil;
+  @MockBean
+  private EmployeeDetailsService employeeDetailsService;
 
-    @Test
-    @DisplayName("GET /api/transactions - Should get my transaction history successfully")
-    @WithMockUserPrincipal(email = "user@joycrew.com")
-    void getMyTransactions_Success() throws Exception {
-        // Given
-        List<TransactionHistoryResponse> mockHistory = List.of(
-                TransactionHistoryResponse.builder()
-                        .transactionId(1L).type(TransactionType.AWARD_P2P).amount(-50)
-                        .counterparty("Colleague Name").message("Thanks!")
-                        .transactionDate(LocalDateTime.now()).build()
-        );
-        when(transactionHistoryService.getTransactionHistory("user@joycrew.com")).thenReturn(mockHistory);
+  @Test
+  @DisplayName("GET /api/transactions - Should get my transaction history successfully")
+  @WithMockUserPrincipal(email = "user@joycrew.com")
+  void getMyTransactions_Success() throws Exception {
+    // Given
+    List<TransactionHistoryResponse> mockHistory = List.of(
+            TransactionHistoryResponse.builder()
+                    .transactionId(1L).type(TransactionType.AWARD_P2P).amount(-50)
+                    .counterparty("Colleague Name").message("Thanks!")
+                    .transactionDate(LocalDateTime.now()).build()
+    );
+    when(transactionHistoryService.getTransactionHistory("user@joycrew.com")).thenReturn(mockHistory);
 
-        // When & Then
-        mockMvc.perform(get("/api/transactions")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].transactionId").value(1L))
-                .andExpect(jsonPath("$[0].counterparty").value("Colleague Name"));
-    }
+    // When & Then
+    mockMvc.perform(get("/api/transactions")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].transactionId").value(1L))
+            .andExpect(jsonPath("$[0].counterparty").value("Colleague Name"));
+  }
 }

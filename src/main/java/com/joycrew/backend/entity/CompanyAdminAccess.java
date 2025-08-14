@@ -15,56 +15,56 @@ import java.time.LocalDateTime;
 @Builder
 public class CompanyAdminAccess {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long accessId;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long accessId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id", nullable = false)
-    private Employee employee;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "employee_id", nullable = false)
+  private Employee employee;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "company_id", nullable = false)
+  private Company company;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private AdminLevel adminLevel;
+  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
+  private AdminLevel adminLevel;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_by", nullable = true)
-    private Employee assignedBy;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "assigned_by", nullable = true)
+  private Employee assignedBy;
 
-    @Column(nullable = false)
-    private LocalDateTime assignedAt;
+  @Column(nullable = false)
+  private LocalDateTime assignedAt;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private AccessStatus status;
+  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
+  private AccessStatus status;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
+  @Column(nullable = false)
+  private LocalDateTime createdAt;
+  @Column(nullable = false)
+  private LocalDateTime updatedAt;
 
-    public void revoke() {
-        this.status = AccessStatus.REVOKED;
+  public void revoke() {
+    this.status = AccessStatus.REVOKED;
+  }
+
+
+  @PrePersist
+  protected void onCreate() {
+    this.createdAt = this.updatedAt = LocalDateTime.now();
+    if (this.assignedAt == null) {
+      this.assignedAt = LocalDateTime.now();
     }
-
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = this.updatedAt = LocalDateTime.now();
-        if (this.assignedAt == null) {
-            this.assignedAt = LocalDateTime.now();
-        }
-        if (this.status == null) {
-            this.status = AccessStatus.ACTIVE;
-        }
+    if (this.status == null) {
+      this.status = AccessStatus.ACTIVE;
     }
+  }
 
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+  @PreUpdate
+  protected void onUpdate() {
+    this.updatedAt = LocalDateTime.now();
+  }
 }

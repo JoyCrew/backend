@@ -1,56 +1,44 @@
 package com.joycrew.backend.exception;
 
 import com.joycrew.backend.dto.ErrorResponse;
-import lombok.extern.slf4j.Slf4j;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import java.util.NoSuchElementException;
 
-@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(InsufficientPointsException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(InsufficientPointsException ex) {
-        log.warn("Business logic violation: {}", ex.getMessage());
-        ErrorResponse response = new ErrorResponse("BUSINESS_LOGIC_ERROR", ex.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
+  @ExceptionHandler(InsufficientPointsException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ErrorResponse handleInsufficientPoints(InsufficientPointsException ex, HttpServletRequest req) {
+    return new ErrorResponse("INSUFFICIENT_POINTS", ex.getMessage(), LocalDateTime.now(), req.getRequestURI());
+  }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        String allErrors = ex.getBindingResult().getAllErrors().stream()
-                .map(error -> error.getDefaultMessage())
-                .collect(Collectors.joining(", "));
-        log.warn("Validation failed: {}", allErrors);
-        ErrorResponse response = new ErrorResponse("VALIDATION_FAILED", allErrors);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
+  @ExceptionHandler(NoSuchElementException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ErrorResponse handleNoSuchElement(NoSuchElementException ex, HttpServletRequest req) {
+    return new ErrorResponse("NOT_FOUND", ex.getMessage(), LocalDateTime.now(), req.getRequestURI());
+  }
 
-    @ExceptionHandler({BadCredentialsException.class, UsernameNotFoundException.class})
-    public ResponseEntity<ErrorResponse> handleAuthenticationException(Exception ex) {
-        log.warn("Authentication failed: {}", ex.getMessage());
-        ErrorResponse response = new ErrorResponse("AUTHENTICATION_FAILED", "The email or password provided is incorrect.");
-        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-    }
+  @ExceptionHandler(IllegalStateException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ErrorResponse handleIllegalState(IllegalStateException ex, HttpServletRequest req) {
+    return new ErrorResponse("ORDER_CANNOT_CANCEL", ex.getMessage(), LocalDateTime.now(), req.getRequestURI());
+  }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFoundException(UserNotFoundException ex) {
-        log.warn("Resource not found: {}", ex.getMessage());
-        ErrorResponse response = new ErrorResponse("RESOURCE_NOT_FOUND", ex.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleAllUncaughtException(Exception ex) {
-        log.error("Unhandled internal server error occurred", ex);
-        ErrorResponse response = new ErrorResponse("INTERNAL_SERVER_ERROR", "An internal server error occurred. Please contact an administrator.");
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  @ExceptionHandler(BadCredentialsException.class)
+  public ResponseEntity<ErrorResponse> handleAuthenticationFailed(BadCredentialsException ex, HttpServletRequest req) { // 1. HttpServletRequest 추가
+    ErrorResponse errorResponse = new ErrorResponse(
+        "AUTHENTICATION_FAILED",
+        ex.getMessage(),
+        LocalDateTime.now(),
+        req.getRequestURI()
+    );
+    return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+  }
 }

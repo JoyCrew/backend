@@ -24,30 +24,34 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = EmployeeQueryController.class)
 class EmployeeQueryControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @MockBean private EmployeeQueryService employeeQueryService;
-    @MockBean private JwtUtil jwtUtil;
-    @MockBean private EmployeeDetailsService employeeDetailsService;
+  @Autowired
+  private MockMvc mockMvc;
+  @MockBean
+  private EmployeeQueryService employeeQueryService;
+  @MockBean
+  private JwtUtil jwtUtil;
+  @MockBean
+  private EmployeeDetailsService employeeDetailsService;
 
-    @Test
-    @DisplayName("GET /api/employee/query - Should search employees successfully")
-    @WithMockUserPrincipal
-    void searchEmployees_success() throws Exception {
-        // Given
-        EmployeeQueryResponse mockEmployee = new EmployeeQueryResponse(
-                2L, "https://cdn.joycrew.com/profile/user1.jpg",
-                "Jane Doe", "HR", "Staff"
-        );
-        PagedEmployeeResponse mockResponse = new PagedEmployeeResponse(List.of(mockEmployee), 0, 1, true);
-        when(employeeQueryService.getEmployees(anyString(), anyInt(), anyInt(), anyLong()))
-                .thenReturn(mockResponse);
+  @Test
+  @DisplayName("GET /api/employee/query - Should search employees successfully")
+  @WithMockUserPrincipal
+  void searchEmployees_success() throws Exception {
+    // Given
+    EmployeeQueryResponse mockEmployee = new EmployeeQueryResponse(
+            2L, "https://cdn.joycrew.com/profile/user1.jpg",
+            "Jane Doe", "HR", "Staff"
+    );
+    PagedEmployeeResponse mockResponse = new PagedEmployeeResponse(List.of(mockEmployee), 0, 1, true);
+    when(employeeQueryService.getEmployees(anyString(), anyInt(), anyInt(), anyLong()))
+            .thenReturn(mockResponse);
 
-        // When & Then
-        mockMvc.perform(get("/api/employee/query")
-                        .param("keyword", "Jane")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.employees[0].employeeName").value("Jane Doe"))
-                .andExpect(jsonPath("$.currentPage").value(0));
-    }
+    // When & Then
+    mockMvc.perform(get("/api/employee/query")
+                    .param("keyword", "Jane")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.employees[0].employeeName").value("Jane Doe"))
+            .andExpect(jsonPath("$.currentPage").value(0));
+  }
 }
