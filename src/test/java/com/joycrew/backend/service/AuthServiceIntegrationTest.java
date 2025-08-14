@@ -25,65 +25,65 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Transactional
 class AuthServiceIntegrationTest {
 
-    @Autowired private AuthService authService;
-    @Autowired private EmployeeRepository employeeRepository;
-    @Autowired private JwtUtil jwtUtil;
-    @Autowired private CompanyRepository companyRepository;
-    @Autowired private EmployeeRegistrationService registrationService;
+  @Autowired private AuthService authService;
+  @Autowired private EmployeeRepository employeeRepository;
+  @Autowired private JwtUtil jwtUtil;
+  @Autowired private CompanyRepository companyRepository;
+  @Autowired private EmployeeRegistrationService registrationService;
 
-    private String testEmail = "integration@joycrew.com";
-    private String testPassword = "integrationPass123!";
-    private String testName = "IntegrationTestUser";
-    private Company defaultCompany;
+  private String testEmail = "integration@joycrew.com";
+  private String testPassword = "integrationPass123!";
+  private String testName = "IntegrationTestUser";
+  private Company defaultCompany;
 
-    @BeforeEach
-    void setUp() {
-        defaultCompany = companyRepository.save(Company.builder().companyName("Test Company").build());
-        employeeRepository.findByEmail(testEmail).ifPresent(employeeRepository::delete);
+  @BeforeEach
+  void setUp() {
+    defaultCompany = companyRepository.save(Company.builder().companyName("Test Company").build());
+    employeeRepository.findByEmail(testEmail).ifPresent(employeeRepository::delete);
 
-        EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
-                testName, testEmail, testPassword,
-                defaultCompany.getCompanyName(), null, "Staff",
-                AdminLevel.EMPLOYEE, null, null, null
-        );
-        registrationService.registerEmployee(request);
-    }
+    EmployeeRegistrationRequest request = new EmployeeRegistrationRequest(
+        testName, testEmail, testPassword,
+        defaultCompany.getCompanyName(), null, "Staff",
+        AdminLevel.EMPLOYEE, null, null, null
+    );
+    registrationService.registerEmployee(request);
+  }
 
-    @Test
-    @DisplayName("[Integration] Login success returns JWT and user info")
-    void login_Integration_Success() {
-        // Given
-        LoginRequest request = new LoginRequest(testEmail, testPassword);
+  @Test
+  @DisplayName("[Integration] Login success returns JWT and user info")
+  void login_Integration_Success() {
+    // Given
+    LoginRequest request = new LoginRequest(testEmail, testPassword);
 
-        // When
-        LoginResponse response = authService.login(request);
+    // When
+    LoginResponse response = authService.login(request);
 
-        // Then
-        assertThat(response).isNotNull();
-        assertThat(response.accessToken()).isNotBlank();
-        assertThat(response.message()).isEqualTo("Login successful");
-        assertThat(response.email()).isEqualTo(testEmail);
-    }
+    // Then
+    assertThat(response).isNotNull();
+    assertThat(response.accessToken()).isNotBlank();
+    assertThat(response.message()).isEqualTo("Login successful");
+    assertThat(response.email()).isEqualTo(testEmail);
+  }
 
-    @Test
-    @DisplayName("[Integration] Login failure - Non-existent email")
-    void login_Integration_Failure_EmailNotFound() {
-        // Given
-        LoginRequest request = new LoginRequest("nonexistent@joycrew.com", "anypassword");
+  @Test
+  @DisplayName("[Integration] Login failure - Non-existent email")
+  void login_Integration_Failure_EmailNotFound() {
+    // Given
+    LoginRequest request = new LoginRequest("nonexistent@joycrew.com", "anypassword");
 
-        // When & Then
-        assertThatThrownBy(() -> authService.login(request))
-                .isInstanceOf(BadCredentialsException.class);
-    }
+    // When & Then
+    assertThatThrownBy(() -> authService.login(request))
+        .isInstanceOf(BadCredentialsException.class);
+  }
 
-    @Test
-    @DisplayName("[Integration] Login failure - Wrong password")
-    void login_Integration_Failure_WrongPassword() {
-        // Given
-        LoginRequest request = new LoginRequest(testEmail, "wrongpassword");
+  @Test
+  @DisplayName("[Integration] Login failure - Wrong password")
+  void login_Integration_Failure_WrongPassword() {
+    // Given
+    LoginRequest request = new LoginRequest(testEmail, "wrongpassword");
 
-        // When & Then
-        assertThatThrownBy(() -> authService.login(request))
-                .isInstanceOf(BadCredentialsException.class);
-    }
+    // When & Then
+    assertThatThrownBy(() -> authService.login(request))
+        .isInstanceOf(BadCredentialsException.class);
+  }
 }

@@ -24,19 +24,19 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class OrderController {
 
-    private final OrderService orderService;
+  private final OrderService orderService;
 
-    @Operation(
-            summary = "Create an order",
-            description = "Creates an order for the current user and deducts points from the linked wallet.",
-            responses = {
-                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                            responseCode = "200",
-                            description = "Order created successfully.",
-                            content = @Content(
-                                    schema = @Schema(implementation = OrderResponse.class),
-                                    examples = @ExampleObject(
-                                            value = """
+  @Operation(
+      summary = "Create an order",
+      description = "Creates an order for the current user and deducts points from the linked wallet.",
+      responses = {
+          @io.swagger.v3.oas.annotations.responses.ApiResponse(
+              responseCode = "200",
+              description = "Order created successfully.",
+              content = @Content(
+                  schema = @Schema(implementation = OrderResponse.class),
+                  examples = @ExampleObject(
+                      value = """
                                             {
                                               "orderId": 1001,
                                               "employeeId": 1,
@@ -52,62 +52,62 @@ public class OrderController {
                                               "deliveredAt": null
                                             }
                                             """
-                                    )
-                            )
-                    )
-            }
-    )
-    @PostMapping
-    public ResponseEntity<OrderResponse> createOrder(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @RequestBody CreateOrderRequest request
-    ) {
-        Long employeeId = principal.getEmployee().getEmployeeId();
-        return ResponseEntity.ok(orderService.createOrder(employeeId, request));
-    }
+                  )
+              )
+          )
+      }
+  )
+  @PostMapping
+  public ResponseEntity<OrderResponse> createOrder(
+      @AuthenticationPrincipal UserPrincipal principal,
+      @RequestBody CreateOrderRequest request
+  ) {
+    Long employeeId = principal.getEmployee().getEmployeeId();
+    return ResponseEntity.ok(orderService.createOrder(employeeId, request));
+  }
 
-    @Operation(
-            summary = "Get my orders (paged)",
-            description = "Retrieves the current user's own orders only.",
-            parameters = {
-                    @Parameter(name = "page", description = "Page number (0-based)", example = "0"),
-                    @Parameter(name = "size", description = "Items per page", example = "20")
-            }
-    )
-    @GetMapping
-    public ResponseEntity<PagedOrderResponse> getMyOrders(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
-        Long employeeId = principal.getEmployee().getEmployeeId();
-        return ResponseEntity.ok(orderService.getMyOrders(employeeId, page, size));
-    }
+  @Operation(
+      summary = "Get my orders (paged)",
+      description = "Retrieves the current user's own orders only.",
+      parameters = {
+          @Parameter(name = "page", description = "Page number (0-based)", example = "0"),
+          @Parameter(name = "size", description = "Items per page", example = "20")
+      }
+  )
+  @GetMapping
+  public ResponseEntity<PagedOrderResponse> getMyOrders(
+      @AuthenticationPrincipal UserPrincipal principal,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size
+  ) {
+    Long employeeId = principal.getEmployee().getEmployeeId();
+    return ResponseEntity.ok(orderService.getMyOrders(employeeId, page, size));
+  }
 
-    @Operation(
-            summary = "Get my order detail",
-            description = "Retrieves a specific order of the current user."
-    )
-    @GetMapping("/{orderId}")
-    public ResponseEntity<OrderResponse> getMyOrderDetail(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long orderId
-    ) {
-        Long employeeId = principal.getEmployee().getEmployeeId();
-        return ResponseEntity.ok(orderService.getMyOrderDetail(employeeId, orderId));
-    }
+  @Operation(
+      summary = "Get my order detail",
+      description = "Retrieves a specific order of the current user."
+  )
+  @GetMapping("/{orderId}")
+  public ResponseEntity<OrderResponse> getMyOrderDetail(
+      @AuthenticationPrincipal UserPrincipal principal,
+      @PathVariable Long orderId
+  ) {
+    Long employeeId = principal.getEmployee().getEmployeeId();
+    return ResponseEntity.ok(orderService.getMyOrderDetail(employeeId, orderId));
+  }
 
-    @Operation(
-            summary = "Cancel my order (only if not shipped)",
-            description = "Cancels the current user's order and refunds points if the order has not been shipped yet.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Order canceled successfully.",
-                            content = @Content(
-                                    schema = @Schema(implementation = OrderResponse.class),
-                                    examples = @ExampleObject(
-                                            value = """
+  @Operation(
+      summary = "Cancel my order (only if not shipped)",
+      description = "Cancels the current user's order and refunds points if the order has not been shipped yet.",
+      responses = {
+          @ApiResponse(
+              responseCode = "200",
+              description = "Order canceled successfully.",
+              content = @Content(
+                  schema = @Schema(implementation = OrderResponse.class),
+                  examples = @ExampleObject(
+                      value = """
                                             {
                                               "orderId": 1001,
                                               "employeeId": 1,
@@ -123,16 +123,16 @@ public class OrderController {
                                               "deliveredAt": null
                                             }
                                             """
-                                    )
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "400",
-                            description = "Order cannot be canceled after it has been shipped.",
-                            content = @Content(
-                                    schema = @Schema(implementation = ErrorResponse.class),
-                                    examples = @ExampleObject(
-                                            value = """
+                  )
+              )
+          ),
+          @ApiResponse(
+              responseCode = "400",
+              description = "Order cannot be canceled after it has been shipped.",
+              content = @Content(
+                  schema = @Schema(implementation = ErrorResponse.class),
+                  examples = @ExampleObject(
+                      value = """
                                             {
                                               "code": "ORDER_CANNOT_CANCEL",
                                               "message": "Order cannot be canceled after it has been shipped.",
@@ -140,17 +140,17 @@ public class OrderController {
                                               "path": "/api/orders/1001/cancel"
                                             }
                                             """
-                                    )
-                            )
-                    )
-            }
-    )
-    @PatchMapping("/{orderId}/cancel")
-    public ResponseEntity<OrderResponse> cancelMyOrder(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long orderId
-    ) {
-        Long employeeId = principal.getEmployee().getEmployeeId();
-        return ResponseEntity.ok(orderService.cancelMyOrder(employeeId, orderId));
-    }
+                  )
+              )
+          )
+      }
+  )
+  @PatchMapping("/{orderId}/cancel")
+  public ResponseEntity<OrderResponse> cancelMyOrder(
+      @AuthenticationPrincipal UserPrincipal principal,
+      @PathVariable Long orderId
+  ) {
+    Long employeeId = principal.getEmployee().getEmployeeId();
+    return ResponseEntity.ok(orderService.cancelMyOrder(employeeId, orderId));
+  }
 }

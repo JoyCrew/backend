@@ -28,86 +28,86 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceTest {
 
-    @Mock private EmployeeRepository employeeRepository;
-    @Mock private WalletRepository walletRepository;
-    @Mock private PasswordEncoder passwordEncoder;
-    @Mock private EmployeeMapper employeeMapper;
+  @Mock private EmployeeRepository employeeRepository;
+  @Mock private WalletRepository walletRepository;
+  @Mock private PasswordEncoder passwordEncoder;
+  @Mock private EmployeeMapper employeeMapper;
 
-    @InjectMocks
-    private EmployeeService employeeService;
+  @InjectMocks
+  private EmployeeService employeeService;
 
-    @Test
-    @DisplayName("[Unit] Get profile success - Wallet exists")
-    void getUserProfile_Success_WalletExists() {
-        // Given
-        String userEmail = "test@joycrew.com";
-        Employee mockEmployee = Employee.builder().employeeId(1L).email(userEmail).employeeName("Test User").build();
-        Wallet mockWallet = new Wallet(mockEmployee);
-        mockWallet.addPoints(200);
+  @Test
+  @DisplayName("[Unit] Get profile success - Wallet exists")
+  void getUserProfile_Success_WalletExists() {
+    // Given
+    String userEmail = "test@joycrew.com";
+    Employee mockEmployee = Employee.builder().employeeId(1L).email(userEmail).employeeName("Test User").build();
+    Wallet mockWallet = new Wallet(mockEmployee);
+    mockWallet.addPoints(200);
 
-        UserProfileResponse mockDto = new UserProfileResponse(1L, "Test User", userEmail, null, 200, 200, AdminLevel.EMPLOYEE, null, null, null, null, null);
+    UserProfileResponse mockDto = new UserProfileResponse(1L, "Test User", userEmail, null, 200, 200, AdminLevel.EMPLOYEE, null, null, null, null, null);
 
-        when(employeeRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockEmployee));
-        when(walletRepository.findByEmployee_EmployeeId(1L)).thenReturn(Optional.of(mockWallet));
-        when(employeeMapper.toUserProfileResponse(any(Employee.class), any(Wallet.class))).thenReturn(mockDto);
+    when(employeeRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockEmployee));
+    when(walletRepository.findByEmployee_EmployeeId(1L)).thenReturn(Optional.of(mockWallet));
+    when(employeeMapper.toUserProfileResponse(any(Employee.class), any(Wallet.class))).thenReturn(mockDto);
 
-        // When
-        UserProfileResponse response = employeeService.getUserProfile(userEmail);
+    // When
+    UserProfileResponse response = employeeService.getUserProfile(userEmail);
 
-        // Then
-        assertThat(response).isNotNull();
-        assertThat(response.name()).isEqualTo("Test User");
-        assertThat(response.totalBalance()).isEqualTo(200);
-    }
+    // Then
+    assertThat(response).isNotNull();
+    assertThat(response.name()).isEqualTo("Test User");
+    assertThat(response.totalBalance()).isEqualTo(200);
+  }
 
-    @Test
-    @DisplayName("[Unit] Get profile success - Wallet does not exist (defaults to 0)")
-    void getUserProfile_Success_WalletDoesNotExist() {
-        // Given
-        String userEmail = "test@joycrew.com";
-        Employee mockEmployee = Employee.builder().employeeId(1L).email(userEmail).employeeName("Test User").build();
-        UserProfileResponse mockDto = new UserProfileResponse(1L, "Test User", userEmail, null, 0, 0, AdminLevel.EMPLOYEE, null, null, null, null, null);
+  @Test
+  @DisplayName("[Unit] Get profile success - Wallet does not exist (defaults to 0)")
+  void getUserProfile_Success_WalletDoesNotExist() {
+    // Given
+    String userEmail = "test@joycrew.com";
+    Employee mockEmployee = Employee.builder().employeeId(1L).email(userEmail).employeeName("Test User").build();
+    UserProfileResponse mockDto = new UserProfileResponse(1L, "Test User", userEmail, null, 0, 0, AdminLevel.EMPLOYEE, null, null, null, null, null);
 
-        when(employeeRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockEmployee));
-        when(walletRepository.findByEmployee_EmployeeId(1L)).thenReturn(Optional.empty());
-        when(employeeMapper.toUserProfileResponse(any(Employee.class), any(Wallet.class))).thenReturn(mockDto);
+    when(employeeRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockEmployee));
+    when(walletRepository.findByEmployee_EmployeeId(1L)).thenReturn(Optional.empty());
+    when(employeeMapper.toUserProfileResponse(any(Employee.class), any(Wallet.class))).thenReturn(mockDto);
 
 
-        // When
-        UserProfileResponse response = employeeService.getUserProfile(userEmail);
+    // When
+    UserProfileResponse response = employeeService.getUserProfile(userEmail);
 
-        // Then
-        assertThat(response).isNotNull();
-        assertThat(response.name()).isEqualTo("Test User");
-        assertThat(response.totalBalance()).isEqualTo(0);
-    }
+    // Then
+    assertThat(response).isNotNull();
+    assertThat(response.name()).isEqualTo("Test User");
+    assertThat(response.totalBalance()).isEqualTo(0);
+  }
 
-    @Test
-    @DisplayName("[Unit] Change password success - Verifies changePassword call")
-    void forcePasswordChange_Success() {
-        // Given
-        String userEmail = "test@joycrew.com";
-        PasswordChangeRequest request = new PasswordChangeRequest("newPassword123!");
-        Employee mockEmployee = mock(Employee.class);
-        when(employeeRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockEmployee));
+  @Test
+  @DisplayName("[Unit] Change password success - Verifies changePassword call")
+  void forcePasswordChange_Success() {
+    // Given
+    String userEmail = "test@joycrew.com";
+    PasswordChangeRequest request = new PasswordChangeRequest("newPassword123!");
+    Employee mockEmployee = mock(Employee.class);
+    when(employeeRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockEmployee));
 
-        // When
-        employeeService.forcePasswordChange(userEmail, request);
+    // When
+    employeeService.forcePasswordChange(userEmail, request);
 
-        // Then
-        verify(mockEmployee, times(1)).changePassword(request.newPassword(), passwordEncoder);
-    }
+    // Then
+    verify(mockEmployee, times(1)).changePassword(request.newPassword(), passwordEncoder);
+  }
 
-    @Test
-    @DisplayName("[Unit] Change password failure - User not found")
-    void forcePasswordChange_Failure_UserNotFound() {
-        // Given
-        String userEmail = "notfound@joycrew.com";
-        PasswordChangeRequest request = new PasswordChangeRequest("newPassword123!");
-        when(employeeRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+  @Test
+  @DisplayName("[Unit] Change password failure - User not found")
+  void forcePasswordChange_Failure_UserNotFound() {
+    // Given
+    String userEmail = "notfound@joycrew.com";
+    PasswordChangeRequest request = new PasswordChangeRequest("newPassword123!");
+    when(employeeRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
-        // When & Then
-        assertThatThrownBy(() -> employeeService.forcePasswordChange(userEmail, request))
-                .isInstanceOf(UserNotFoundException.class);
-    }
+    // When & Then
+    assertThatThrownBy(() -> employeeService.forcePasswordChange(userEmail, request))
+        .isInstanceOf(UserNotFoundException.class);
+  }
 }

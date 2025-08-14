@@ -6,13 +6,6 @@
 # ===================================================================
 server:
   port: 8082
-  tomcat:
-    accesslog:
-      enabled: true
-      directory: /var/log/joycrew
-      prefix: access_log
-      suffix: .log
-      pattern: common
 
 spring:
   application:
@@ -63,7 +56,7 @@ aws:
   s3:
     bucket-name: 'joycrew-dev-bucket'
 
-#view-cleanup-scheduling
+# view-cleanup-scheduling
 jobs:
   recent-view-cleanup:
     enabled: true
