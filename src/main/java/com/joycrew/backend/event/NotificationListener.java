@@ -9,18 +9,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class NotificationListener {
 
-    @Async
-    @EventListener
-    public void handleRecognitionEvent(RecognitionEvent event) {
-        log.info("Recognition event received. Starting asynchronous processing.");
-        try {
-            // Simulate a delay for notification processing (e.g., sending a push notification).
-            Thread.sleep(2000);
-            log.info("User {} gifted {} points to user {}. Message: {}",
-                    event.getSenderId(), event.getPoints(), event.getReceiverId(), event.getMessage());
-        } catch (InterruptedException e) {
-            log.error("Error occurred while processing notification", e);
-            Thread.currentThread().interrupt();
-        }
+  @Async
+  @EventListener
+  public void handleRecognitionEvent(RecognitionEvent event) {
+    log.info("Recognition event received. Starting asynchronous processing.");
+    try {
+      // Simulate a delay for notification processing (e.g., sending a push notification).
+      Thread.sleep(2000);
+      log.info("User {} gifted {} points to user {}. Message: {}",
+          event.getSenderId(), event.getPoints(), event.getReceiverId(), event.getMessage());
+    } catch (InterruptedException e) {
+      log.error("Error occurred while processing notification", e);
+      Thread.currentThread().interrupt();
     }
+  }
 }

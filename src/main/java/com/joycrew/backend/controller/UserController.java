@@ -1,9 +1,6 @@
 package com.joycrew.backend.controller;
 
-import com.joycrew.backend.dto.PasswordChangeRequest;
-import com.joycrew.backend.dto.SuccessResponse;
-import com.joycrew.backend.dto.UserProfileResponse;
-import com.joycrew.backend.dto.UserProfileUpdateRequest;
+import com.joycrew.backend.dto.*;
 import com.joycrew.backend.security.UserPrincipal;
 import com.joycrew.backend.service.EmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,34 +20,44 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final EmployeeService employeeService;
+  private final EmployeeService employeeService;
 
-    @Operation(summary = "Get user profile", security = @SecurityRequirement(name = "Authorization"))
-    @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponse> getProfile(
-            @AuthenticationPrincipal UserPrincipal principal
-    ) {
-        return ResponseEntity.ok(employeeService.getUserProfile(principal.getUsername()));
-    }
+  @Operation(summary = "Get user profile", security = @SecurityRequirement(name = "Authorization"))
+  @GetMapping("/profile")
+  public ResponseEntity<UserProfileResponse> getProfile(
+      @AuthenticationPrincipal UserPrincipal principal
+  ) {
+    return ResponseEntity.ok(employeeService.getUserProfile(principal.getUsername()));
+  }
 
-    @Operation(summary = "Change password", security = @SecurityRequirement(name = "Authorization"))
-    @PostMapping("/password")
-    public ResponseEntity<SuccessResponse> forceChangePassword(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @Valid @RequestBody PasswordChangeRequest request
-    ) {
-        employeeService.forcePasswordChange(principal.getUsername(), request);
-        return ResponseEntity.ok(new SuccessResponse("Password changed successfully."));
-    }
+  @Operation(summary = "Change password", security = @SecurityRequirement(name = "Authorization"))
+  @PostMapping("/password")
+  public ResponseEntity<SuccessResponse> forceChangePassword(
+      @AuthenticationPrincipal UserPrincipal principal,
+      @Valid @RequestBody PasswordChangeRequest request
+  ) {
+    employeeService.forcePasswordChange(principal.getUsername(), request);
+    return ResponseEntity.ok(new SuccessResponse("Password changed successfully."));
+  }
 
-    @Operation(summary = "Update my information", description = "Send profile data as 'request' part and image as 'profileImage' part in a multipart/form-data request.", security = @SecurityRequirement(name = "Authorization"))
-    @PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<SuccessResponse> updateMyProfile(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @RequestPart("request") UserProfileUpdateRequest request,
-            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+  @Operation(summary = "Update my information", description = "Send profile data as 'request' part and image as 'profileImage' part in a multipart/form-data request.", security = @SecurityRequirement(name = "Authorization"))
+  @PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<SuccessResponse> updateMyProfile(
+      @AuthenticationPrincipal UserPrincipal principal,
+      @RequestPart("request") UserProfileUpdateRequest request,
+      @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
 
-        employeeService.updateUserProfile(principal.getUsername(), request, profileImage);
-        return ResponseEntity.ok(new SuccessResponse("Your information has been updated successfully."));
-    }
+    employeeService.updateUserProfile(principal.getUsername(), request, profileImage);
+    return ResponseEntity.ok(new SuccessResponse("Your information has been updated successfully."));
+  }
+
+  @Operation(summary = "Verify current password", security = @SecurityRequirement(name = "Authorization"))
+  @PostMapping("/password/verify")
+  public ResponseEntity<SuccessResponse> verifyPassword(
+          @AuthenticationPrincipal UserPrincipal principal,
+          @Valid @RequestBody PasswordVerifyRequest request
+  ) {
+    employeeService.verifyCurrentPassword(principal.getUsername(), request);
+    return ResponseEntity.ok(new SuccessResponse("Password verified successfully."));
+  }
 }

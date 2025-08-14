@@ -17,7 +17,9 @@ spring:
   # The database schema is created from scratch on every application start.
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: create-drop
+    defer-datasource-initialization: true
+
 
   # Uses development-specific Gmail credentials.
   # NOTE: Using an App Password instead of the actual password is recommended.
