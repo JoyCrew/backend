@@ -8,6 +8,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
-    List<Department> findAllByCompanyCompanyId(Long companyId);
-    Optional<Department> findByCompanyAndName(Company company, String name);
+  List<Department> findAllByCompanyCompanyId(Long companyId);
+  Optional<Department> findByCompanyAndName(Company company, String name);
 }

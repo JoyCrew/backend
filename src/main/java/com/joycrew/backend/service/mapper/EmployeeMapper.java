@@ -11,52 +11,54 @@ import org.springframework.stereotype.Component;
 @Component
 public class EmployeeMapper {
 
-    public EmployeeQueryResponse toEmployeeQueryResponse(Employee employee) {
-        String departmentName = (employee.getDepartment() != null) ? employee.getDepartment().getName() : null;
-        return new EmployeeQueryResponse(
-                employee.getEmployeeId(),
-                employee.getProfileImageUrl(),
-                employee.getEmployeeName(),
-                departmentName,
-                employee.getPosition()
-        );
-    }
+  public EmployeeQueryResponse toEmployeeQueryResponse(Employee employee) {
+    String departmentName = (employee.getDepartment() != null) ? employee.getDepartment().getName() : null;
+    return new EmployeeQueryResponse(
+        employee.getEmployeeId(),
+        employee.getProfileImageUrl(),
+        employee.getEmployeeName(),
+        departmentName,
+        employee.getPosition()
+    );
+  }
 
-    public AdminEmployeeQueryResponse toAdminEmployeeQueryResponse(Employee employee) {
-        String departmentName = (employee.getDepartment() != null) ? employee.getDepartment().getName() : null;
-        return new AdminEmployeeQueryResponse(
-                employee.getEmployeeId(),
-                employee.getEmployeeName(),
-                employee.getEmail(),
-                departmentName,
-                employee.getPosition(),
-                employee.getProfileImageUrl(),
-                employee.getRole().name(),
-                employee.getBirthday(),
-                employee.getAddress(),
-                employee.getHireDate()
-        );
-    }
+  public AdminEmployeeQueryResponse toAdminEmployeeQueryResponse(Employee employee) {
+    String departmentName = (employee.getDepartment() != null) ? employee.getDepartment().getName() : null;
+    return new AdminEmployeeQueryResponse(
+        employee.getEmployeeId(),
+        employee.getEmployeeName(),
+        employee.getEmail(),
+        departmentName,
+        employee.getPosition(),
+        employee.getProfileImageUrl(),
+        employee.getRole().name(),
+        employee.getPhoneNumber(),
+        employee.getBirthday(),
+        employee.getAddress(),
+        employee.getHireDate()
+    );
+  }
 
-    public UserProfileResponse toUserProfileResponse(Employee employee, Wallet wallet) {
-        String departmentName = employee.getDepartment() != null ? employee.getDepartment().getName() : null;
-        return new UserProfileResponse(
-                employee.getEmployeeId(),
-                employee.getEmployeeName(),
-                employee.getEmail(),
-                employee.getProfileImageUrl(),
-                wallet.getBalance(),
-                wallet.getGiftablePoint(),
-                employee.getRole(),
-                departmentName,
-                employee.getPosition(),
-                employee.getBirthday(),
-                employee.getAddress(),
-                employee.getHireDate()
-        );
-    }
+  public UserProfileResponse toUserProfileResponse(Employee employee, Wallet wallet) {
+    String departmentName = employee.getDepartment() != null ? employee.getDepartment().getName() : null;
+    return new UserProfileResponse(
+        employee.getEmployeeId(),
+        employee.getEmployeeName(),
+        employee.getEmail(),
+        employee.getProfileImageUrl(),
+        wallet.getBalance(),
+        wallet.getGiftablePoint(),
+        employee.getRole(),
+        departmentName,
+        employee.getPosition(),
+        employee.getPhoneNumber(),
+        employee.getBirthday(),
+        employee.getAddress(),
+        employee.getHireDate()
+    );
+  }
 
-    public PointBalanceResponse toPointBalanceResponse(Wallet wallet) {
-        return new PointBalanceResponse(wallet.getBalance(), wallet.getGiftablePoint());
-    }
+  public PointBalanceResponse toPointBalanceResponse(Wallet wallet) {
+    return new PointBalanceResponse(wallet.getBalance(), wallet.getGiftablePoint());
+  }
 }

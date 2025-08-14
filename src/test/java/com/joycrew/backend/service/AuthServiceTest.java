@@ -36,89 +36,89 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
-    @Mock private JwtUtil jwtUtil;
-    @Mock private AuthenticationManager authenticationManager;
-    @Mock private WalletRepository walletRepository;
-    @Mock private EmployeeRepository employeeRepository;
-    @Mock private PasswordEncoder passwordEncoder;
-    @Mock private EmailService emailService;
+  @Mock private JwtUtil jwtUtil;
+  @Mock private AuthenticationManager authenticationManager;
+  @Mock private WalletRepository walletRepository;
+  @Mock private EmployeeRepository employeeRepository;
+  @Mock private PasswordEncoder passwordEncoder;
+  @Mock private EmailService emailService;
 
-    @InjectMocks
-    private AuthService authService;
+  @InjectMocks
+  private AuthService authService;
 
-    private Employee testEmployee;
-    private LoginRequest testLoginRequest;
-    private final String testToken = "mocked.jwt.token";
+  private Employee testEmployee;
+  private LoginRequest testLoginRequest;
+  private final String testToken = "mocked.jwt.token";
 
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(authService, "passwordResetExpirationMs", 900000L);
+  @BeforeEach
+  void setUp() {
+    ReflectionTestUtils.setField(authService, "passwordResetExpirationMs", 900000L);
 
-        testEmployee = Employee.builder()
-                .employeeId(1L)
-                .email("test@joycrew.com")
-                .passwordHash("encodedPassword")
-                .employeeName("Test User")
-                .role(AdminLevel.EMPLOYEE)
-                .status("ACTIVE")
-                .profileImageUrl("http://example.com/profile.jpg")
-                .build();
+    testEmployee = Employee.builder()
+        .employeeId(1L)
+        .email("test@joycrew.com")
+        .passwordHash("encodedPassword")
+        .employeeName("Test User")
+        .role(AdminLevel.EMPLOYEE)
+        .status("ACTIVE")
+        .profileImageUrl("http://example.com/profile.jpg")
+        .build();
 
-        testLoginRequest = new LoginRequest("test@joycrew.com", "password123");
-    }
+    testLoginRequest = new LoginRequest("test@joycrew.com", "password123");
+  }
 
-    @Test
-    @DisplayName("[Unit] Login success should return JWT and user info")
-    void login_Success() {
-        // Given
-        UserPrincipal principal = new UserPrincipal(testEmployee);
-        Authentication successfulAuth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(successfulAuth);
+  @Test
+  @DisplayName("[Unit] Login success should return JWT and user info")
+  void login_Success() {
+    // Given
+    UserPrincipal principal = new UserPrincipal(testEmployee);
+    Authentication successfulAuth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+    when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+        .thenReturn(successfulAuth);
 
-        Wallet mockWallet = mock(Wallet.class);
-        when(mockWallet.getBalance()).thenReturn(1000);
-        when(walletRepository.findByEmployee_EmployeeId(anyLong())).thenReturn(Optional.of(mockWallet));
+    Wallet mockWallet = mock(Wallet.class);
+    when(mockWallet.getBalance()).thenReturn(1000);
+    when(walletRepository.findByEmployee_EmployeeId(anyLong())).thenReturn(Optional.of(mockWallet));
 
-        when(jwtUtil.generateToken(anyString())).thenReturn(testToken);
+    when(jwtUtil.generateToken(anyString())).thenReturn(testToken);
 
-        // When
-        LoginResponse response = authService.login(testLoginRequest);
+    // When
+    LoginResponse response = authService.login(testLoginRequest);
 
-        // Then
-        assertThat(response).isNotNull();
-        assertThat(response.accessToken()).isEqualTo(testToken);
-        assertThat(response.message()).isEqualTo("Login successful"); // 수정된 부분
-        assertThat(response.userId()).isEqualTo(testEmployee.getEmployeeId());
-        assertThat(response.email()).isEqualTo(testEmployee.getEmail());
-        assertThat(response.totalPoint()).isEqualTo(1000);
-        assertThat(response.profileImageUrl()).isEqualTo(testEmployee.getProfileImageUrl());
+    // Then
+    assertThat(response).isNotNull();
+    assertThat(response.accessToken()).isEqualTo(testToken);
+    assertThat(response.message()).isEqualTo("Login successful"); // 수정된 부분
+    assertThat(response.userId()).isEqualTo(testEmployee.getEmployeeId());
+    assertThat(response.email()).isEqualTo(testEmployee.getEmail());
+    assertThat(response.totalPoint()).isEqualTo(1000);
+    assertThat(response.profileImageUrl()).isEqualTo(testEmployee.getProfileImageUrl());
 
-        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtUtil).generateToken(testEmployee.getEmail());
-    }
+    verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+    verify(jwtUtil).generateToken(testEmployee.getEmail());
+  }
 
-    @Test
-    @DisplayName("[Unit] Login failure should throw BadCredentialsException")
-    void login_Failure_WrongPassword() {
-        // Given
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new BadCredentialsException("Bad credentials"));
+  @Test
+  @DisplayName("[Unit] Login failure should throw BadCredentialsException")
+  void login_Failure_WrongPassword() {
+    // Given
+    when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+        .thenThrow(new BadCredentialsException("Bad credentials"));
 
-        // When & Then
-        assertThatThrownBy(() -> authService.login(testLoginRequest))
-                .isInstanceOf(BadCredentialsException.class);
-    }
+    // When & Then
+    assertThatThrownBy(() -> authService.login(testLoginRequest))
+        .isInstanceOf(BadCredentialsException.class);
+  }
 
-    @Test
-    @DisplayName("[Unit] Login failure should throw UsernameNotFoundException")
-    void login_Failure_UserNotFound() {
-        // Given
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new UsernameNotFoundException("User not found"));
+  @Test
+  @DisplayName("[Unit] Login failure should throw UsernameNotFoundException")
+  void login_Failure_UserNotFound() {
+    // Given
+    when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+        .thenThrow(new UsernameNotFoundException("User not found"));
 
-        // When & Then
-        assertThatThrownBy(() -> authService.login(testLoginRequest))
-                .isInstanceOf(UsernameNotFoundException.class);
-    }
+    // When & Then
+    assertThatThrownBy(() -> authService.login(testLoginRequest))
+        .isInstanceOf(UsernameNotFoundException.class);
+  }
 }

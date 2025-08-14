@@ -15,17 +15,17 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class WalletService {
-    private final WalletRepository walletRepository;
-    private final EmployeeRepository employeeRepository;
-    private final EmployeeMapper employeeMapper;
+  private final WalletRepository walletRepository;
+  private final EmployeeRepository employeeRepository;
+  private final EmployeeMapper employeeMapper;
 
-    public PointBalanceResponse getPointBalance(String userEmail) {
-        Employee employee = employeeRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("Authenticated user not found."));
+  public PointBalanceResponse getPointBalance(String userEmail) {
+    Employee employee = employeeRepository.findByEmail(userEmail)
+        .orElseThrow(() -> new UserNotFoundException("Authenticated user not found."));
 
-        Wallet wallet = walletRepository.findByEmployee_EmployeeId(employee.getEmployeeId())
-                .orElse(new Wallet(employee));
+    Wallet wallet = walletRepository.findByEmployee_EmployeeId(employee.getEmployeeId())
+        .orElse(new Wallet(employee));
 
-        return employeeMapper.toPointBalanceResponse(wallet);
-    }
+    return employeeMapper.toPointBalanceResponse(wallet);
+  }
 }

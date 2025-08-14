@@ -27,8 +27,8 @@ spec:
           # Define resource requests and limits for better scheduling and stability.
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: "128Mi"
+              cpu: "150m"
             limits:
               memory: "1Gi"
               cpu: "500m"

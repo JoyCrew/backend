@@ -24,48 +24,48 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class WalletServiceTest {
 
-    @Mock
-    private WalletRepository walletRepository;
-    @Mock
-    private EmployeeRepository employeeRepository;
-    @Mock
-    private EmployeeMapper employeeMapper;
+  @Mock
+  private WalletRepository walletRepository;
+  @Mock
+  private EmployeeRepository employeeRepository;
+  @Mock
+  private EmployeeMapper employeeMapper;
 
-    @InjectMocks
-    private WalletService walletService;
+  @InjectMocks
+  private WalletService walletService;
 
-    @Test
-    @DisplayName("[Unit] Get point balance successfully")
-    void getPointBalance_Success() {
-        // Given
-        String userEmail = "test@joycrew.com";
-        Employee mockEmployee = Employee.builder().employeeId(1L).build();
-        Wallet mockWallet = new Wallet(mockEmployee);
-        mockWallet.addPoints(500);
-        PointBalanceResponse mockDto = new PointBalanceResponse(500, 500);
+  @Test
+  @DisplayName("[Unit] Get point balance successfully")
+  void getPointBalance_Success() {
+    // Given
+    String userEmail = "test@joycrew.com";
+    Employee mockEmployee = Employee.builder().employeeId(1L).build();
+    Wallet mockWallet = new Wallet(mockEmployee);
+    mockWallet.addPoints(500);
+    PointBalanceResponse mockDto = new PointBalanceResponse(500, 500);
 
-        when(employeeRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockEmployee));
-        when(walletRepository.findByEmployee_EmployeeId(1L)).thenReturn(Optional.of(mockWallet));
-        when(employeeMapper.toPointBalanceResponse(any(Wallet.class))).thenReturn(mockDto); // Mock the mapper's behavior
+    when(employeeRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockEmployee));
+    when(walletRepository.findByEmployee_EmployeeId(1L)).thenReturn(Optional.of(mockWallet));
+    when(employeeMapper.toPointBalanceResponse(any(Wallet.class))).thenReturn(mockDto); // Mock the mapper's behavior
 
-        // When
-        PointBalanceResponse response = walletService.getPointBalance(userEmail);
+    // When
+    PointBalanceResponse response = walletService.getPointBalance(userEmail);
 
-        // Then
-        assertThat(response).isNotNull();
-        assertThat(response.totalBalance()).isEqualTo(500);
-        assertThat(response.giftableBalance()).isEqualTo(500);
-    }
+    // Then
+    assertThat(response).isNotNull();
+    assertThat(response.totalBalance()).isEqualTo(500);
+    assertThat(response.giftableBalance()).isEqualTo(500);
+  }
 
-    @Test
-    @DisplayName("[Unit] Get point balance failure - User not found")
-    void getPointBalance_Failure_UserNotFound() {
-        // Given
-        String userEmail = "notfound@joycrew.com";
-        when(employeeRepository.findByEmail(userEmail)).thenReturn(Optional.empty());
+  @Test
+  @DisplayName("[Unit] Get point balance failure - User not found")
+  void getPointBalance_Failure_UserNotFound() {
+    // Given
+    String userEmail = "notfound@joycrew.com";
+    when(employeeRepository.findByEmail(userEmail)).thenReturn(Optional.empty());
 
-        // When & Then
-        assertThatThrownBy(() -> walletService.getPointBalance(userEmail))
-                .isInstanceOf(UserNotFoundException.class);
-    }
+    // When & Then
+    assertThatThrownBy(() -> walletService.getPointBalance(userEmail))
+        .isInstanceOf(UserNotFoundException.class);
+  }
 }

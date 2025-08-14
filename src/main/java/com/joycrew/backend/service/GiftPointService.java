@@ -19,41 +19,41 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class GiftPointService {
 
-    private final EmployeeRepository employeeRepository;
-    private final WalletRepository walletRepository;
-    private final RewardPointTransactionRepository transactionRepository;
-    private final ApplicationEventPublisher eventPublisher;
+  private final EmployeeRepository employeeRepository;
+  private final WalletRepository walletRepository;
+  private final RewardPointTransactionRepository transactionRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
-    @Transactional
-    public void giftPointsToColleague(String senderEmail, GiftPointRequest request) {
-        Employee sender = employeeRepository.findByEmail(senderEmail)
-                .orElseThrow(() -> new UserNotFoundException("Sender not found."));
-        Employee receiver = employeeRepository.findById(request.receiverId())
-                .orElseThrow(() -> new UserNotFoundException("Receiver not found."));
+  @Transactional
+  public void giftPointsToColleague(String senderEmail, GiftPointRequest request) {
+    Employee sender = employeeRepository.findByEmail(senderEmail)
+        .orElseThrow(() -> new UserNotFoundException("Sender not found."));
+    Employee receiver = employeeRepository.findById(request.receiverId())
+        .orElseThrow(() -> new UserNotFoundException("Receiver not found."));
 
-        Wallet senderWallet = walletRepository.findByEmployee_EmployeeId(sender.getEmployeeId())
-                .orElseThrow(() -> new IllegalStateException("Sender's wallet does not exist."));
-        Wallet receiverWallet = walletRepository.findByEmployee_EmployeeId(receiver.getEmployeeId())
-                .orElseThrow(() -> new IllegalStateException("Receiver's wallet does not exist."));
+    Wallet senderWallet = walletRepository.findByEmployee_EmployeeId(sender.getEmployeeId())
+        .orElseThrow(() -> new IllegalStateException("Sender's wallet does not exist."));
+    Wallet receiverWallet = walletRepository.findByEmployee_EmployeeId(receiver.getEmployeeId())
+        .orElseThrow(() -> new IllegalStateException("Receiver's wallet does not exist."));
 
-        // Transfer points
-        senderWallet.spendPoints(request.points());
-        receiverWallet.addPoints(request.points());
+    // Transfer points
+    senderWallet.spendGiftablePoints(request.points());
+    receiverWallet.addPoints(request.points());
 
-        // Record the transaction
-        RewardPointTransaction transaction = RewardPointTransaction.builder()
-                .sender(sender)
-                .receiver(receiver)
-                .pointAmount(request.points())
-                .message(request.message())
-                .type(TransactionType.AWARD_P2P)
-                .tags(request.tags())
-                .build();
-        transactionRepository.save(transaction);
+    // Record the transaction
+    RewardPointTransaction transaction = RewardPointTransaction.builder()
+        .sender(sender)
+        .receiver(receiver)
+        .pointAmount(request.points())
+        .message(request.message())
+        .type(TransactionType.AWARD_P2P)
+        .tags(request.tags())
+        .build();
+    transactionRepository.save(transaction);
 
-        // Publish an event for notifications or other async tasks
-        eventPublisher.publishEvent(
-                new RecognitionEvent(this, sender.getEmployeeId(), receiver.getEmployeeId(), request.points(), request.message())
-        );
-    }
+    // Publish an event for notifications or other async tasks
+    eventPublisher.publishEvent(
+        new RecognitionEvent(this, sender.getEmployeeId(), receiver.getEmployeeId(), request.points(), request.message())
+    );
+  }
 }

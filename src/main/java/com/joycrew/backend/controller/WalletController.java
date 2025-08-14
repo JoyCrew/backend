@@ -19,13 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class WalletController {
 
-    private final WalletService walletService;
+  private final WalletService walletService;
 
-    @Operation(summary = "Get point balance", security = @SecurityRequirement(name = "Authorization"))
-    @GetMapping("/point")
-    public ResponseEntity<PointBalanceResponse> getWalletPoint(
-            @AuthenticationPrincipal UserPrincipal principal
-    ) {
-        return ResponseEntity.ok(walletService.getPointBalance(principal.getUsername()));
-    }
+  @Operation(summary = "Get point balance", security = @SecurityRequirement(name = "Authorization"))
+  @GetMapping("/point")
+  public ResponseEntity<PointBalanceResponse> getWalletPoint(
+      @AuthenticationPrincipal UserPrincipal principal
+  ) {
+    return ResponseEntity.ok(walletService.getPointBalance(principal.getUsername()));
+  }
 }

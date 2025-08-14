@@ -19,35 +19,35 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class EmailServiceTest {
 
-    @Mock
-    private JavaMailSender mailSender;
+  @Mock
+  private JavaMailSender mailSender;
 
-    @InjectMocks
-    private EmailService emailService;
+  @InjectMocks
+  private EmailService emailService;
 
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(emailService, "frontendUrlBase", "https://test.joycrew.co.kr");
-    }
+  @BeforeEach
+  void setUp() {
+    ReflectionTestUtils.setField(emailService, "frontendUrlBase", "https://test.joycrew.co.kr");
+  }
 
-    @Test
-    @DisplayName("[Unit] Send password reset email - Verify MailSender call")
-    void sendPasswordResetEmail_Success() {
-        // Given
-        String toEmail = "test@joycrew.com";
-        String token = "test-token";
-        String expectedResetUrl = "https://test.joycrew.co.kr/reset-password?token=" + token;
+  @Test
+  @DisplayName("[Unit] Send password reset email - Verify MailSender call")
+  void sendPasswordResetEmail_Success() {
+    // Given
+    String toEmail = "test@joycrew.com";
+    String token = "test-token";
+    String expectedResetUrl = "https://test.joycrew.co.kr/reset-password?token=" + token;
 
-        // When
-        emailService.sendPasswordResetEmail(toEmail, token);
+    // When
+    emailService.sendPasswordResetEmail(toEmail, token);
 
-        // Then
-        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender, times(1)).send(messageCaptor.capture());
+    // Then
+    ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+    verify(mailSender, times(1)).send(messageCaptor.capture());
 
-        SimpleMailMessage sentMessage = messageCaptor.getValue();
-        assertThat(sentMessage.getTo()).contains(toEmail);
-        assertThat(sentMessage.getSubject()).isEqualTo("[JoyCrew] Password Reset Instructions");
-        assertThat(sentMessage.getText()).contains(expectedResetUrl);
-    }
+    SimpleMailMessage sentMessage = messageCaptor.getValue();
+    assertThat(sentMessage.getTo()).contains(toEmail);
+    assertThat(sentMessage.getSubject()).isEqualTo("[JoyCrew] Password Reset Instructions");
+    assertThat(sentMessage.getText()).contains(expectedResetUrl);
+  }
 }

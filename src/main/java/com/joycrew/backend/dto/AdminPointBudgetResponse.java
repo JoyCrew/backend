@@ -7,12 +7,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
  */
 @Schema(description = "Admin's point budget and personal balance response DTO")
 public record AdminPointBudgetResponse(
-        @Schema(description = "The total point budget available for the entire company")
-        Double companyTotalBalance,
+  @Schema(description = "The total point budget available for the entire company")
+  Double companyTotalBalance,
 
-        @Schema(description = "The admin's personal total point balance")
-        Integer adminPersonalTotalBalance,
+  @Schema(description = "The admin's personal total point balance")
+  Integer adminPersonalTotalBalance,
 
-        @Schema(description = "The admin's personal giftable point balance")
-        Integer adminPersonalGiftableBalance
+  @Schema(description = "The admin's personal giftable point balance")
+  Integer adminPersonalGiftableBalance
 ) {}

@@ -19,15 +19,15 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class GiftPointController {
 
-    private final GiftPointService giftPointService;
+  private final GiftPointService giftPointService;
 
-    @Operation(summary = "Gift points to a colleague", security = @SecurityRequirement(name = "Authorization"))
-    @PostMapping
-    public ResponseEntity<SuccessResponse> giftPoints(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @Valid @RequestBody GiftPointRequest request
-    ) {
-        giftPointService.giftPointsToColleague(principal.getUsername(), request);
-        return ResponseEntity.ok(new SuccessResponse("Points sent successfully."));
-    }
+  @Operation(summary = "Gift points to a colleague", security = @SecurityRequirement(name = "Authorization"))
+  @PostMapping
+  public ResponseEntity<SuccessResponse> giftPoints(
+      @AuthenticationPrincipal UserPrincipal principal,
+      @Valid @RequestBody GiftPointRequest request
+  ) {
+    giftPointService.giftPointsToColleague(principal.getUsername(), request);
+    return ResponseEntity.ok(new SuccessResponse("Points sent successfully."));
+  }
 }
