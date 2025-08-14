@@ -11,16 +11,16 @@ import java.util.TimeZone;
 @EnableScheduling
 public class JoyCrewBackendApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(JoyCrewBackendApplication.class, args);
-	}
+  public static void main(String[] args) {
+    SpringApplication.run(JoyCrewBackendApplication.class, args);
+  }
 
-	/**
-	 * Set the default timezone for the application to Korea Standard Time (KST).
-	 * This ensures all date and time operations are based on KST.
-	 */
-	@PostConstruct
-	public void init() {
-		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
-	}
+  /**
+   * Set the default timezone for the application to Korea Standard Time (KST).
+   * This ensures all date and time operations are based on KST.
+   */
+  @PostConstruct
+  public void init() {
+    TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
+  }
 }

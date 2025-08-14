@@ -27,56 +27,56 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class GiftPointServiceTest {
 
-    @Mock private EmployeeRepository employeeRepository;
-    @Mock private WalletRepository walletRepository;
-    @Mock private RewardPointTransactionRepository transactionRepository;
-    @Mock private ApplicationEventPublisher eventPublisher;
-    @InjectMocks private GiftPointService giftPointService;
+  @Mock private EmployeeRepository employeeRepository;
+  @Mock private WalletRepository walletRepository;
+  @Mock private RewardPointTransactionRepository transactionRepository;
+  @Mock private ApplicationEventPublisher eventPublisher;
+  @InjectMocks private GiftPointService giftPointService;
 
-    private Employee sender, receiver;
-    private Wallet senderWallet, receiverWallet;
+  private Employee sender, receiver;
+  private Wallet senderWallet, receiverWallet;
 
-    @BeforeEach
-    void setUp() {
-        sender = Employee.builder().employeeId(1L).build();
-        receiver = Employee.builder().employeeId(2L).build();
-        senderWallet = new Wallet(sender);
-        receiverWallet = new Wallet(receiver);
-    }
+  @BeforeEach
+  void setUp() {
+    sender = Employee.builder().employeeId(1L).build();
+    receiver = Employee.builder().employeeId(2L).build();
+    senderWallet = new Wallet(sender);
+    receiverWallet = new Wallet(receiver);
+  }
 
-    @Test
-    @DisplayName("[Unit] Gift points successfully")
-    void giftPoints_Success() {
-        // Given
-        senderWallet.addPoints(100);
-        GiftPointRequest request = new GiftPointRequest(2L, 50, "Thanks!", List.of());
-        when(employeeRepository.findByEmail("sender@test.com")).thenReturn(Optional.of(sender));
-        when(employeeRepository.findById(2L)).thenReturn(Optional.of(receiver));
-        when(walletRepository.findByEmployee_EmployeeId(1L)).thenReturn(Optional.of(senderWallet));
-        when(walletRepository.findByEmployee_EmployeeId(2L)).thenReturn(Optional.of(receiverWallet));
+  @Test
+  @DisplayName("[Unit] Gift points successfully")
+  void giftPoints_Success() {
+    // Given
+    senderWallet.addPoints(100);
+    GiftPointRequest request = new GiftPointRequest(2L, 50, "Thanks!", List.of());
+    when(employeeRepository.findByEmail("sender@test.com")).thenReturn(Optional.of(sender));
+    when(employeeRepository.findById(2L)).thenReturn(Optional.of(receiver));
+    when(walletRepository.findByEmployee_EmployeeId(1L)).thenReturn(Optional.of(senderWallet));
+    when(walletRepository.findByEmployee_EmployeeId(2L)).thenReturn(Optional.of(receiverWallet));
 
-        // When
-        giftPointService.giftPointsToColleague("sender@test.com", request);
+    // When
+    giftPointService.giftPointsToColleague("sender@test.com", request);
 
-        // Then
-        verify(transactionRepository, times(1)).save(any());
-        verify(eventPublisher, times(1)).publishEvent(any());
-        assertThat(senderWallet.getBalance()).isEqualTo(50);
-        assertThat(receiverWallet.getBalance()).isEqualTo(50);
-    }
+    // Then
+    verify(transactionRepository, times(1)).save(any());
+    verify(eventPublisher, times(1)).publishEvent(any());
+    assertThat(senderWallet.getBalance()).isEqualTo(50);
+    assertThat(receiverWallet.getBalance()).isEqualTo(50);
+  }
 
-    @Test
-    @DisplayName("[Unit] Gift points failure - Insufficient points")
-    void giftPoints_Failure_InsufficientPoints() {
-        // Given
-        GiftPointRequest request = new GiftPointRequest(2L, 50, "Thanks!", List.of());
-        when(employeeRepository.findByEmail("sender@test.com")).thenReturn(Optional.of(sender));
-        when(employeeRepository.findById(2L)).thenReturn(Optional.of(receiver));
-        when(walletRepository.findByEmployee_EmployeeId(1L)).thenReturn(Optional.of(senderWallet));
-        when(walletRepository.findByEmployee_EmployeeId(2L)).thenReturn(Optional.of(receiverWallet));
+  @Test
+  @DisplayName("[Unit] Gift points failure - Insufficient points")
+  void giftPoints_Failure_InsufficientPoints() {
+    // Given
+    GiftPointRequest request = new GiftPointRequest(2L, 50, "Thanks!", List.of());
+    when(employeeRepository.findByEmail("sender@test.com")).thenReturn(Optional.of(sender));
+    when(employeeRepository.findById(2L)).thenReturn(Optional.of(receiver));
+    when(walletRepository.findByEmployee_EmployeeId(1L)).thenReturn(Optional.of(senderWallet));
+    when(walletRepository.findByEmployee_EmployeeId(2L)).thenReturn(Optional.of(receiverWallet));
 
-        // When & Then
-        assertThatThrownBy(() -> giftPointService.giftPointsToColleague("sender@test.com", request))
-                .isInstanceOf(InsufficientPointsException.class);
-    }
+    // When & Then
+    assertThatThrownBy(() -> giftPointService.giftPointsToColleague("sender@test.com", request))
+        .isInstanceOf(InsufficientPointsException.class);
+  }
 }

@@ -10,11 +10,11 @@ import java.util.Optional;
 
 public interface RecentProductViewRepository extends JpaRepository<RecentProductView, Long> {
 
-    Optional<RecentProductView> findByEmployee_EmployeeIdAndProduct_Id(Long employeeId, Long productId);
+  Optional<RecentProductView> findByEmployee_EmployeeIdAndProduct_Id(Long employeeId, Long productId);
 
-    List<RecentProductView> findByEmployee_EmployeeIdAndViewedAtAfterOrderByViewedAtDesc(
-            Long employeeId, LocalDateTime threshold, Pageable pageable
-    );
+  List<RecentProductView> findByEmployee_EmployeeIdAndViewedAtAfterOrderByViewedAtDesc(
+      Long employeeId, LocalDateTime threshold, Pageable pageable
+  );
 
-    long deleteByViewedAtBefore(LocalDateTime threshold);
+  long deleteByViewedAtBefore(LocalDateTime threshold);
 }

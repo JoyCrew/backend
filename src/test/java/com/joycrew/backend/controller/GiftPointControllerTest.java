@@ -27,28 +27,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(GiftPointController.class)
 class GiftPointControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @MockBean private GiftPointService giftPointService;
-    @MockBean private JwtUtil jwtUtil;
-    @MockBean private EmployeeDetailsService employeeDetailsService;
+  @Autowired
+  private MockMvc mockMvc;
+  @Autowired
+  private ObjectMapper objectMapper;
+  @MockBean
+  private GiftPointService giftPointService;
+  @MockBean
+  private JwtUtil jwtUtil;
+  @MockBean
+  private EmployeeDetailsService employeeDetailsService;
 
-    @Test
-    @WithMockUserPrincipal(email = "sender@example.com")
-    @DisplayName("POST /api/gift-points - Should gift points to a colleague successfully")
-    void testGiftPointsSuccess() throws Exception {
-        // given
-        GiftPointRequest request = new GiftPointRequest(
-                2L, 50, "Great work!", List.of(Tag.TEAMWORK)
-        );
-        doNothing().when(giftPointService).giftPointsToColleague(anyString(), any(GiftPointRequest.class));
+  @Test
+  @WithMockUserPrincipal(email = "sender@example.com")
+  @DisplayName("POST /api/gift-points - Should gift points to a colleague successfully")
+  void testGiftPointsSuccess() throws Exception {
+    // given
+    GiftPointRequest request = new GiftPointRequest(
+        2L, 50, "Great work!", List.of(Tag.TEAMWORK)
+    );
+    doNothing().when(giftPointService).giftPointsToColleague(anyString(), any(GiftPointRequest.class));
 
-        // when & then
-        mockMvc.perform(post("/api/gift-points")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Points sent successfully."));
-    }
+    // when & then
+    mockMvc.perform(post("/api/gift-points")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.message").value("Points sent successfully."));
+  }
 }

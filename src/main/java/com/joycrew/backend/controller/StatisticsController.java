@@ -19,14 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class StatisticsController {
 
-    private final StatisticsService statisticsService;
+  private final StatisticsService statisticsService;
 
-    @Operation(summary = "내 포인트 통계 조회", description = "로그인된 사용자의 주고받은 포인트 및 태그 통계를 조회합니다.", security = @SecurityRequirement(name = "Authorization"))
-    @GetMapping("/me")
-    public ResponseEntity<PointStatisticsResponse> getMyStatistics(
-            @AuthenticationPrincipal UserPrincipal principal
-    ) {
-        PointStatisticsResponse stats = statisticsService.getPointStatistics(principal.getUsername());
-        return ResponseEntity.ok(stats);
-    }
+  @Operation(summary = "내 포인트 통계 조회", description = "로그인된 사용자의 주고받은 포인트 및 태그 통계를 조회합니다.", security = @SecurityRequirement(name = "Authorization"))
+  @GetMapping("/me")
+  public ResponseEntity<PointStatisticsResponse> getMyStatistics(
+      @AuthenticationPrincipal UserPrincipal principal
+  ) {
+    PointStatisticsResponse stats = statisticsService.getPointStatistics(principal.getUsername());
+    return ResponseEntity.ok(stats);
+  }
 }

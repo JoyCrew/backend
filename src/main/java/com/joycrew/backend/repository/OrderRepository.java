@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    Page<Order> findByEmployee_EmployeeId(Long employeeId, Pageable pageable);
+  Page<Order> findByEmployee_EmployeeId(Long employeeId, Pageable pageable);
 
-    Optional<Order> findByOrderIdAndEmployee_EmployeeId(Long orderId, Long employeeId);
+  Optional<Order> findByOrderIdAndEmployee_EmployeeId(Long orderId, Long employeeId);
 }
