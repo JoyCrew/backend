@@ -10,8 +10,23 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
+
   Optional<Employee> findByEmail(String email);
 
-  @Query("SELECT e FROM Employee e WHERE e.employeeName LIKE %:keyword% OR e.email LIKE %:keyword% OR e.department.name LIKE %:keyword%")
+  @Query("""
+      SELECT e 
+      FROM Employee e 
+      WHERE e.employeeName LIKE %:keyword% 
+         OR e.email LIKE %:keyword% 
+         OR e.department.name LIKE %:keyword%
+      """)
   Page<Employee> findByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+  @Query("""
+      SELECT e 
+      FROM Employee e 
+      JOIN FETCH e.company 
+      WHERE e.employeeId = :id
+      """)
+  Optional<Employee> findByIdWithCompany(@Param("id") Long id);
 }

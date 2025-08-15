@@ -1,6 +1,7 @@
 package com.joycrew.backend.controller;
 
 import com.joycrew.backend.dto.PagedEmployeeResponse;
+import com.joycrew.backend.entity.enums.AccessStatus;
 import com.joycrew.backend.security.UserPrincipal;
 import com.joycrew.backend.service.EmployeeQueryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,7 +49,7 @@ public class EmployeeQueryController {
       @RequestParam(defaultValue = "20") int size,
       @AuthenticationPrincipal UserPrincipal principal
   ) {
-    PagedEmployeeResponse response = employeeQueryService.getEmployees(keyword, page, size, principal.getEmployee().getEmployeeId());
+    PagedEmployeeResponse response = employeeQueryService.getEmployees(keyword, page, size, principal.getEmployee().getEmployeeId(), AccessStatus.ACTIVE);
     return ResponseEntity.ok(response);
   }
 }

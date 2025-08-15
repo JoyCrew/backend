@@ -1,7 +1,6 @@
 package com.joycrew.backend.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.joycrew.backend.dto.ErrorResponse;
 import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.security.EmployeeDetailsService;
 import com.joycrew.backend.security.JwtAuthenticationFilter;
@@ -10,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -22,10 +20,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
-import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -39,82 +38,61 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
-        .cors(cors -> {})
-        .csrf(csrf -> csrf.disable())
-        .headers(headers -> headers
-            .frameOptions(frameOptions -> frameOptions.disable()))
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers(
-                "/",
-                "/h2-console/**",
-                "/api/auth/login",
-                "/api/auth/password-reset/request",
-                "/api/auth/password-reset/confirm",
-                "/v3/api-docs/**",
-                "/swagger-ui/**",
-                "/swagger-ui.html"
-            ).permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/crawl/**").permitAll()
-            .requestMatchers("/api/admin/**").hasRole(AdminLevel.SUPER_ADMIN.name())
-            .anyRequest().authenticated()
-        )
-        .exceptionHandling(exceptions -> exceptions
-            .authenticationEntryPoint((request, response, authException) -> {
-              response.setStatus(HttpStatus.UNAUTHORIZED.value());
-              response.setContentType("application/json;charset=UTF-8");
-              String jsonResponse = objectMapper.writeValueAsString(
-                  new ErrorResponse(
-                      "UNAUTHENTICATED",
-                      "Authentication is required. Please log in.",
-                      LocalDateTime.now(),
-                      request.getRequestURI()
-                  )
-              );
-              response.getWriter().write(jsonResponse);
-            })
-            .accessDeniedHandler((request, response, accessDeniedException) -> {
-              response.setStatus(HttpStatus.FORBIDDEN.value());
-              response.setContentType("application/json;charset=UTF-8");
-              String jsonResponse = objectMapper.writeValueAsString(
-                  new ErrorResponse(
-                      "ACCESS_DENIED",
-                      "You do not have permission to access this resource.",
-                      LocalDateTime.now(),
-                      request.getRequestURI()
-                  )
-              );
-              response.getWriter().write(jsonResponse);
-            })
-        )
-        .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, employeeDetailsService),
-            UsernamePasswordAuthenticationFilter.class);
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .headers(headers -> headers
+                    .frameOptions(frameOptions -> frameOptions.disable()))
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    .requestMatchers(
+                            "/",
+                            "/error", // 에러 경로 허용
+                            "/h2-console/**",
+                            "/api/auth/login",
+                            "/api/auth/password-reset/request",
+                            "/api/auth/password-reset/confirm",
+                            "/v3/api-docs/**",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html"
+                    ).permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/crawl/**").permitAll()
+                    .requestMatchers("/api/admin/employees").permitAll()
+                    .requestMatchers("/api/admin/**").hasAuthority(AdminLevel.SUPER_ADMIN.name())
+                    .anyRequest().authenticated()
+            )
+
+            .sessionManagement(session -> session
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, employeeDetailsService),
+                    UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
 
   @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
-
-  @Bean
-  public CorsFilter corsFilter() {
+  public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
-    config.addAllowedOriginPattern("http://localhost:3000");
-    config.addAllowedOriginPattern("http://localhost:5173");
-    config.addAllowedOriginPattern("https://www.joycrew.co.kr");
-    config.addAllowedOriginPattern("https://joycrew.co.kr");
-    config.addAllowedOriginPattern("http://localhost:8082");
-    config.addAllowedHeader("*");
-    config.addAllowedMethod("*");
+    config.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:8082",
+            "https://joycrew.co.kr",
+            "https://www.joycrew.co.kr",
+            "https://api.joycrew.co.kr"
+    ));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+    config.setAllowedHeaders(List.of("*"));
     config.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", config);
-    return new CorsFilter(source);
+    return source;
+  }
+
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
   }
 
   @Bean

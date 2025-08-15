@@ -3,12 +3,14 @@ package com.joycrew.backend.entity;
 import com.joycrew.backend.entity.enums.AdminLevel;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Where;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Entity
@@ -16,6 +18,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Where(clause = "status = 'ACTIVE'")
 @Builder
 public class Employee {
 
@@ -101,9 +104,11 @@ public class Employee {
 
   @PreUpdate
   protected void onUpdate() {
+    if (this.status == null || !Arrays.asList("ACTIVE", "INACTIVE", "PENDING").contains(this.status)) {
+      this.status = "ACTIVE";
+    }
     this.updatedAt = LocalDateTime.now();
   }
-
   public void changePassword(String rawPassword, PasswordEncoder encoder) {
     this.passwordHash = encoder.encode(rawPassword);
   }
@@ -121,7 +126,11 @@ public class Employee {
   }
 
   public void updateStatus(String newStatus) {
-    this.status = newStatus;
+    if (newStatus != null && Arrays.asList("ACTIVE", "INACTIVE", "PENDING").contains(newStatus)) {
+      this.status = newStatus;
+    } else {
+      this.status = "ACTIVE";
+    }
   }
 
   public void updateProfileImageUrl(String newUrl) {
