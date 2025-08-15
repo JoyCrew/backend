@@ -23,41 +23,32 @@ public class TransactionHistoryService {
 
   public List<TransactionHistoryResponse> getTransactionHistory(String userEmail) {
     Employee user = employeeRepository.findByEmail(userEmail)
-        .orElseThrow(() -> new UserNotFoundException("User not found with email: " + userEmail));
+            .orElseThrow(() -> new UserNotFoundException("User not found with email: " + userEmail));
 
-    // Define which transaction types are considered personal history
     List<TransactionType> personalTransactionTypes = List.of(
-        TransactionType.AWARD_P2P,
-        TransactionType.REDEEM_ITEM
+            TransactionType.AWARD_P2P
     );
 
     return transactionRepository.findBySenderOrReceiverOrderByTransactionDateDesc(user, user)
-        .stream()
-        // Filter only for personal transaction types
-        .filter(tx -> personalTransactionTypes.contains(tx.getType()))
-        .map(tx -> {
-          boolean isSender = user.equals(tx.getSender());
-          // For item redemption, the user is the sender of points, so amount should be negative.
-          int amount = isSender ? -tx.getPointAmount() : tx.getPointAmount();
+            .stream()
+            .filter(tx -> personalTransactionTypes.contains(tx.getType()))
+            .map(tx -> {
+              boolean isSender = user.equals(tx.getSender());
+              int amount = isSender ? -tx.getPointAmount() : tx.getPointAmount();
 
-          String counterparty;
-          if (tx.getType() == TransactionType.REDEEM_ITEM) {
-            counterparty = tx.getMessage() != null ? tx.getMessage() : "상품 구매";
-          } else { // AWARD_P2P
-            counterparty = isSender
-                ? tx.getReceiver().getEmployeeName()
-                : tx.getSender().getEmployeeName();
-          }
+              String counterparty = isSender
+                      ? tx.getReceiver().getEmployeeName()
+                      : tx.getSender().getEmployeeName();
 
-          return TransactionHistoryResponse.builder()
-              .transactionId(tx.getTransactionId())
-              .type(tx.getType())
-              .amount(amount)
-              .counterparty(counterparty)
-              .message(tx.getMessage())
-              .transactionDate(tx.getTransactionDate())
-              .build();
-        })
-        .collect(Collectors.toList());
+              return TransactionHistoryResponse.builder()
+                      .transactionId(tx.getTransactionId())
+                      .type(tx.getType())
+                      .amount(amount)
+                      .counterparty(counterparty)
+                      .message(tx.getMessage())
+                      .transactionDate(tx.getTransactionDate())
+                      .build();
+            })
+            .collect(Collectors.toList());
   }
 }
