@@ -61,3 +61,21 @@ jobs:
   recent-view-cleanup:
     enabled: true
     cron: "0 0 3 * * *"
+
+nice:
+  pass:
+    # NICE 접속/표준창
+    base-url: https://svc.niceapi.co.kr:22001
+    standard-window-url: https://nice.checkplus.co.kr/CheckPlusSafeModel/service.cb
+    token-version-id: v2
+
+    # 콘솔에서 받은 값들 (환경변수 연동 권장)
+    client-id: ${NICE_CLIENT_ID}
+    client-secret: ${NICE_CLIENT_SECRET}
+    product-id: ${NICE_PRODUCT_ID}
+
+    # 인증 완료 콜백 URL(외부에서 접근 가능해야 함)
+    return-url: https://api.joycrew.co.kr/api/kyc/pass/callback
+
+    # 타임아웃 등
+    timeout-ms: 7000

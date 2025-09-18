@@ -53,7 +53,9 @@ public class SecurityConfig {
                             "/api/auth/password-reset/confirm",
                             "/v3/api-docs/**",
                             "/swagger-ui/**",
-                            "/swagger-ui.html"
+                            "/swagger-ui.html",
+                            "/api/kyc/pass/**",
+                            "/api/auth/find-id/**"
                     ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/crawl/**").permitAll()
