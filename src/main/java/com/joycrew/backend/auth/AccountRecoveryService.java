@@ -22,7 +22,7 @@ public class AccountRecoveryService {
         // 가장 보편: 휴대폰 번호로 1차 후보 → 이름/생일 2차 검증
         Optional<Employee> byPhone = employeeRepository.findByPhoneNumber(mobileNo);
         return byPhone
-                .filter(e -> (e.getName() == null || e.getName().equals(name)))
+                .filter(e -> (e.getEmployeeName() == null || e.getEmployeeName().equals(name)))
                 .filter(e -> (e.getBirthday() == null || e.getBirthday().equals(birthday)))
                 .map(Employee::getEmail); // 시스템에서 '아이디'가 이메일일 경우
     }

@@ -1,7 +1,6 @@
 package com.joycrew.backend.kyc;
 
 import com.joycrew.backend.auth.AccountRecoveryService;
-import com.joycrew.backend.config.NicePassProperties;
 import com.joycrew.backend.kyc.crypto.NiceCrypto;
 import com.joycrew.backend.kyc.dto.FindIdResult;
 import com.joycrew.backend.kyc.dto.NiceStartResponse;

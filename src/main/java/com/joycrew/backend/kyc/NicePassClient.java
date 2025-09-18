@@ -1,6 +1,5 @@
 package com.joycrew.backend.kyc;
 
-import com.joycrew.backend.config.NicePassProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
