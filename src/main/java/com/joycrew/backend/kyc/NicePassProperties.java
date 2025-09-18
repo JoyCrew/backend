@@ -1,4 +1,4 @@
-package com.joycrew.backend.config;
+package com.joycrew.backend.kyc;
 
 import lombok.Getter;
 import lombok.Setter;
