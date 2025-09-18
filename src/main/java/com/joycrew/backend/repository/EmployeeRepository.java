@@ -29,4 +29,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
       WHERE e.employeeId = :id
       """)
   Optional<Employee> findByIdWithCompany(@Param("id") Long id);
+
+  Optional<Employee> findByPhoneNumber(String phoneNumber);
 }
