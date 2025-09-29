@@ -27,11 +27,6 @@ public class EmployeeService {
   private final EmployeeMapper employeeMapper;
   private final S3FileStorageService s3FileStorageService;
 
-  private Employee getEmployeeOrThrow(Long employeeId) {
-    return employeeRepository.findById(employeeId)
-            .orElseThrow(() -> new UserNotFoundException("Employee not found: " + employeeId));
-  }
-
   @Transactional(readOnly = true)
   public UserProfileResponse getUserProfile(String userEmail) {
     Employee employee = employeeRepository.findByEmail(userEmail)
