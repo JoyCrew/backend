@@ -50,6 +50,28 @@ app:
   # Default frontend URL, primarily for the 'dev' environment.
   frontend-url: http://localhost:3000
 
+  # KYC / SMS verification (defaults for all profiles)
+  sms:
+    provider: solapi
+    from-number: "01044907174"
+
+  kyc:
+    # KYC 토큰 서명키(32바이트+ 권장). 환경변수로 주입 가능.
+    token-secret: ${KYC_TOKEN_SECRET:CHANGE_ME_TO_LONG_RANDOM_SECRET}
+    # KYC 토큰 유효시간(분)
+    token-ttl-minutes: 10
+
+solapi:
+  api-key: ${SOLAPI_API_KEY}
+  api-secret: ${SOLAPI_API_SECRET}
+  base-url: "https://api.solapi.com"
+
+# OTP policy (코드 유효/재전송/시도 제한)
+otp:
+  ttl-minutes: 5                # OTP 유효시간(분)
+  max-attempts: 5               # 최대 시도 횟수
+  resend-cooldown-seconds: 30   # 재전송 쿨다운(초)
+
 # AWS specific settings
 aws:
   region: 'ap-northeast-2'
@@ -61,21 +83,3 @@ jobs:
   recent-view-cleanup:
     enabled: true
     cron: "0 0 3 * * *"
-
-nice:
-  pass:
-    # NICE 접속/표준창
-    base-url: https://svc.niceapi.co.kr:22001
-    standard-window-url: https://nice.checkplus.co.kr/CheckPlusSafeModel/service.cb
-    token-version-id: v2
-
-    # 콘솔에서 받은 값들 (환경변수 연동 권장)
-    client-id: ${NICE_CLIENT_ID}
-    client-secret: ${NICE_CLIENT_SECRET}
-    product-id: ${NICE_PRODUCT_ID}
-
-    # 인증 완료 콜백 URL(외부에서 접근 가능해야 함)
-    return-url: https://api.joycrew.co.kr/api/kyc/pass/callback
-
-    # 타임아웃 등
-    timeout-ms: 7000

@@ -54,8 +54,8 @@ public class SecurityConfig {
                             "/v3/api-docs/**",
                             "/swagger-ui/**",
                             "/swagger-ui.html",
-                            "/api/kyc/pass/**",
-                            "/api/auth/find-id/**"
+                            "/kyc/phone/**",
+                            "/accounts/emails/by-phone"
                     ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/crawl/**").permitAll()
