@@ -1,89 +1,89 @@
-# Workflow name
-name: JoyCrew Backend CI/CD
+name: Deploy to EC2 (Self-contained)
 
-# Triggers the workflow on pushes to the develop and main branches
 on:
   push:
     branches:
-      - develop
       - main
 
-# Environment variables available to all jobs
-env:
-  AWS_REGION: ap-northeast-2
-  ECR_REPOSITORY: joycrew-backend
-  EKS_CLUSTER_NAME: joycrew-cluster
-
 jobs:
-  # ===================================================================
-  # CI Job: Runs on pushes to 'develop' to build and test the code.
-  # ===================================================================
-  build-and-test:
-    name: Build and Test
-    # Only run this job for the 'develop' branch
-    if: github.ref == 'refs/heads/develop'
+  build-and-deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
+    steps:
+      # 1. 소스 코드 체크아웃
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      # 2. JDK 17 설정
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
+      # 3. gradlew 실행 권한 추가
       - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+        run: chmod +x ./gradlew
 
-      - name: Build and run tests with Gradle
-        run: ./gradlew build
+      # 4. Gradle로 프로젝트 빌드
+      - name: Build with Gradle
+        run: ./gradlew build -x test
 
-  # ===================================================================
-  # CD Job: Runs on pushes to 'main' to build a Docker image and deploy to EKS.
-  # ===================================================================
-  deploy:
-    name: Build, Push, and Deploy
-    # Only run this job for the 'main' branch
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      # 5. 빌드된 JAR 파일을 EC2로 전송 (Secret 이름을 SSH_HOST/USER/KEY로 변경)
+      - name: Transfer JAR to EC2
+        uses: appleboy/scp-action@v0.1.4
         with:
-          # Use an IAM role for authentication instead of long-lived access keys
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          host: ${{ secrets.SSH_HOST }}        # SSH_HOST 사용
+          username: ${{ secrets.SSH_USER }}    # SSH_USER 사용
+          key: ${{ secrets.SSH_KEY }}          # SSH_KEY 사용
+          source: "build/libs/*.jar"
+          target: "/home/${{ secrets.SSH_USER }}" # 대상 경로 수정
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+      # 6. EC2에 접속하여 배포 명령 실행 (Secret 이름 및 AWS 인증 주입)
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SSH_HOST }}        # SSH_HOST 사용
+          username: ${{ secrets.SSH_USER }}    # SSH_USER 사용
+          key: ${{ secrets.SSH_KEY }}          # SSH_KEY 사용
+          
+          # AWS CLI 사용을 위해 인증 정보를 환경 변수로 주입합니다.
+          env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          # Build the Docker image for the amd64 architecture (for EKS nodes)
-          docker buildx build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --push .
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          script: |
+            # --------------------------------------------------
+            # AWS Secrets Manager 설정
+            # --------------------------------------------------
+            SECRET_NAME="security"  # 👈 Secrets Manager 이름 "security"로 확정
+            AWS_REGION="ap-northeast-2" # 👈 ARN에 따른 리전 확정
 
-      - name: Configure kubectl for EKS
-        run: |
-          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+            # --------------------------------------------------
+            # 배포 로직 시작
+            # --------------------------------------------------
+            echo "> Secrets Manager에서 환경변수를 가져옵니다."
+            # env 블록을 통해 주입된 AWS_ACCESS_KEY_ID와 AWS_SECRET_ACCESS_KEY를 사용하여 실행됨
+            SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id $SECRET_NAME --region $AWS_REGION --query SecretString --output text)
+            
+            # jq를 사용하여 JSON의 각 키-값을 'export KEY="VALUE"' 형식으로 변환하고 실행
+            export $(echo $SECRET_JSON | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]')
+            echo "> 환경변수 로딩 완료."
 
-      - name: Deploy to Amazon EKS
-        run: |
-          # Update the Kubernetes deployment with the new image version
-          kubectl set image deployment/joycrew-backend-deployment backend-container=${{ steps.build-image.outputs.image }}
+            # 기존 애플리케이션 종료
+            CURRENT_PID=$(pgrep -f ".jar")
+            if [ -z "$CURRENT_PID" ]; then
+              echo "> 현재 실행 중인 애플리케이션이 없습니다."
+            else
+              echo "> 실행 중인 애플리케이션을 종료합니다. (PID: $CURRENT_PID)"
+              kill -15 $CURRENT_PID
+              sleep 5
+            fi
+
+            # 새 애플리케이션 실행
+            EC2_HOME="/home/${{ secrets.SSH_USER }}" # 👈 SSH_USER Secret 사용
+            JAR_NAME=$(ls -tr $EC2_HOME/*.jar | tail -n 1)
+            echo "> 새 애플리케이션을 배포합니다: $JAR_NAME"
+            
+            # nohup을 사용하여 백그라운드에서 Spring Boot 애플리케이션 실행
+            nohup java -jar -Dspring.profiles.active=prod $JAR_NAME > $EC2_HOME/application.log 2>&1 &
