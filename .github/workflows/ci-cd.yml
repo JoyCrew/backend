@@ -29,44 +29,39 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
-      # 5. 빌드된 JAR 파일을 EC2로 전송 (Secret 이름을 SSH_HOST/USER/KEY로 변경)
+      # 5. 빌드된 JAR 파일을 EC2로 전송
       - name: Transfer JAR to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
-          host: ${{ secrets.SSH_HOST }}        # SSH_HOST 사용
-          username: ${{ secrets.SSH_USER }}    # SSH_USER 사용
-          key: ${{ secrets.SSH_KEY }}          # SSH_KEY 사용
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
           source: "build/libs/*.jar"
-          target: "/home/${{ secrets.SSH_USER }}" # 대상 경로 수정
+          target: "/home/${{ secrets.SSH_USER }}"
 
-      # 6. EC2에 접속하여 배포 명령 실행 (Secret 이름 및 AWS 인증 주입)
+      # 6. EC2에 접속하여 배포 명령 실행 (들여쓰기 수정 완료)
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.SSH_HOST }}        # SSH_HOST 사용
-          username: ${{ secrets.SSH_USER }}    # SSH_USER 사용
-          key: ${{ secrets.SSH_KEY }}          # SSH_KEY 사용
-          
-          # AWS CLI 사용을 위해 인증 정보를 환경 변수로 주입합니다.
-          env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
           script: |
             # --------------------------------------------------
             # AWS Secrets Manager 설정
             # --------------------------------------------------
-            SECRET_NAME="security"  # 👈 Secrets Manager 이름 "security"로 확정
-            AWS_REGION="ap-northeast-2" # 👈 ARN에 따른 리전 확정
+            SECRET_NAME="security"  # Secrets Manager 이름
+            AWS_REGION="ap-northeast-2" # AWS 리전
 
             # --------------------------------------------------
             # 배포 로직 시작
             # --------------------------------------------------
             echo "> Secrets Manager에서 환경변수를 가져옵니다."
-            # env 블록을 통해 주입된 AWS_ACCESS_KEY_ID와 AWS_SECRET_ACCESS_KEY를 사용하여 실행됨
+            # AWS 인증 정보는 ssh-action의 env 블록을 통해 환경 변수로 전달됨
             SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id $SECRET_NAME --region $AWS_REGION --query SecretString --output text)
             
             # jq를 사용하여 JSON의 각 키-값을 'export KEY="VALUE"' 형식으로 변환하고 실행
+            # 이 키-값들은 Spring Boot 애플리케이션에 환경 변수로 전달됨
             export $(echo $SECRET_JSON | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]')
             echo "> 환경변수 로딩 완료."
 
@@ -81,9 +76,12 @@ jobs:
             fi
 
             # 새 애플리케이션 실행
-            EC2_HOME="/home/${{ secrets.SSH_USER }}" # 👈 SSH_USER Secret 사용
+            EC2_HOME="/home/${{ secrets.SSH_USER }}" 
             JAR_NAME=$(ls -tr $EC2_HOME/*.jar | tail -n 1)
             echo "> 새 애플리케이션을 배포합니다: $JAR_NAME"
             
             # nohup을 사용하여 백그라운드에서 Spring Boot 애플리케이션 실행
             nohup java -jar -Dspring.profiles.active=prod $JAR_NAME > $EC2_HOME/application.log 2>&1 &
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
