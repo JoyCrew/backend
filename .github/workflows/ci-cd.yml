@@ -37,7 +37,7 @@ jobs:
           target: "/home/${{ secrets.SSH_USER }}/app"
           strip_components: 2
       
-      # 6. EC2에 접속하여 배포 명령 실행
+      # 6. 배포 스크립트 생성 및 실행
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -47,6 +47,15 @@ jobs:
           envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY
           command_timeout: 15m
           script: |
+            # 배포 스크립트를 파일로 생성
+            cat > /tmp/deploy.sh << 'DEPLOY_SCRIPT_EOF'
+            #!/bin/bash
+            
+            # AWS 환경변수 설정 (부모 프로세스에서 전달받음)
+            export AWS_ACCESS_KEY_ID="$1"
+            export AWS_SECRET_ACCESS_KEY="$2"
+            export SSH_USER="$3"
+            
             # --------------------------------------------------
             # AWS Secrets Manager 설정
             # --------------------------------------------------
@@ -63,7 +72,7 @@ jobs:
             echo "> 환경변수 로딩 완료."
             
             # 애플리케이션 디렉토리 설정
-            APP_DIR="/home/${{ secrets.SSH_USER }}/app"
+            APP_DIR="/home/${SSH_USER}/app"
             
             # 기존 애플리케이션 종료
             echo "> 기존 애플리케이션 확인 중..."
@@ -75,7 +84,7 @@ jobs:
               
               # 프로세스가 종료될 때까지 대기 (최대 30초)
               for i in {1..30}; do
-                if ! kill -0 $CURRENT_PID 2>/dev/null; then
+                if ! ps -p $CURRENT_PID > /dev/null 2>&1; then
                   echo "> 애플리케이션이 정상 종료되었습니다."
                   break
                 fi
@@ -84,7 +93,7 @@ jobs:
               done
               
               # 여전히 실행 중이면 강제 종료
-              if kill -0 $CURRENT_PID 2>/dev/null; then
+              if ps -p $CURRENT_PID > /dev/null 2>&1; then
                 echo "> 강제 종료합니다."
                 kill -9 $CURRENT_PID
                 sleep 2
@@ -109,14 +118,30 @@ jobs:
             
             # 프로세스 시작 확인
             sleep 3
-            if kill -0 $NEW_PID 2>/dev/null; then
+            if ps -p $NEW_PID > /dev/null 2>&1; then
               echo "> 애플리케이션이 성공적으로 시작되었습니다. (PID: $NEW_PID)"
+              echo "$NEW_PID" > "$APP_DIR/app.pid"
             else
               echo "> ERROR: 애플리케이션 시작에 실패했습니다."
+              echo "> 로그 확인: tail -50 $APP_DIR/application.log"
               exit 1
             fi
             
             echo "> 배포 완료!"
+            DEPLOY_SCRIPT_EOF
+            
+            # 스크립트 실행 권한 부여
+            chmod +x /tmp/deploy.sh
+            
+            # 백그라운드에서 배포 스크립트 실행 (SSH 세션과 분리)
+            echo "> 배포 스크립트를 백그라운드에서 실행합니다..."
+            nohup /tmp/deploy.sh "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" "${{ secrets.SSH_USER }}" > /tmp/deploy.log 2>&1 &
+            
+            echo "> 배포 스크립트가 시작되었습니다."
+            echo "> 배포 로그 확인: tail -f /tmp/deploy.log"
+            
+            # 배포 스크립트가 시작될 시간을 준 후 SSH 종료
+            sleep 2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
