@@ -60,9 +60,9 @@ jobs:
             # AWS 인증 정보는 ssh-action의 env 블록을 통해 환경 변수로 전달됨
             SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id $SECRET_NAME --region $AWS_REGION --query SecretString --output text)
             
-            # jq를 사용하여 JSON의 각 키-값을 'export KEY="VALUE"' 형식으로 변환하고 실행
-            # 이 키-값들은 Spring Boot 애플리케이션에 환경 변수로 전달됨
-            export $(echo $SECRET_JSON | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]')
+            # --- [수정] Bash에서 유효한 환경 변수 이름으로 변환 ---
+            # Spring Boot가 인식하도록 키의 '.'을 '_'로 바꾸고 대문자로 변환하여 export 합니다.
+            export $(echo $SECRET_JSON | jq -r 'to_entries | map({key: .key | ascii_upcase | gsub("\\."; "_"), value: .value}) | map(.key + "=\"" + (.value | tostring) + "\"") | .[]')
             echo "> 환경변수 로딩 완료."
 
             # 기존 애플리케이션 종료
