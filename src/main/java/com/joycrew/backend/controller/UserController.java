@@ -4,6 +4,10 @@ import com.joycrew.backend.dto.*;
 import com.joycrew.backend.security.UserPrincipal;
 import com.joycrew.backend.service.EmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -40,16 +44,28 @@ public class UserController {
     return ResponseEntity.ok(new SuccessResponse("Password changed successfully."));
   }
 
-  @Operation(summary = "Update my information", description = "Send profile data as 'request' part and image as 'profileImage' part in a multipart/form-data request.", security = @SecurityRequirement(name = "Authorization"))
+  @Operation(summary = "Update my information",
+          description = "Send profile data as 'request' part and image as 'profileImage' part in multipart/form-data request.",
+          security = @SecurityRequirement(name = "Authorization"))
   @PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<SuccessResponse> updateMyProfile(
-      @AuthenticationPrincipal UserPrincipal principal,
-      @RequestPart("request") UserProfileUpdateRequest request,
-      @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+          @AuthenticationPrincipal UserPrincipal principal,
+          @Parameter(description = "User profile update data",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+          @RequestPart("request") UserProfileUpdateRequest request,
+          @Parameter(description = "Profile image file (optional)",
+                  content = @Content(mediaType = "image/*"))
+          @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
 
-    employeeService.updateUserProfile(principal.getUsername(), request, profileImage);
+    // 빈 파일 체크 추가
+    MultipartFile imageFile = (profileImage != null && !profileImage.isEmpty()) ? profileImage : null;
+
+    employeeService.updateUserProfile(principal.getUsername(), request, imageFile);
     return ResponseEntity.ok(new SuccessResponse("Your information has been updated successfully."));
   }
+
+
+
 
   @Operation(summary = "Verify current password", security = @SecurityRequirement(name = "Authorization"))
   @PostMapping("/password/verify")

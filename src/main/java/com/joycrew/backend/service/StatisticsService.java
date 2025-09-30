@@ -5,6 +5,7 @@ import com.joycrew.backend.dto.TransactionHistoryResponse;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.RewardPointTransaction;
 import com.joycrew.backend.entity.enums.Tag;
+import com.joycrew.backend.entity.enums.TransactionType;
 import com.joycrew.backend.exception.UserNotFoundException;
 import com.joycrew.backend.repository.EmployeeRepository;
 import com.joycrew.backend.repository.RewardPointTransactionRepository;
@@ -30,14 +31,15 @@ public class StatisticsService {
     Employee user = employeeRepository.findByEmail(userEmail)
             .orElseThrow(() -> new UserNotFoundException("User not found with email: " + userEmail));
 
-    // Use a query that fetches related entities to avoid N+1 problems
+    // Fetch all transactions involving the user (sender or receiver)
     List<RewardPointTransaction> allTransactions = transactionRepository.findBySenderOrReceiverOrderByTransactionDateDesc(user, user);
 
     List<TransactionHistoryResponse> receivedHistory = new ArrayList<>();
     List<TransactionHistoryResponse> sentHistory = new ArrayList<>();
 
+    // Process transactions, excluding REDEEM_ITEM for history
     for (RewardPointTransaction tx : allTransactions) {
-      if (user.equals(tx.getReceiver())) {
+      if (user.equals(tx.getReceiver()) && tx.getType() != TransactionType.REDEEM_ITEM) {
         Employee sender = tx.getSender();
         receivedHistory.add(TransactionHistoryResponse.builder()
                 .transactionId(tx.getTransactionId())
@@ -49,7 +51,7 @@ public class StatisticsService {
                 .counterpartyProfileImageUrl(sender != null ? sender.getProfileImageUrl() : null)
                 .counterpartyDepartmentName(sender != null && sender.getDepartment() != null ? sender.getDepartment().getName() : null)
                 .build());
-      } else if (user.equals(tx.getSender())) {
+      } else if (user.equals(tx.getSender()) && tx.getType() != TransactionType.REDEEM_ITEM) {
         Employee receiver = tx.getReceiver();
         sentHistory.add(TransactionHistoryResponse.builder()
                 .transactionId(tx.getTransactionId())
@@ -64,11 +66,20 @@ public class StatisticsService {
       }
     }
 
-    int totalReceived = receivedHistory.stream().mapToInt(TransactionHistoryResponse::amount).sum();
-    int totalSent = sentHistory.stream().mapToInt(TransactionHistoryResponse::amount).sum();
+    // Calculate total points including all transaction types
+    int totalReceived = allTransactions.stream()
+            .filter(tx -> user.equals(tx.getReceiver()))
+            .mapToInt(RewardPointTransaction::getPointAmount)
+            .sum();
 
+    int totalSent = allTransactions.stream()
+            .filter(tx -> user.equals(tx.getSender()))
+            .mapToInt(tx -> tx.getPointAmount())
+            .sum();
+
+    // Calculate tag statistics (only for received transactions, excluding REDEEM_ITEM)
     Map<Tag, Long> tagStatsMap = allTransactions.stream()
-            .filter(tx -> user.equals(tx.getReceiver()) && tx.getTags() != null)
+            .filter(tx -> user.equals(tx.getReceiver()) && tx.getTags() != null && tx.getType() != TransactionType.REDEEM_ITEM)
             .flatMap(tx -> tx.getTags().stream())
             .collect(Collectors.groupingBy(tag -> tag, Collectors.counting()));
 

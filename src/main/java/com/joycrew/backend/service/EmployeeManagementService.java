@@ -34,8 +34,8 @@ public class EmployeeManagementService {
     StringBuilder whereClause = new StringBuilder("WHERE 1=1 ");
     if (keyword != null && !keyword.isBlank()) {
       whereClause.append("AND (LOWER(e.employeeName) LIKE :keyword ")
-          .append("OR LOWER(e.email) LIKE :keyword ")
-          .append("OR LOWER(d.name) LIKE :keyword) ");
+              .append("OR LOWER(e.email) LIKE :keyword ")
+              .append("OR LOWER(d.name) LIKE :keyword) ");
     }
 
     String countJpql = "SELECT COUNT(e) FROM Employee e LEFT JOIN e.department d " + whereClause;
@@ -47,39 +47,39 @@ public class EmployeeManagementService {
     int totalPages = (int) Math.ceil((double) total / size);
 
     String dataJpql = "SELECT e FROM Employee e " +
-        "LEFT JOIN FETCH e.department d " +
-        "LEFT JOIN FETCH e.company c " +
-        whereClause +
-        "ORDER BY e.employeeName ASC";
+            "LEFT JOIN FETCH e.department d " +
+            "LEFT JOIN FETCH e.company c " +
+            whereClause +
+            "ORDER BY e.employeeName ASC";
     TypedQuery<Employee> dataQuery = em.createQuery(dataJpql, Employee.class)
-        .setFirstResult(page * size)
-        .setMaxResults(size);
+            .setFirstResult(page * size)
+            .setMaxResults(size);
     if (keyword != null && !keyword.isBlank()) {
       dataQuery.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
     }
 
     List<AdminEmployeeQueryResponse> employees = dataQuery.getResultList().stream()
-        .map(employeeMapper::toAdminEmployeeQueryResponse) // Use Mapper
-        .toList();
+            .map(employeeMapper::toAdminEmployeeQueryResponse) // Use Mapper
+            .toList();
 
     return new AdminPagedEmployeeResponse(
-        employees,
-        page, // Return 0-based page index for consistency
-        totalPages,
-        page >= totalPages - 1
+            employees,
+            page,
+            totalPages,
+            page >= totalPages - 1
     );
   }
 
   public Employee updateEmployee(Long employeeId, AdminEmployeeUpdateRequest request) {
     Employee employee = employeeRepository.findById(employeeId)
-        .orElseThrow(() -> new UserNotFoundException("Employee not found with ID: " + employeeId));
+            .orElseThrow(() -> new UserNotFoundException("Employee not found with ID: " + employeeId));
 
     if (request.name() != null) {
       employee.updateName(request.name());
     }
     if (request.departmentId() != null) {
       Department department = departmentRepository.findById(request.departmentId())
-          .orElseThrow(() -> new IllegalArgumentException("Department not found with ID: " + request.departmentId()));
+              .orElseThrow(() -> new IllegalArgumentException("Department not found with ID: " + request.departmentId()));
       employee.assignToDepartment(department);
     }
     if (request.position() != null) {
@@ -96,14 +96,14 @@ public class EmployeeManagementService {
 
   public void deactivateEmployee(Long employeeId) {
     Employee employee = employeeRepository.findById(employeeId)
-        .orElseThrow(() -> new UserNotFoundException("Employee not found with ID: " + employeeId));
-    employee.updateStatus("DELETED");
+            .orElseThrow(() -> new UserNotFoundException("Employee not found with ID: " + employeeId));
+    employee.updateStatus("INACTIVE");
   }
 
   @Transactional(readOnly = true)
   public List<AdminEmployeeQueryResponse> getAllEmployees() {
     return employeeRepository.findAll().stream()
-        .map(employeeMapper::toAdminEmployeeQueryResponse) // Use Mapper
-        .toList();
+            .map(employeeMapper::toAdminEmployeeQueryResponse) // Use Mapper
+            .toList();
   }
 }

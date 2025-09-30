@@ -24,6 +24,11 @@ spec:
           image: "566105751077.dkr.ecr.ap-northeast-2.amazonaws.com/joycrew-backend:a761bbb-1754808557"
           ports:
             - containerPort: 8082
+          env:
+            - name: SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT
+              value: "20000" # 20 seconds
+            - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+              value: "5"
           # Define resource requests and limits for better scheduling and stability.
           resources:
             requests:
@@ -35,7 +40,7 @@ spec:
           # Readiness probe checks if the container is ready to accept traffic.
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /
               port: 8082
             initialDelaySeconds: 30
             periodSeconds: 10
@@ -43,7 +48,7 @@ spec:
           # If it fails, Kubernetes will restart the container.
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /
               port: 8082
             initialDelaySeconds: 60
             periodSeconds: 20

@@ -3,6 +3,7 @@ package com.joycrew.backend.service;
 import com.joycrew.backend.dto.EmployeeQueryResponse;
 import com.joycrew.backend.dto.PagedEmployeeResponse;
 import com.joycrew.backend.entity.Employee;
+import com.joycrew.backend.entity.enums.AccessStatus;
 import com.joycrew.backend.service.mapper.EmployeeMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -24,7 +25,7 @@ public class EmployeeQueryService {
   private final EntityManager em;
   private final EmployeeMapper employeeMapper;
 
-  public PagedEmployeeResponse getEmployees(String keyword, int page, int size, Long currentUserId) {
+  public PagedEmployeeResponse getEmployees(String keyword, int page, int size, Long currentUserId, AccessStatus accessStatus) {
     StringBuilder whereClause = new StringBuilder();
     boolean hasKeyword = StringUtils.hasText(keyword);
 
