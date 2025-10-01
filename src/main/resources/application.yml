@@ -83,3 +83,17 @@ jobs:
   recent-view-cleanup:
     enabled: true
     cron: "0 0 3 * * *"
+
+kakao:
+  giftbiz:
+    base-url: https://gateway-giftbiz.kakao.com/openapi/giftbiz
+    api-key: ${KAKAO_GIFT_BIZ_API_KEY}
+    timeout-ms: 5000
+  callback:
+    success-url: https://api.joycrew.co.kr/kakao/callback/success
+    fail-url: https://api.joycrew.co.kr/kakao/callback/fail
+    gift-cancel-url: https://api.joycrew.co.kr/kakao/callback/gift-cancel
+
+joycrew:
+  points:
+    krw_per_point: 40

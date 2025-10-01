@@ -55,6 +55,10 @@ public class Wallet {
     this.giftablePoint -= amount;
   }
 
+  /**
+   * 개인 구매용 결제: balance 에서만 차감한다.
+   * giftablePoint 는 선물 가능 한도로 유지한다.
+   */
   public void purchaseWithPoints(int amount) {
     if (amount < 0) {
       throw new IllegalArgumentException("Purchase amount cannot be negative.");
@@ -62,8 +66,8 @@ public class Wallet {
     if (this.balance < amount) {
       throw new InsufficientPointsException("Insufficient points for purchase.");
     }
-    this.balance -= amount;
-    this.giftablePoint = Math.max(0, this.giftablePoint - amount);
+    this.balance -= amount; // ✅ 구매는 balance만 차감
+    // ✅ giftablePoint는 변경하지 않음
   }
 
   public void revokePoints(int amount) {
