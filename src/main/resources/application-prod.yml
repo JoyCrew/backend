@@ -51,18 +51,3 @@ kakao:
 joycrew:
   points:
     krw_per_point: ${JOYCREW_POINTS_KRW_PER_POINT:40}
-
-logging:
-  file:
-    name: /home/${SSH_USER}/app/logs/app.log
-    max-size: 10MB
-    max-history: 7
-
-server:
-  tomcat:
-    accesslog:
-      enabled: true
-      directory: /home/${SSH_USER}/app/logs
-      prefix: access_log
-      suffix: .log
-      pattern: common
