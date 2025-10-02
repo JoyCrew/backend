@@ -1,19 +1,23 @@
 # ===================================================================
-# COMMON CONFIGURATION
+# COMMON CONFIGURATION (모든 환경 공통 설정)
 #
-# This file contains default properties shared across all profiles (dev, prod, etc.).
-# Profile-specific properties in files like 'application-dev.yml' will override these values.
+# 이 파일은 dev, prod 등 모든 프로파일에 공통적으로 적용되는,
+# 민감하지 않고 거의 변경되지 않는 기본 설정만 포함합니다.
 # ===================================================================
+
 server:
   port: 8082
 
 spring:
   application:
     name: joycrew
-  # Specifies the default active profile.
+
+  # 기본 활성 프로파일을 'dev'로 설정합니다.
+  # EC2 배포 시에는 '-Dspring.profiles.active=prod' 옵션으로 'prod'가 활성화됩니다.
   profiles:
     active: dev
-  # Common mail server settings used by all profiles.
+
+  # 모든 환경에서 공통으로 사용하는 메일 서버 정보
   mail:
     host: smtp.gmail.com
     port: 587
@@ -24,62 +28,25 @@ spring:
           starttls:
             enable: true
 
-# API documentation (Swagger/OpenAPI) settings.
+# API 문서 (Swagger/OpenAPI) 공통 설정
 springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
 
-# Default JWT settings.
-jwt:
-  # Default access token expiration: 1 hour (3,600,000 ms)
-  expiration-ms: 3600000
-  # Password reset token expiration: 15 minutes (900,000 ms)
-  password-reset-expiration-ms: 900000
-
-# Common logging settings.
+# 로깅 공통 설정
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
   level:
+    # 기본 로그 레벨은 INFO로 설정하고, 각 프로파일에서 필요에 따라 오버라이드합니다.
     com.joycrew.backend: INFO
+    org.springframework.web: INFO
+    org.hibernate: INFO
 
-# Application-specific common properties.
-app:
-  # Default frontend URL, primarily for the 'dev' environment.
-  frontend-url: http://localhost:3000
-
-  # KYC / SMS verification (defaults for all profiles)
-  sms:
-    provider: solapi
-    from-number: "01044907174"
-
-  kyc:
-    # KYC 토큰 서명키(32바이트+ 권장). 환경변수로 주입 가능.
-    token-secret: ${KYC_TOKEN_SECRET:CHANGE_ME_TO_LONG_RANDOM_SECRET}
-    # KYC 토큰 유효시간(분)
-    token-ttl-minutes: 10
-
-solapi:
-  api-key: ${SOLAPI_API_KEY}
-  api-secret: ${SOLAPI_API_SECRET}
-  base-url: "https://api.solapi.com"
-
-# OTP policy (코드 유효/재전송/시도 제한)
-otp:
-  ttl-minutes: 5                # OTP 유효시간(분)
-  max-attempts: 5               # 최대 시도 횟수
-  resend-cooldown-seconds: 30   # 재전송 쿨다운(초)
-
-# AWS specific settings
+# AWS 공통 설정
 aws:
   region: 'ap-northeast-2'
   s3:
     bucket-name: 'joycrew-dev-bucket'
-
-# view-cleanup-scheduling
-jobs:
-  recent-view-cleanup:
-    enabled: true
-    cron: "0 0 3 * * *"
