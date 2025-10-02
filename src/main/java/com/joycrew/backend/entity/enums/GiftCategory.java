@@ -1,4 +1,3 @@
-// src/main/java/com/joycrew/backend/entity/enums/GiftCategory.java
 package com.joycrew.backend.entity.enums;
 
 import lombok.Getter;
