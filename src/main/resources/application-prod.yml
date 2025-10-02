@@ -51,3 +51,9 @@ kakao:
 joycrew:
   points:
     krw_per_point: ${JOYCREW_POINTS_KRW_PER_POINT:40}
+
+logging:
+  file:
+    name: /home/${SSH_USER}/app/logs/app.log
+    max-size: 10MB
+    max-history: 7
