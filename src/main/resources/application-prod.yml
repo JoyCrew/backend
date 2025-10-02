@@ -6,72 +6,63 @@
 # ===================================================================
 
 spring:
-  # 운영 환경에서는 외부 MySQL 데이터베이스를 사용합니다.
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
 
-  # 운영 환경용 메일 계정 정보
   mail:
     username: ${SPRING_MAIL_USERNAME}
     password: ${SPRING_MAIL_PASSWORD}
 
-  # JPA 및 Hibernate 설정
   jpa:
     hibernate:
-      ddl-auto: update # 운영 환경에서는 스키마를 자동으로 변경
+      ddl-auto: update
     show-sql: false
 
-# 운영 환경용 JWT 시크릿 키
 jwt:
   expiration-ms: 3600000
   password-reset-expiration-ms: 900000
   secret: ${JWT_SECRET}
 
-# 운영 환경의 프론트엔드 서비스 주소
 app:
   frontend-url: https://www.joycrew.co.kr
   kyc:
     token-secret: ${KYC_TOKEN_SECRET}
     token-ttl-minutes: 10
 
-# 운영용 Solapi (SMS) 키
 solapi:
   api-key: ${SOLAPI_API_KEY}
   api-secret: ${SOLAPI_API_SECRET}
   base-url: "https://api.solapi.com"
 
-# 운영용 카카오 API 설정
+# [수정] 플레이스홀더의 '.'을 '_'로 변경하여 배포 스크립트와 일치시킴
 kakao:
   giftbiz:
-    base-url: ${KAKAO_GIFTBIZ_BASE-URL}
-    api-key: ${KAKAO_GIFTBIZ_API-KEY}
+    base-url: ${KAKAO_GIFTBIZ_BASE_URL}
+    api-key: ${KAKAO_GIFTBIZ_API_KEY}
     timeout-ms: 5000
   callback:
-    success-url: ${KAKAO_CALLBACK_SUCCESS-URL}
-    fail-url: ${KAKAO_CALLBACK_FAIL-URL}
-    gift-cancel-url: ${KAKAO_CALLBACK_GIFT-CANCEL-URL}
+    success-url: ${KAKAO_CALLBACK_SUCCESS_URL}
+    fail-url: ${KAKAO_CALLBACK_FAIL_URL}
+    gift-cancel-url: ${KAKAO_CALLBACK_GIFT_CANCEL_URL}
 
-# 운영용 포인트 설정
 joycrew:
   points:
     krw_per_point: ${JOYCREW_POINTS_KRW_PER_POINT:40}
 
-# 운영 환경에서는 로그를 파일로 기록하여 관리합니다.
 logging:
   file:
-    name: /var/log/joycrew/app.log
+    name: /home/${SSH_USER}/app/logs/app.log
     max-size: 10MB
     max-history: 7
 
-# 운영 서버의 톰캣 접근 로그 설정
 server:
   tomcat:
     accesslog:
       enabled: true
-      directory: /var/log/joycrew
+      directory: /home/${SSH_USER}/app/logs
       prefix: access_log
       suffix: .log
       pattern: common
