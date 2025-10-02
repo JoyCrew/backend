@@ -1,40 +1,72 @@
 # ===================================================================
-# PRODUCTION PROFILE
+# PRODUCTION PROFILE (운영 환경)
 #
-# Properties that are active when the 'prod' profile is enabled.
+# 'prod' 프로파일이 활성화되었을 때 적용되는 설정입니다.
+# 모든 민감 정보는 배포 시 AWS Secrets Manager를 통해 환경변수로 주입됩니다.
 # ===================================================================
+
 spring:
-  config:
-    import: optional:aws-secretsmanager:security
-  # In production, the application connects to an external MySQL database.
-  # For security, database credentials are read from environment variables.
+  # 운영 환경에서는 외부 MySQL 데이터베이스를 사용합니다.
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-  # Updates the schema on application start if it differs from the entities.
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  # 운영 환경용 메일 계정 정보
+  mail:
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
+
+  # JPA 및 Hibernate 설정
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update # 운영 환경에서는 스키마를 자동으로 변경
     show-sql: false
 
-# In production, logs are written to a file for persistence and analysis.
+# 운영 환경용 JWT 시크릿 키
+jwt:
+  expiration-ms: 3600000
+  password-reset-expiration-ms: 900000
+  secret: ${JWT_SECRET}
+
+# 운영 환경의 프론트엔드 서비스 주소
+app:
+  frontend-url: https://www.joycrew.co.kr
+  kyc:
+    token-secret: ${KYC_TOKEN_SECRET}
+    token-ttl-minutes: 10
+
+# 운영용 Solapi (SMS) 키
+solapi:
+  api-key: ${SOLAPI_API_KEY}
+  api-secret: ${SOLAPI_API_SECRET}
+  base-url: "https://api.solapi.com"
+
+# 운영용 카카오 API 설정
+kakao:
+  giftbiz:
+    base-url: ${KAKAO_GIFTBIZ_BASE-URL}
+    api-key: ${KAKAO_GIFTBIZ_API-KEY}
+    timeout-ms: 5000
+  callback:
+    success-url: ${KAKAO_CALLBACK_SUCCESS-URL}
+    fail-url: ${KAKAO_CALLBACK_FAIL-URL}
+    gift-cancel-url: ${KAKAO_CALLBACK_GIFT-CANCEL-URL}
+
+# 운영용 포인트 설정
+joycrew:
+  points:
+    krw_per_point: ${JOYCREW_POINTS_KRW_PER_POINT:40}
+
+# 운영 환경에서는 로그를 파일로 기록하여 관리합니다.
 logging:
-  level:
-    com.joycrew.backend: INFO
   file:
     name: /var/log/joycrew/app.log
     max-size: 10MB
     max-history: 7
 
-# The frontend service URL for the production environment.
-app:
-  frontend-url: https://www.joycrew.co.kr
-
-# AWS specific settings for production
-aws:
-  s3:
-    # Production S3 bucket name
-    bucket-name: 'joycrew-prod-bucket'
-
+# 운영 서버의 톰캣 접근 로그 설정
 server:
   tomcat:
     accesslog:
