@@ -7,10 +7,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "orders", indexes = {
-  @Index(name = "idx_orders_employee", columnList = "employee_id"),
-  @Index(name = "idx_orders_status", columnList = "status")
-})
+@Table(name = "orders")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,44 +17,43 @@ public class Order {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long orderId;
+  private Long id;
 
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "employee_id")
+  /** 주문자 */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "employee_id", nullable = false)
   private Employee employee;
 
-  // Product snapshot at the time of order
-  @Column(nullable = false)
+  /** 상품 ID (카카오 템플릿 ID를 해시 변환해서 저장) */
   private Long productId;
 
-  @Column(nullable = false, length = 1000)
+  /** 상품 이름 */
   private String productName;
 
-  @Column(nullable = false, length = 64)
-  private String productItemId;
+  /** 옵션 상품 ID (옵션 없는 경우 null) */
+  private Long productItemId;
 
-  @Column(nullable = false)
+  /** 단가(포인트 단위) */
   private Integer productUnitPrice;
 
-  @Column(nullable = false)
+  /** 수량 */
   private Integer quantity;
 
-  @Column(nullable = false)
+  /** 총 금액(포인트 단위) */
   private Integer totalPrice;
 
+  /** 주문 상태 */
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 32)
   private OrderStatus status;
 
-  @Column(nullable = false)
+  /** 주문 일시 */
   private LocalDateTime orderedAt;
 
-  private LocalDateTime shippedAt;
-  private LocalDateTime deliveredAt;
-
-  @PrePersist
-  protected void onCreate() {
-    if (this.orderedAt == null) this.orderedAt = LocalDateTime.now();
-    if (this.status == null) this.status = OrderStatus.PLACED;
-  }
+  /**
+   * 외부 주문번호 (카카오 GiftBiz external_order_id)
+   * - 카카오 스펙: length ≤ 70
+   * - 성공 건은 중복 불가
+   */
+  @Column(name = "external_order_id", length = 70, unique = true, nullable = false)
+  private String externalOrderId;
 }
