@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 @RestController
-@RequestMapping("/kyc/phone")
+@RequestMapping("/api/kyc/phone")
 @RequiredArgsConstructor
 public class KycController {
     private final PhoneVerificationService svc;
