@@ -46,86 +46,50 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY # AWS 시크릿 전달
           script: |
-            # --- 아래 스크립트는 EC2 서버 내부에서 실행됩니다 ---
+            # --- EC2 내부에서 실행되는 배포 스크립트 ---
+            set -e
 
-            cat > /tmp/deploy.sh << 'DEPLOY_SCRIPT_EOF'
-            #!/bin/bash
-            set -e # 한 명령어라도 실패하면 즉시 스크립트를 중단합니다.
-
-            # GitHub Actions로부터 전달받은 변수 설정
-            export AWS_ACCESS_KEY_ID="$1"
-            export AWS_SECRET_ACCESS_KEY="$2"
-            export SSH_USER="$3"
-
-            APP_DIR="/home/${SSH_USER}/app"
+            APP_DIR="/home/${{ secrets.SSH_USER }}/app"
             LOG_DIR="${APP_DIR}/logs"
 
-            # 로그 디렉토리 생성 (없을 경우)
+            # 로그 디렉토리 생성
             mkdir -p $LOG_DIR
 
-            echo "> Secrets Manager에서 환경변수를 가져옵니다."
-            SECRET_NAME="security"
-            AWS_REGION="ap-northeast-2"
-            SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id $SECRET_NAME --region $AWS_REGION --query SecretString --output text)
-
-            # [핵심 수정] source 방식 대신, Spring Boot가 직접 읽을 .env 파일을 생성합니다.
-            echo "> JAR 파일과 동일한 위치에 .env 파일을 생성합니다."
-            echo "$SECRET_JSON" | jq -r 'to_entries | map({key: .key | ascii_upcase | gsub("\\."; "_"), value: .value}) | map(.key + "=" + .value) | .[]' > "${APP_DIR}/.env"
-            echo "> .env 파일 생성 완료."
-
-            # 기존 애플리케이션 종료
-            echo "> 기존 애플리케이션을 확인하고 종료합니다."
+            echo "> 기존 애플리케이션 종료"
             if pgrep -f "java.*\.jar" > /dev/null; then
               CURRENT_PID=$(pgrep -f "java.*\.jar")
-              echo "> 실행 중인 애플리케이션을 종료합니다. (PID: $CURRENT_PID)"
+              echo "> 실행 중인 애플리케이션 종료 (PID: $CURRENT_PID)"
               kill -15 $CURRENT_PID
-              sleep 10 # 종료 대기
+              sleep 10
             else
-              echo "> 현재 실행 중인 애플리케이션이 없습니다."
+              echo "> 실행 중인 애플리케이션 없음"
             fi
 
-            # 새 애플리케이션 실행
+            # 최신 JAR 선택
             JAR_NAME=$(ls -tr $APP_DIR/*.jar | tail -n 1)
             if [ -z "$JAR_NAME" ]; then
-              echo "> ERROR: 배포할 JAR 파일을 찾을 수 없습니다."
+              echo "> ERROR: 배포할 JAR 없음"
               exit 1
             fi
 
-            echo "> 새 애플리케이션을 배포합니다: $JAR_NAME"
-
-            # [핵심 수정] Spring Boot가 .env 파일을 자동으로 읽도록 실행 옵션을 추가합니다.
+            echo "> 새 애플리케이션 실행: $JAR_NAME"
             nohup java -jar \
               -Dspring.profiles.active=prod \
-              -Dspring.config.import=optional:file:.env \
               "$JAR_NAME" > "$LOG_DIR/application.log" 2>&1 &
 
-            # 애플리케이션 시작 확인 (더 긴 대기시간과 상세한 로그 출력)
-            echo "> 애플리케이션 시작을 15초간 기다립니다..."
+            echo "> 애플리케이션 시작 확인 (15초 대기)"
             sleep 15
-            
+
             if pgrep -f "$JAR_NAME" > /dev/null; then
-              echo "> 애플리케이션이 성공적으로 시작되었습니다."
+              echo "> ✅ 애플리케이션 시작 성공"
             else
               echo "----------------------------------------"
-              echo "> ERROR: 애플리케이션 시작에 실패했습니다."
-              echo "> 아래 로그를 확인하여 원인을 파악하세요."
+              echo "> ❌ 애플리케이션 시작 실패"
               echo "--- 최근 로그 50줄 ---"
               tail -n 50 "$LOG_DIR/application.log"
               echo "----------------------------------------"
               exit 1
             fi
-            
-            echo "> 배포 완료!"
-            DEPLOY_SCRIPT_EOF
 
-            # 스크립트 실행 권한 부여
-            chmod +x /tmp/deploy.sh
-            
-            # 백그라운드에서 배포 스크립트 실행
-            echo "> 배포 스크립트를 백그라운드에서 실행합니다."
-            nohup /tmp/deploy.sh "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" "${{ secrets.SSH_USER }}" > /tmp/deploy.log 2>&1 &
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            echo "> 배포 완료"
