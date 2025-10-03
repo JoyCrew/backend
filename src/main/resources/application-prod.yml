@@ -2,19 +2,25 @@
 # PRODUCTION PROFILE (운영 환경)
 #
 # 'prod' 프로파일이 활성화되었을 때 적용되는 설정입니다.
-# 모든 민감 정보는 배포 시 AWS Secrets Manager를 통해 환경변수로 주입됩니다.
+# 모든 민감 정보는 AWS Secrets Manager에서 직접 불러옵니다.
 # ===================================================================
 
 spring:
+  config:
+    import: aws-secretsmanager:joycrew-backend-secrets
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
 
   mail:
-    username: ${SPRING_MAIL_USERNAME}
-    password: ${SPRING_MAIL_PASSWORD}
+    host: email-smtp.ap-northeast-2.amazonaws.com
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
   jpa:
     hibernate:
@@ -24,29 +30,19 @@ spring:
 jwt:
   expiration-ms: 3600000
   password-reset-expiration-ms: 900000
-  secret: ${JWT_SECRET}
 
 app:
   frontend-url: https://www.joycrew.co.kr
   kyc:
-    token-secret: ${KYC_TOKEN_SECRET}
     token-ttl-minutes: 10
 
 solapi:
-  api-key: ${SOLAPI_API_KEY}
-  api-secret: ${SOLAPI_API_SECRET}
   base-url: "https://api.solapi.com"
 
-# [수정] 플레이스홀더의 '.'을 '_'로 변경하여 배포 스크립트와 일치시킴
 kakao:
   giftbiz:
-    base-url: ${KAKAO_GIFTBIZ_BASE_URL}
-    api-key: ${KAKAO_GIFTBIZ_API_KEY}
     timeout-ms: 5000
   callback:
-    success-url: ${KAKAO_CALLBACK_SUCCESS_URL}
-    fail-url: ${KAKAO_CALLBACK_FAIL_URL}
-    gift-cancel-url: ${KAKAO_CALLBACK_GIFT_CANCEL_URL}
 
 joycrew:
   points:
