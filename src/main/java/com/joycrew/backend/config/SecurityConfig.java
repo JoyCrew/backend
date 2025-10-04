@@ -50,6 +50,7 @@ public class SecurityConfig {
                             "/actuator/health",
                             "/h2-console/**",
                             "/api/auth/login",
+                            "/api/auth/logout",
                             "/api/auth/password-reset/request",
                             "/api/auth/password-reset/confirm",
                             "/v3/api-docs/**",
