@@ -50,4 +50,4 @@ logging:
 aws:
   region: 'ap-northeast-2'
   s3:
-    bucket-name: 'joycrew-dev-bucket'
+    bucket-name: 'joycrew-prod-bucket'
