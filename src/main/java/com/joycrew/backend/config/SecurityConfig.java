@@ -59,7 +59,6 @@ public class SecurityConfig {
                             "/accounts/emails/by-phone"
                     ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/catalog/**").permitAll()
-                    .requestMatchers("/api/admin/employees").permitAll()
                     .requestMatchers("/api/admin/**").hasAuthority(AdminLevel.SUPER_ADMIN.name())
                     .anyRequest().authenticated()
             )

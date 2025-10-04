@@ -24,79 +24,82 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-  private final JwtUtil jwtUtil;
-  private final UserDetailsService userDetailsService;
-  // AntPathMatcher를 사용하여 URL 패턴을 비교합니다. (e.g., /api/docs/**)
-  private final AntPathMatcher pathMatcher = new AntPathMatcher();
+    private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-  // 1. 여기에 JWT 토큰 검사를 건너뛸 경로 목록을 정의합니다.
-  private static final List<String> EXCLUDE_URLS = Arrays.asList(
-          "/",
-          "/h2-console/**",
-          "/api/auth/login",
-          "/api/auth/password-reset/**",
-          "/v3/api-docs/**",
-          "/swagger-ui/**",
-          "/swagger-ui.html",
-          "/api/products/**",
-          "/api/crawl/**",
-          // 최초 관리자 등록을 위해 이 경로를 필터 예외 목록에 추가합니다.
-          "/api/admin/employees"
-  );
+    // JWT 토큰 검사를 건너뛸 경로 목록 (SecurityConfig와 일치하도록 수정)
+    private static final List<String> EXCLUDE_URLS = Arrays.asList(
+            "/",
+            "/error",
+            "/actuator/health",
+            "/h2-console/**",
+            "/api/auth/**",                  // 로그인, 비밀번호 재설정 등 모든 인증 관련 경로
+            "/api/kyc/phone/**",             // ### KYC 관련 경로 추가 (문제의 직접적인 원인) ###
+            "/accounts/emails/by-phone",     // ### 이메일 조회 경로 추가 (문제의 직접적인 원인) ###
+            "/api/catalog/**",               // 상품 목록 조회 경로 추가
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html"
+            // "/api/admin/employees" // 보안상 이 경로는 필터 예외에서 제거하는 것이 올바릅니다.
+    );
 
-  @Override
-  protected void doFilterInternal(HttpServletRequest request,
-                                  HttpServletResponse response,
-                                  FilterChain filterChain)
-          throws ServletException, IOException {
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
-    // 2. 현재 요청 경로가 EXCLUDE_URLS 목록에 포함되는지 확인합니다.
-    String path = request.getServletPath();
-    boolean isExcluded = EXCLUDE_URLS.stream()
-            .anyMatch(excludeUrl -> pathMatcher.match(excludeUrl, path));
+        String path = request.getServletPath();
 
-    // 3. 예외 목록에 포함된 경로라면, 필터 로직을 실행하지 않고 즉시 다음 필터로 넘깁니다.
-    if (isExcluded) {
-      log.info("JWT Filter bypassed for path: {}", path);
-      filterChain.doFilter(request, response);
-      return;
+        // CORS Preflight 요청(OPTIONS)은 항상 통과
+        if (request.getMethod().equalsIgnoreCase("OPTIONS")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        boolean isExcluded = EXCLUDE_URLS.stream()
+                .anyMatch(excludeUrl -> pathMatcher.match(excludeUrl, path));
+
+        if (isExcluded) {
+            log.info("JWT Filter bypassed for path: {}", path);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        log.info("===== JWT Filter Executed for path: {} =====", path);
+
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            log.warn("Authorization header is missing or invalid for protected path: {}", path);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String token = authHeader.substring(7);
+        String email = null;
+        try {
+            email = jwtUtil.getEmailFromToken(token);
+        } catch (ExpiredJwtException e) {
+            log.warn("JWT token has expired: {}", e.getMessage());
+        } catch (JwtException e) {
+            log.warn("Invalid JWT token: {}", e.getMessage());
+        }
+
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
+
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    null,
+                    userDetails.getAuthorities()
+            );
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            log.info("User '{}' authenticated successfully.", email);
+        }
+
+        filterChain.doFilter(request, response);
     }
-
-    // --- 아래는 기존 필터 로직과 동일합니다 ---
-
-    log.info("===== JWT Filter Executed for path: {} =====", path);
-
-    String authHeader = request.getHeader("Authorization");
-
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-      log.warn("Authorization header is missing or invalid for protected path: {}", path);
-      filterChain.doFilter(request, response);
-      return;
-    }
-
-    String token = authHeader.substring(7);
-    String email = null;
-    try {
-      email = jwtUtil.getEmailFromToken(token);
-    } catch (ExpiredJwtException e) {
-      log.warn("JWT token has expired: {}", e.getMessage());
-    } catch (JwtException e) {
-      log.warn("Invalid JWT token: {}", e.getMessage());
-    }
-
-    if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-      UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
-
-      UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-              userDetails,
-              null,
-              userDetails.getAuthorities()
-      );
-      authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-      SecurityContextHolder.getContext().setAuthentication(authentication);
-      log.info("User '{}' authenticated successfully.", email);
-    }
-
-    filterChain.doFilter(request, response);
-  }
 }
