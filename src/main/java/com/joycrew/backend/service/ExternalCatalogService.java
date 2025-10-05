@@ -33,7 +33,7 @@ public class ExternalCatalogService {
         return p.getContent().stream().map(t -> {
             int point = (int) Math.ceil(t.getBasePriceKrw() / (double) krwPerPoint);
             return new ExternalProductResponse(
-                    t.getTemplateId(), t.getName(), point, t.getBasePriceKrw(), t.getThumbnailUrl()
+                    t.getTemplateId(), t.getName(), t.getBrand(), point, t.getBasePriceKrw(), t.getThumbnailUrl()
             );
         }).toList();
     }
@@ -47,6 +47,7 @@ public class ExternalCatalogService {
         return new ExternalProductDetailResponse(
                 t.getTemplateId(),
                 t.getName(),
+                t.getBrand(),
                 basePoint,
                 t.getBasePriceKrw(),
                 t.getThumbnailUrl()
