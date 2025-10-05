@@ -21,6 +21,9 @@ public class KakaoTemplate {
     @Column(nullable = false, length = 255)
     private String name;
 
+    @Column(length = 128)
+    private String brand;
+
     @Column(nullable = false)
     private Integer basePriceKrw;
 
