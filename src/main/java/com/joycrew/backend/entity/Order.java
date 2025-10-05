@@ -30,9 +30,6 @@ public class Order {
   /** 상품 이름 */
   private String productName;
 
-  /** 옵션 상품 ID (옵션 없는 경우 null) */
-  private Long productItemId;
-
   /** 단가(포인트 단위) */
   private Integer productUnitPrice;
 
