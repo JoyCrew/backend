@@ -1,0 +1,74 @@
+# H2 Database settings for 'dev' profile
+spring:
+  # --- H2 Datasource Configuration ---
+  datasource:
+    # Use H2 in-memory database named 'testdb'
+    # DB_CLOSE_DELAY=-1 keeps the database alive as long as the JVM is running
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    # H2 JDBC Driver
+    driver-class-name: org.h2.Driver
+    # Default H2 username
+    username: sa
+    # Default H2 password (can be empty or set)
+    password: password
+
+  # --- H2 Console Configuration (Optional but recommended) ---
+  h2:
+    console:
+      # Enable H2 web console
+      enabled: true
+      # Access path for H2 console (e.g., http://localhost:8082/h2-console)
+      path: /h2-console
+      settings:
+        # Allows access from web browsers
+        web-allow-others: false
+        # Disables trace output in console
+        trace: false
+
+  # --- JPA/Hibernate Configuration ---
+  jpa:
+    # Let Hibernate automatically detect H2 dialect (no need to specify)
+    # database-platform: org.hibernate.dialect.H2Dialect # Optional
+    hibernate:
+      # Automatically update schema based on entities (create/update tables)
+      ddl-auto: update
+    properties:
+      hibernate:
+      # format_sql: true # Optional: Pretty print SQL logs
+      # use_sql_comments: true # Optional: Add comments to SQL logs
+    # Show executed SQL statements in the logs (optional)
+    show-sql: true
+
+# --- Other configurations (like jwt, mail, etc. remain the same) ---
+jwt:
+  expiration-ms: 3600000
+  password-reset-expiration-ms: 900000
+  secret: ${JWT_SECRET:defaultSecretValueForDev} # Provide a default for dev if env var is not set
+
+app:
+  frontend-url: http://localhost:3000 # Use localhost for dev frontend
+  sms:
+    provider: solapi
+    from-number: 123
+  kyc:
+    token-secret: 123
+    token-ttl-minutes: 10
+
+solapi:
+  api-key: 123
+  api-secret: 123
+  base-url: "https://api.solapi.com"
+
+kakao:
+  giftbiz:
+    base-url: 123
+    api-key: 123
+    timeout-ms: 5000
+  callback:
+    success-url: 123
+    fail-url: 123
+    gift-cancel-url: 123
+
+joycrew:
+  points:
+    krw_per_point: ${JOYCREW_POINTS_KRW_PER_POINT:40}
