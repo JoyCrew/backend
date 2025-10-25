@@ -23,10 +23,13 @@ public class CatalogController {
             @PathVariable String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "POPULAR") SortOption sort
+            @RequestParam(defaultValue = "POPULAR") SortOption sort,
+            @RequestParam(required = false) String searchName // 상품명 검색 파라미터 추가
     ) {
         GiftCategory gc = GiftCategory.valueOf(category.toUpperCase());
-        return ResponseEntity.ok(catalog.listByCategory(gc, page, size, sort));
+
+        // 서비스 레이어에도 searchName 파라미터 전달 (ExternalCatalogService.listByCategory 수정 필요)
+        return ResponseEntity.ok(catalog.listByCategory(gc, page, size, sort, searchName));
     }
 
     @GetMapping(value = "/kakao/product/{templateId}", produces = "application/json; charset=UTF-8")

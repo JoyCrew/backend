@@ -1,9 +1,6 @@
 package com.joycrew.backend.controller;
 
-import com.joycrew.backend.dto.kyc.PhoneStartRequest;
-import com.joycrew.backend.dto.kyc.PhoneStartResponse;
-import com.joycrew.backend.dto.kyc.PhoneVerifyRequest;
-import com.joycrew.backend.dto.kyc.PhoneVerifyResponse;
+import com.joycrew.backend.dto.kyc.*;
 import com.joycrew.backend.service.PhoneVerificationService;
 import com.joycrew.backend.repository.EmployeeRepository;
 import com.joycrew.backend.util.EmailMasker;
@@ -11,7 +8,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -35,25 +31,30 @@ public class KycController {
         // 1) 코드 검증 + KYC 토큰 생성 + phone 획득
         var r = svc.verify(req.requestId(), req.code());
 
-        // 2) 해당 phone으로 직원들 조회 → 이메일/최근로그인 추출
+        // 2) 해당 phone으로 직원들 조회
         var employees = employeeRepo.findByPhoneNumber(r.phone());
 
-        List<String> emails = employees.stream()
-                .flatMap(e -> Stream.of(e.getEmail(), e.getPersonalEmail()))
-                .filter(Objects::nonNull)
-                .map(EmailMasker::mask)
-                .distinct()
+        // 3) [수정된 로직]
+        // Employee 엔티티를 VerifiedEmailInfo DTO 리스트로 변환
+        // (회사 이메일과 개인 이메일을 별도 항목으로 취급)
+        List<VerifiedEmailInfo> accounts = employees.stream()
+                .flatMap(e -> Stream.of(
+                        // 회사 이메일 정보
+                        new VerifiedEmailInfo(EmailMasker.mask(e.getEmail()), e.getLastLoginAt()),
+                        // 개인 이메일 정보 (null이 아닐 경우에만 생성)
+                        (e.getPersonalEmail() != null)
+                                ? new VerifiedEmailInfo(EmailMasker.mask(e.getPersonalEmail()), e.getLastLoginAt())
+                                : null
+                ))
+                .filter(Objects::nonNull) // personalEmail이 null이었던 스트림 제거
+                .filter(info -> info.email() != null) // 마스킹된 이메일이 null이 아닌 경우
+                .distinct() // (이메일, 날짜)가 완전히 동일한 경우 중복 제거
+                // 최근 로그인 날짜 기준으로 내림차순 정렬 (프론트 편의성)
+                .sorted(Comparator.comparing(VerifiedEmailInfo::recentLoginAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
 
-        LocalDateTime recent = employees.stream()
-                .map(e -> e.getLastLoginAt())     // LocalDateTime
-                .filter(Objects::nonNull)
-                .max(Comparator.naturalOrder())
-                .orElse(null);
-
-        String recentStr = (recent != null) ? recent.toString() : null; // ISO-8601 문자열
-
-        // 3) 응답
-        return new PhoneVerifyResponse(r.verified(), r.kycToken(), emails, recentStr);
+        // 4) [수정된 생성자 호출] (3-인수)
+        return new PhoneVerifyResponse(r.verified(), r.kycToken(), accounts);
     }
 }
+
