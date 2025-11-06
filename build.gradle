@@ -49,6 +49,7 @@ dependencies {
     // AWS SDK for S3 and Secrets Manager Integration
     implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:3.1.1')
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
+    implementation(platform("software.amazon.awssdk:bom:2.21.46"))
     implementation 'software.amazon.awssdk:s3'
 
     implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
