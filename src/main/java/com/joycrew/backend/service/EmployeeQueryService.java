@@ -5,6 +5,7 @@ import com.joycrew.backend.dto.PagedEmployeeResponse;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.service.mapper.EmployeeMapper;
+import com.joycrew.backend.tenant.Tenant;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -25,11 +26,10 @@ public class EmployeeQueryService {
   private final EntityManager em;
   private final EmployeeMapper employeeMapper;
 
-  // EmployeeQueryService.java
-  public PagedEmployeeResponse getEmployees(
-          String keyword, int page, int size, Long currentUserId, AdminLevel requesterRole
-  ) {
-    StringBuilder where = new StringBuilder("WHERE e.employeeId != :currentUserId ");
+  public PagedEmployeeResponse getEmployees(String keyword, int page, int size, Long currentUserId, AdminLevel requesterRole) {
+    Long tenant = Tenant.id(); // ✅ 테넌트
+
+    StringBuilder where = new StringBuilder("WHERE c.companyId = :tenant AND e.employeeId != :currentUserId ");
 
     boolean hasKeyword = StringUtils.hasText(keyword);
     if (hasKeyword) {
@@ -40,12 +40,12 @@ public class EmployeeQueryService {
 
     boolean hideSuperAdmin = (requesterRole != AdminLevel.SUPER_ADMIN);
     if (hideSuperAdmin) {
-      // JPQL에 SUPER_ADMIN 제외
       where.append("AND e.role <> :superAdmin ");
     }
 
-    String countJpql = "SELECT COUNT(e) FROM Employee e LEFT JOIN e.department d " + where;
+    String countJpql = "SELECT COUNT(e) FROM Employee e JOIN e.company c LEFT JOIN e.department d " + where;
     TypedQuery<Long> countQuery = em.createQuery(countJpql, Long.class)
+            .setParameter("tenant", tenant)
             .setParameter("currentUserId", currentUserId);
     if (hasKeyword) countQuery.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
     if (hideSuperAdmin) countQuery.setParameter("superAdmin", AdminLevel.SUPER_ADMIN);
@@ -59,7 +59,9 @@ public class EmployeeQueryService {
                     "LEFT JOIN FETCH e.department d " +
                     where +
                     "ORDER BY e.employeeName ASC";
+
     TypedQuery<Employee> dataQuery = em.createQuery(dataJpql, Employee.class)
+            .setParameter("tenant", tenant)
             .setParameter("currentUserId", currentUserId);
     if (hasKeyword) dataQuery.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
     if (hideSuperAdmin) dataQuery.setParameter("superAdmin", AdminLevel.SUPER_ADMIN);
@@ -67,15 +69,11 @@ public class EmployeeQueryService {
     dataQuery.setFirstResult(page * size);
     dataQuery.setMaxResults(size);
 
-    // ✅ 최종 안전망: 결과에서 SUPER_ADMIN 제거 (요청자가 SUPER_ADMIN이 아닐 때)
     List<EmployeeQueryResponse> employees = dataQuery.getResultList().stream()
-            .filter(e -> !(hideSuperAdmin && e.getRole() == AdminLevel.SUPER_ADMIN))
+            .filter(e -> !(hideSuperAdmin && e.getRole() == AdminLevel.SUPER_ADMIN)) // 최종 안전망
             .map(employeeMapper::toEmployeeQueryResponse)
             .collect(Collectors.toList());
 
-    return new PagedEmployeeResponse(
-            employees, page, totalPages, page >= totalPages - 1
-    );
+    return new PagedEmployeeResponse(employees, page, totalPages, page >= totalPages - 1);
   }
-
 }
