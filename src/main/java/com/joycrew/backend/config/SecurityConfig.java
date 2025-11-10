@@ -80,6 +80,7 @@ public class SecurityConfig {
             "http://localhost:5173",
             "http://localhost:8082",
             "https://joycrew.co.kr",
+            "https://*.joycrew.co.kr",
             "https://www.joycrew.co.kr",
             "https://api.joycrew.co.kr"
     ));
