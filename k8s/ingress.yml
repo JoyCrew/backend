@@ -1,23 +1,14 @@
-# /k8s/ingress.yml
-# Defines how external traffic reaches the service inside the cluster.
-# This configuration uses the AWS Load Balancer Controller to provision an ALB.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: joycrew-backend-ingress
   annotations:
-    # Creates an internet-facing load balancer.
     alb.ingress.kubernetes.io/scheme: internet-facing
-    # Routes traffic directly to Pod IPs for better performance.
     alb.ingress.kubernetes.io/target-type: ip
-    # Specifies the ARN of the ACM certificate for HTTPS.
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:566105751077:certificate/d5930928-10dc-4f4d-9cc4-67770a94522b
-    # Configures the ALB to listen on port 443 (HTTPS).
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
-    # Redirects HTTP traffic to HTTPS.
     alb.ingress.kubernetes.io/ssl-redirect: '443'
 spec:
-  # Specifies that the 'alb' ingress controller should handle this Ingress. (Modern way)
   ingressClassName: alb
   rules:
     - host: api.joycrew.co.kr
@@ -27,8 +18,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                # Forwards traffic to the 'joycrew-backend-service'.
                 name: joycrew-backend-service
                 port:
-                  # Forwards to the service's port 80.
                   number: 80
