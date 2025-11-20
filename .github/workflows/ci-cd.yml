@@ -1,12 +1,19 @@
-name: Deploy to EC2 (Self-contained)
+name: Deploy to EKS
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: joycrew-backend
+  EKS_CLUSTER_NAME: joycrew-cluster
+  # GitHub SHA를 태그로 사용하여 매번 새로운 이미지를 구분
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
-  build-and-deploy:
+  deploy:
+    name: Build and Deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
@@ -24,29 +31,47 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
-      - name: Transfer JAR to EC2
-        uses: appleboy/scp-action@v0.1.4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          source: "build/libs/*.jar"
-          target: "/home/${{ secrets.SSH_USER }}/app"
-          strip_components: 2
+          # GitHub Repository Settings > Secrets에 등록 필요
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy on EC2
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            APP_DIR="/home/${{ secrets.SSH_USER }}/app"
-            LOG_DIR="${APP_DIR}/logs"
-            DEPLOY_SCRIPT="$APP_DIR/deploy.sh"
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-            mkdir -p $LOG_DIR
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          # 이미지 빌드
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          
+          # 이미지 푸시
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-            echo "> 배포 스크립트 실행"
-            chmod +x $DEPLOY_SCRIPT
-            $DEPLOY_SCRIPT
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Deploy to EKS
+        run: |
+          # k8s 폴더 내의 모든 설정을 적용
+          # secret-provider.yml -> deployment.yml 순서 등이 자동으로 처리됨 (apply 시)
+          
+          # deployment.yml의 이미지 태그를 현재 빌드된 버전으로 교체
+          cd k8s
+          sed -i "s|image: .*joycrew-backend:.*|image: ${{ steps.build-image.outputs.image }}|g" deployment.yml
+          
+          # 매니페스트 적용
+          kubectl apply -f .
+          
+          # 배포 확인
+          kubectl rollout status deployment/joycrew-backend-deployment
