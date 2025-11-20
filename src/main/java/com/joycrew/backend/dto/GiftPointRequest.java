@@ -24,7 +24,7 @@ public record GiftPointRequest(
   @Size(max = 255, message = "Message cannot exceed 255 characters.")
   String message,
 
-  @Schema(description = "List of tags to send with the points (min 1, max 3)", example = "[\"TEAMWORK\", \"LEADERSHIP\"]")
+  @Schema(description = "List of tags to send with the points (min 1, max 3)", example = "[\"TEAMWORK\"]")
   @NotNull(message = "Tags are required.")
   @Size(min = 1, max = 3, message = "Between 1 and 3 tags can be selected.")
   List<Tag> tags
