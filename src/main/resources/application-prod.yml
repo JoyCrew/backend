@@ -3,12 +3,10 @@ server:
     accesslog:
       enabled: true
       pattern: common
-      # directory 설정 삭제 (표준 출력)
 
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    # 아래 변수들은 K8s가 환경변수로 주입해줍니다.
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
