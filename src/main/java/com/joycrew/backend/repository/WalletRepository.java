@@ -16,4 +16,6 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
 
     // 일반 조회는 기존 메서드 유지
     Optional<Wallet> findByEmployee_EmployeeId(Long employeeId);
+
+    Optional<Wallet> findByEmployeeCompanyCompanyIdAndEmployeeEmployeeId(Long companyId, Long employeeId);
 }

@@ -32,4 +32,12 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
   Optional<Employee> findByIdWithCompany(@Param("id") Long id);
 
   List<Employee> findByPhoneNumber(String phoneNumber);
+
+  Page<Employee> findByCompanyCompanyIdAndStatus(Long companyId, String status, Pageable pageable);
+
+  Optional<Employee> findByCompanyCompanyIdAndEmail(Long companyId, String email);
+
+  Optional<Employee> findByCompanyCompanyIdAndEmployeeId(Long companyId, Long employeeId);
+
+  boolean existsByCompanyCompanyIdAndEmail(Long companyId, String email);
 }

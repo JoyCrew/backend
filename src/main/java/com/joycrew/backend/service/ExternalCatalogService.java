@@ -29,7 +29,6 @@ public class ExternalCatalogService {
      * 추천 상품 (랜덤) - 이건 페이지 정보가 필요 없으므로 List 유지
      */
     public List<ExternalProductResponse> getFeaturedProducts() {
-        // (레포지토리에 findRandomProducts(10)이 정의되어 있어야 함)
         List<KakaoTemplate> templates = templateRepo.findRandomProducts(10);
         return templates.stream()
                 .map(this::convertToExternalProductResponse)
@@ -37,8 +36,7 @@ public class ExternalCatalogService {
     }
 
     /**
-     * [수정] 카테고리 없이 이름으로만 전체 상품 검색
-     * (반환 타입을 List -> PagedCatalogResponse 로 변경)
+     * 카테고리 없이 이름으로만 전체 상품 검색
      */
     public PagedCatalogResponse searchProductsByName(String searchName, int page, int size, SortOption sort) {
         Sort s = switch (sort) {
@@ -48,14 +46,9 @@ public class ExternalCatalogService {
         };
 
         Pageable pageRequest = PageRequest.of(page, size, s);
-
-        // (레포지토리에 findByNameContainingIgnoreCase(name, pageable)이 정의되어 있어야 함)
         Page<KakaoTemplate> p = templateRepo.findByNameContainingIgnoreCase(searchName, pageRequest);
-
-        // [수정] p.getContent() 대신 p.map()을 사용해 DTO로 변환
         Page<ExternalProductResponse> dtoPage = p.map(this::convertToExternalProductResponse);
 
-        // [수정] 새로 만든 PagedCatalogResponse DTO로 감싸서 반환
         return new PagedCatalogResponse(
                 dtoPage.getContent(),
                 dtoPage.getNumber(),
@@ -66,8 +59,8 @@ public class ExternalCatalogService {
     }
 
     /**
-     * [수정] 카테고리별 상품 조회 (검색 기능 포함)
-     * (반환 타입을 List -> PagedCatalogResponse 로 변경)
+     * [CONFLICT FIXED] 카테고리별 상품 조회 (검색 기능 포함)
+     * - main 브랜치의 List 반환 대신, PagedCatalogResponse 반환 로직을 채택
      */
     public PagedCatalogResponse listByCategory(GiftCategory category, int page, int size, SortOption sort, String searchName) {
         Sort s = switch (sort) {
@@ -85,10 +78,10 @@ public class ExternalCatalogService {
             p = templateRepo.findByJoyCategory(category, pageRequest);
         }
 
-        // [수정] p.map()을 사용해 DTO로 변환
+        // p.map()을 사용해 DTO로 변환
         Page<ExternalProductResponse> dtoPage = p.map(this::convertToExternalProductResponse);
 
-        // [수정] 새로 만든 PagedCatalogResponse DTO로 감싸서 반환
+        // PagedCatalogResponse DTO로 감싸서 반환
         return new PagedCatalogResponse(
                 dtoPage.getContent(),
                 dtoPage.getNumber(),
@@ -99,7 +92,7 @@ public class ExternalCatalogService {
     }
 
     /**
-     * 상품 상세 정보 (이건 단건 조회라 수정 필요 없음)
+     * [FIXED] 상품 상세 정보 (brand 필드 추가)
      */
     public ExternalProductDetailResponse getDetailWithPoints(String templateId) {
         var t = templateRepo.findById(templateId).orElse(null);
@@ -110,6 +103,7 @@ public class ExternalCatalogService {
         return new ExternalProductDetailResponse(
                 t.getTemplateId(),
                 t.getName(),
+                t.getBrand(),
                 basePoint,
                 t.getBasePriceKrw(),
                 t.getThumbnailUrl()
@@ -117,7 +111,7 @@ public class ExternalCatalogService {
     }
 
     /**
-     * DTO 변환 헬퍼 (공통 로직)
+     * [FIXED] DTO 변환 헬퍼 (brand 필드 추가)
      */
     private ExternalProductResponse convertToExternalProductResponse(KakaoTemplate t) {
         int point = (int) Math.ceil(t.getBasePriceKrw() / (double) krwPerPoint);
@@ -125,6 +119,7 @@ public class ExternalCatalogService {
         return new ExternalProductResponse(
                 t.getTemplateId(),
                 t.getName(),
+                t.getBrand(), // brand 필드 추가
                 point,
                 t.getBasePriceKrw(),
                 t.getThumbnailUrl()

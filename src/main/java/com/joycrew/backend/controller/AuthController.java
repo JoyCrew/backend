@@ -29,7 +29,7 @@ public class AuthController {
         // 1. 서비스에서 인증 처리 및 토큰 발급
         LoginResponse loginResponse = authService.login(request);
 
-        // 2. 프론트엔드 요구사항에 맞춰 쿠키 생성
+        // 2. deploy/eks 브랜치의 코드 (httpOnly=false 명시)
         ResponseCookie cookie = ResponseCookie.from("accessToken", loginResponse.accessToken())
                 .path("/")
                 .sameSite("None")
@@ -50,7 +50,7 @@ public class AuthController {
     public ResponseEntity<SuccessResponse> logout(HttpServletRequest request) {
         authService.logout(request);
 
-        // [추가] 로그아웃 시 클라이언트의 쿠키도 삭제해주는 것이 정석입니다.
+        // 로그아웃 시 쿠키 삭제
         ResponseCookie deleteCookie = ResponseCookie.from("accessToken", "")
                 .path("/")
                 .sameSite("None")

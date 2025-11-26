@@ -10,6 +10,7 @@ import com.joycrew.backend.exception.UserNotFoundException;
 import com.joycrew.backend.repository.EmployeeRepository;
 import com.joycrew.backend.repository.WalletRepository;
 import com.joycrew.backend.service.mapper.EmployeeMapper;
+import com.joycrew.backend.tenant.Tenant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @Transactional
 public class EmployeeService {
+
   private final EmployeeRepository employeeRepository;
   private final WalletRepository walletRepository;
   private final PasswordEncoder passwordEncoder;
@@ -29,23 +31,30 @@ public class EmployeeService {
 
   @Transactional(readOnly = true)
   public UserProfileResponse getUserProfile(String userEmail) {
-    Employee employee = employeeRepository.findByEmail(userEmail)
-        .orElseThrow(() -> new UserNotFoundException("Authenticated user not found."));
+    Long tenant = Tenant.id();
+    Employee employee = employeeRepository
+            .findByCompanyCompanyIdAndEmail(tenant, userEmail)
+            .orElseThrow(() -> new UserNotFoundException("Authenticated user not found."));
 
-    Wallet wallet = walletRepository.findByEmployee_EmployeeId(employee.getEmployeeId())
-        .orElse(new Wallet(employee));
+    Wallet wallet = walletRepository
+            .findByEmployeeCompanyCompanyIdAndEmployeeEmployeeId(tenant, employee.getEmployeeId())
+            .orElse(new Wallet(employee));
 
     return employeeMapper.toUserProfileResponse(employee, wallet);
   }
 
   public void forcePasswordChange(String userEmail, PasswordChangeRequest request) {
-    Employee employee = employeeRepository.findByEmail(userEmail)
-        .orElseThrow(() -> new UserNotFoundException("Authenticated user not found."));
+    Long tenant = Tenant.id();
+    Employee employee = employeeRepository
+            .findByCompanyCompanyIdAndEmail(tenant, userEmail)
+            .orElseThrow(() -> new UserNotFoundException("Authenticated user not found."));
     employee.changePassword(request.newPassword(), passwordEncoder);
   }
 
   public void verifyCurrentPassword(String userEmail, PasswordVerifyRequest request) {
-    Employee employee = employeeRepository.findByEmail(userEmail)
+    Long tenant = Tenant.id();
+    Employee employee = employeeRepository
+            .findByCompanyCompanyIdAndEmail(tenant, userEmail)
             .orElseThrow(() -> new UserNotFoundException("Authenticated user not found."));
 
     if (!passwordEncoder.matches(request.currentPassword(), employee.getPasswordHash())) {
@@ -54,27 +63,20 @@ public class EmployeeService {
   }
 
   public void updateUserProfile(String userEmail, UserProfileUpdateRequest request, MultipartFile profileImage) {
-    Employee employee = employeeRepository.findByEmail(userEmail)
-        .orElseThrow(() -> new UserNotFoundException("Authenticated user not found."));
+    Long tenant = Tenant.id();
+    Employee employee = employeeRepository
+            .findByCompanyCompanyIdAndEmail(tenant, userEmail)
+            .orElseThrow(() -> new UserNotFoundException("Authenticated user not found."));
 
-    if (request.name() != null) {
-      employee.updateName(request.name());
-    }
+    if (request.name() != null) employee.updateName(request.name());
+
     if (profileImage != null && !profileImage.isEmpty()) {
       String profileImageUrl = s3FileStorageService.uploadFile(profileImage);
       employee.updateProfileImageUrl(profileImageUrl);
     }
-    if (request.personalEmail() != null) {
-      employee.updatePersonalEmail(request.personalEmail());
-    }
-    if (request.phoneNumber() != null) {
-      employee.updatePhoneNumber(request.phoneNumber());
-    }
-    if (request.birthday() != null) {
-      employee.updateBirthday(request.birthday());
-    }
-    if (request.address() != null) {
-      employee.updateAddress(request.address());
-    }
+    if (request.personalEmail() != null) employee.updatePersonalEmail(request.personalEmail());
+    if (request.phoneNumber() != null)   employee.updatePhoneNumber(request.phoneNumber());
+    if (request.birthday() != null)      employee.updateBirthday(request.birthday());
+    if (request.address() != null)       employee.updateAddress(request.address());
   }
 }
