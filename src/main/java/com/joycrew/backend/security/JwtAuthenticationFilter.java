@@ -4,6 +4,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,21 +29,52 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    // JWT 토큰 검사를 건너뛸 경로 목록 (SecurityConfig와 일치하도록 수정)
+    // JWT 토큰 검사를 건너뛸 경로 목록 (SecurityConfig와 일치하도록 유지)
     private static final List<String> EXCLUDE_URLS = Arrays.asList(
             "/",
             "/error",
             "/actuator/health",
             "/h2-console/**",
-            "/api/auth/**",                  // 로그인, 비밀번호 재설정 등 모든 인증 관련 경로
-            "/api/kyc/phone/**",             // ### KYC 관련 경로 추가 (문제의 직접적인 원인) ###
-            "/accounts/emails/by-phone",     // ### 이메일 조회 경로 추가 (문제의 직접적인 원인) ###
-            "/api/catalog/**",               // 상품 목록 조회 경로 추가
+            "/api/auth/**",                  // 로그인, 비밀번호 재설정 등 인증 관련 경로
+            "/api/kyc/phone/**",             // KYC 관련 경로
+            "/accounts/emails/by-phone",     // 이메일 조회 경로
+            "/api/catalog/**",               // 상품 목록 조회
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html"
-            // "/api/admin/employees" // 보안상 이 경로는 필터 예외에서 제거하는 것이 올바릅니다.
+            // "/api/admin/employees" // 보안상 필터 예외에서 제거하는 것이 올바름
     );
+
+    /**
+     * Authorization 헤더 또는 JC_AUTH 쿠키에서 토큰을 추출한다.
+     */
+    private String resolveToken(HttpServletRequest request) {
+        // 1순위: Authorization 헤더
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
+        // 2순위: 쿠키(JC_AUTH)에서 추출
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie c : cookies) {
+                if ("JC_AUTH".equals(c.getName())) {
+                    String value = c.getValue();
+                    if (value != null && !value.isBlank()) {
+                        return value;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private boolean isExcluded(String path) {
+        return EXCLUDE_URLS.stream()
+                .anyMatch(excludeUrl -> pathMatcher.match(excludeUrl, path));
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -58,26 +90,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        boolean isExcluded = EXCLUDE_URLS.stream()
-                .anyMatch(excludeUrl -> pathMatcher.match(excludeUrl, path));
-
-        if (isExcluded) {
-            log.info("JWT Filter bypassed for path: {}", path);
+        // 화이트리스트 경로는 JWT 검사 스킵
+        if (isExcluded(path)) {
+            log.debug("JWT Filter bypassed for path: {}", path);
             filterChain.doFilter(request, response);
             return;
         }
 
-        log.info("===== JWT Filter Executed for path: {} =====", path);
+        log.debug("===== JWT Filter Executed for path: {} =====", path);
 
-        String authHeader = request.getHeader("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.warn("Authorization header is missing or invalid for protected path: {}", path);
+        // 헤더 또는 쿠키에서 토큰 추출
+        String token = resolveToken(request);
+        if (token == null || token.isBlank()) {
+            log.warn("No JWT token found for protected path: {}", path);
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = authHeader.substring(7);
         String email = null;
         try {
             email = jwtUtil.getEmailFromToken(token);
@@ -90,11 +119,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
 
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails,
-                    null,
-                    userDetails.getAuthorities()
-            );
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
             log.info("User '{}' authenticated successfully.", email);
