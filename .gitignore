@@ -90,4 +90,5 @@ Thumbs.db
 # Other generated files that should not be versioned.
 # ===================================================================
 # Auto-generated documentation (if not meant for version control)
-HELP.md
+HELP.mdraw_secret.json
+secrets.env
