@@ -47,6 +47,7 @@ public class DomainTenantFilter implements Filter {
     private boolean isCommonDomain(String host) {
         if (host == null) return false;
         return host.equals("joycrew.co.kr") ||
+                host.equals("api.joycrew.co.kr") ||
                 host.equals("www.joycrew.co.kr") ||
                 host.equals("localhost") ||
                 host.equals("127.0.0.1");
