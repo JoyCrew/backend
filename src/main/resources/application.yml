@@ -51,3 +51,12 @@ aws:
   region: 'ap-northeast-2'
   s3:
     bucket-name: 'joycrew-prod-bucket'
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  metrics:
+    tags:
+      application: joycrew-backend
