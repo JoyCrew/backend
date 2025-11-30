@@ -92,3 +92,4 @@ Thumbs.db
 # Auto-generated documentation (if not meant for version control)
 HELP.mdraw_secret.json
 secrets.env
+raw_secret.json
