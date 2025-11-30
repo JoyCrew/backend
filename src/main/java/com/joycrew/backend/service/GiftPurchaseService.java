@@ -77,7 +77,6 @@ public class GiftPurchaseService {
                 .employee(employee)
                 .productId(stableHashToLong(template.getTemplateId()))
                 .productName(template.getName())
-                .productItemId(null) // 옵션 없음
                 .productUnitPrice((int) Math.ceil(unitKrw / (double) krwPerPoint))
                 .quantity(qty)
                 .totalPrice(totalPoint)

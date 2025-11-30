@@ -1,7 +1,3 @@
-# ===================================================================
-# EKS Cluster Configuration for JoyCrew Backend
-# This version is configured to use your EXISTING VPC and subnets.
-# ===================================================================
 apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
@@ -10,66 +6,38 @@ metadata:
   region: ap-northeast-2
   version: "1.29"
 
-# Enable IAM Roles for Service Accounts (IRSA)
+vpc:
+  id: "vpc-028bab1adc7ebda69"
+  subnets:
+    public:
+      ap-northeast-2a: { id: subnet-03433c389caba3f2a }
+      ap-northeast-2b: { id: subnet-0a1375a0ff65d13b6 }
+      ap-northeast-2c: { id: subnet-018b41dd99161e201 }
+      ap-northeast-2d: { id: subnet-09e8a18776311c8a4 }
+
 iam:
   withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: joycrew-service-account
+        namespace: default
+      attachPolicyARNs:
+        - "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+    - metadata:
+        name: aws-load-balancer-controller
+        namespace: kube-system
+      wellKnownPolicies:
+        awsLoadBalancerController: true
 
-vpc:
-  id: "vpc-067968d8c7f0de694"
-  subnets:
-    # The worker nodes will be placed in the private subnets.
-    private:
-      ap-northeast-2b: { id: "subnet-0b1c4ed704fe8809c" }
-      ap-northeast-2d: { id: "subnet-00394d1c845cc1187" }
-    public:
-      ap-northeast-2a: { id: "subnet-03e9e38db1457d819" }
-      ap-northeast-2c: { id: "subnet-0283caa043409b846" }
-
-# Configuration for managed node groups
 managedNodeGroups:
   - name: app-workers
     instanceType: t3.small
     desiredCapacity: 2
     minSize: 1
-    maxSize: 4
-    # 'privateNetworking' is not needed when subnets are specified above.
-    # eksctl will automatically use the private subnets for the nodes.
+    maxSize: 3
+    privateNetworking: false  # Public 서브넷 사용
     ssh:
       allow: true
       publicKeyName: joycrew-deploy-key
     labels:
       role: application
-      environment: production
-    volumeSize: 20
-    volumeType: gp3
-    iam:
-      attachPolicyARNs:
-        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
-        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
-        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
-
-# Manage essential EKS add-ons
-addons:
-  - name: vpc-cni
-    version: latest
-    configurationValues: |-
-      enableNetworkPolicy: "true"
-  - name: coredns
-    version: latest
-  - name: kube-proxy
-    version: latest
-  - name: aws-ebs-csi-driver
-    version: latest
-    wellKnownPolicies:
-      ebsCSIController: true
-
-# CloudWatch logging configuration
-cloudWatch:
-  clusterLogging:
-    enableTypes:
-      - api
-      - audit
-      - authenticator
-      - controllerManager
-      - scheduler
