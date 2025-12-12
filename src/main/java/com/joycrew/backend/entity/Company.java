@@ -111,7 +111,6 @@ public class Company {
     }
   }
 
-
   @PrePersist
   protected void onCreate() {
     this.createdAt = this.updatedAt = LocalDateTime.now();
@@ -127,5 +126,4 @@ public class Company {
   protected void onUpdate() {
     this.updatedAt = LocalDateTime.now();
   }
-
 }

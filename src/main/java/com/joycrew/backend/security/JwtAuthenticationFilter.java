@@ -1,5 +1,6 @@
 package com.joycrew.backend.security;
 
+import com.joycrew.backend.tenant.TenantContext;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -34,15 +35,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/",
             "/error",
             "/actuator/health",
+            "/actuator/prometheus",
             "/h2-console/**",
-            "/api/auth/**",                  // 로그인, 비밀번호 재설정 등 인증 관련 경로
-            "/api/kyc/phone/**",             // KYC 관련 경로
-            "/accounts/emails/by-phone",     // 이메일 조회 경로
-            "/api/catalog/**",               // 상품 목록 조회
+            "/api/auth/**",
+            "/api/kyc/phone/**",
+            "/accounts/emails/by-phone",
+            "/api/catalog/**",
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html"
-            // "/api/admin/employees" // 보안상 필터 예외에서 제거하는 것이 올바름
     );
 
     /**
@@ -108,28 +109,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String email = null;
+        boolean tenantSetByJwt = false;
+
         try {
-            email = jwtUtil.getEmailFromToken(token);
-        } catch (ExpiredJwtException e) {
-            log.warn("JWT token has expired: {}", e.getMessage());
-        } catch (JwtException e) {
-            log.warn("Invalid JWT token: {}", e.getMessage());
+            try {
+                email = jwtUtil.getEmailFromToken(token);
+            } catch (ExpiredJwtException e) {
+                log.warn("JWT token has expired: {}", e.getMessage());
+            } catch (JwtException e) {
+                log.warn("Invalid JWT token: {}", e.getMessage());
+            }
+
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.info("User '{}' authenticated successfully.", email);
+
+                // 🔁 도메인 필터가 테넌트를 못 설정한 경우, JWT에서 유저 회사 기준으로 fallback 설정
+                if (TenantContext.get() == null && userDetails instanceof UserPrincipal principal) {
+                    Long userCompanyId = principal.getEmployee().getCompany().getCompanyId();
+                    TenantContext.set(userCompanyId);
+                    tenantSetByJwt = true;
+                    log.debug("Tenant fallback: Set to Company ID {} from JWT UserPrincipal", userCompanyId);
+                }
+            }
+
+            filterChain.doFilter(request, response);
+
+        } finally {
+            // 이 필터에서 테넌트 컨텍스트를 세팅한 경우만 책임지고 정리
+            if (tenantSetByJwt) {
+                TenantContext.clear();
+            }
         }
-
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
-
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.info("User '{}' authenticated successfully.", email);
-        }
-
-        filterChain.doFilter(request, response);
     }
 }

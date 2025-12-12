@@ -1,7 +1,10 @@
+<<<<<<< HEAD
 # ===================================================================
 # EKS Cluster Configuration for JoyCrew Backend
 # This version is configured to use your EXISTING VPC and subnets.
 # ===================================================================
+=======
+>>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
 apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
@@ -10,6 +13,7 @@ metadata:
   region: ap-northeast-2
   version: "1.29"
 
+<<<<<<< HEAD
 # Enable IAM Roles for Service Accounts (IRSA)
 iam:
   withOIDC: true
@@ -26,19 +30,50 @@ vpc:
       ap-northeast-2c: { id: "subnet-0283caa043409b846" }
 
 # Configuration for managed node groups
+=======
+vpc:
+  id: "vpc-028bab1adc7ebda69"
+  subnets:
+    public:
+      ap-northeast-2a: { id: subnet-03433c389caba3f2a }
+      ap-northeast-2b: { id: subnet-0a1375a0ff65d13b6 }
+      ap-northeast-2c: { id: subnet-018b41dd99161e201 }
+      ap-northeast-2d: { id: subnet-09e8a18776311c8a4 }
+
+iam:
+  withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: joycrew-service-account
+        namespace: default
+      attachPolicyARNs:
+        - "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+    - metadata:
+        name: aws-load-balancer-controller
+        namespace: kube-system
+      wellKnownPolicies:
+        awsLoadBalancerController: true
+
+>>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
 managedNodeGroups:
   - name: app-workers
     instanceType: t3.small
     desiredCapacity: 2
     minSize: 1
+<<<<<<< HEAD
     maxSize: 4
     # 'privateNetworking' is not needed when subnets are specified above.
     # eksctl will automatically use the private subnets for the nodes.
+=======
+    maxSize: 3
+    privateNetworking: false  # Public 서브넷 사용
+>>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
     ssh:
       allow: true
       publicKeyName: joycrew-deploy-key
     labels:
       role: application
+<<<<<<< HEAD
       environment: production
     volumeSize: 20
     volumeType: gp3
@@ -73,3 +108,5 @@ cloudWatch:
       - authenticator
       - controllerManager
       - scheduler
+=======
+>>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7

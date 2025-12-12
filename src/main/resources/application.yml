@@ -57,3 +57,12 @@ payment:
     site-key: 0123456789ABCDEF0123456789ABCDEF
     pay-url: https://testpay.kcp.co.kr/pay
     site-cd: T1234TEST
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  metrics:
+    tags:
+      application: joycrew-backend

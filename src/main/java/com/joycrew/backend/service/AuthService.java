@@ -49,7 +49,7 @@ public class AuthService {
     log.info("Attempting login for email: {}", request.email());
 
     try {
-      // 인증 (EmployeeDetailsService는 반드시 테넌트 스코프 조회를 하도록 구현되어 있어야 함)
+      // 1. 인증 진행
       Authentication authentication = authenticationManager.authenticate(
               new UsernamePasswordAuthenticationToken(request.email(), request.password())
       );
@@ -57,21 +57,22 @@ public class AuthService {
       UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
       Employee employee = principal.getEmployee();
 
-      // 지갑 잔액
+      // 2. 지갑 잔액 조회
       Integer totalPoint = walletRepository.findByEmployee_EmployeeId(employee.getEmployeeId())
               .map(Wallet::getBalance)
               .orElse(0);
 
-      // 마지막 로그인 시간 업데이트
+      // 3. 마지막 로그인 시간 업데이트
       employee.updateLastLogin();
 
-      // 토큰 생성 (subject: email)
+      // 4. 토큰 생성
       String accessToken = jwtUtil.generateToken(employee.getEmail());
 
-      // subdomain: 현재 테넌트의 primary 도메인을 그대로 반환 (예: alko.joycrew.co.kr)
-      Long tenant = Tenant.id();
+      // ✅ 핵심: 유저가 속한 회사 기준으로 primary domain 조회
+      Long userCompanyId = employee.getCompany().getCompanyId();
+
       String subdomain = companyDomainRepository
-              .findFirstByCompanyCompanyIdAndPrimaryDomainTrueOrderByIdDesc(tenant)
+              .findFirstByCompanyCompanyIdAndPrimaryDomainTrueOrderByIdDesc(userCompanyId)
               .map(cd -> cd.getDomain().toLowerCase())
               .orElse(null); // 등록이 안 되어 있다면 null
 

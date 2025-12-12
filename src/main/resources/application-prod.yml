@@ -25,7 +25,8 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect # 환경 변수 로드 실패 시를 대비해 Dialect 명시
+        # 환경 변수 로드 실패 시를 대비해 Dialect 명시
+        dialect: org.hibernate.dialect.MySQL8Dialect
     show-sql: false
 
 jwt:
@@ -35,9 +36,9 @@ jwt:
 
 app:
   frontend-url: https://www.joycrew.co.kr
-  sms: # <-- [수정 1] sms 설정 블록 추가
-    provider: solapi # <-- [수정 2] solapi를 사용하도록 명시
-    from-number: ${APP_SMS_FROM_NUMBER} # <-- [수정 3] Solapi에 등록된 발신번호 (환경 변수 사용)
+  sms:
+    provider: solapi
+    from-number: ${APP_SMS_FROM_NUMBER}
   kyc:
     token-secret: ${KYC_TOKEN_SECRET}
     token-ttl-minutes: 10
@@ -66,3 +67,6 @@ logging:
     name: /home/ec2-user/app/logs/app.log
     max-size: 10MB
     max-history: 7
+  level:
+    root: INFO
+    com.joycrew.backend: INFO
