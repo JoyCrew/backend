@@ -27,6 +27,13 @@ public class Company {
   @Column(nullable = false)
   private Double totalCompanyBalance;
 
+  /**
+   * 서비스 이용 가능 기한(마지막 날의 23:59:59 같은 느낌)
+   * null이면 아직 결제/구독 시작 전 상태로 취급
+   */
+  @Column(name = "subscription_end_at")
+  private LocalDateTime subscriptionEndAt;
+
   @Builder.Default
   @OneToMany(mappedBy = "company")
   private List<Employee> employees = new ArrayList<>();
@@ -67,6 +74,44 @@ public class Company {
     this.totalCompanyBalance -= amount;
   }
 
+  /**
+   * 구독 기간 연장
+   * - subscriptionEndAt이 미래면 그 날짜 기준으로 연장
+   * - 아니면 현재 시간을 기준으로 연장
+   * - 연장 후 상태도 자동 업데이트
+   */
+  public void extendSubscription(int months) {
+    if (months <= 0) {
+      throw new IllegalArgumentException("months must be positive");
+    }
+
+    LocalDateTime base =
+            (this.subscriptionEndAt != null && this.subscriptionEndAt.isAfter(LocalDateTime.now()))
+                    ? this.subscriptionEndAt
+                    : LocalDateTime.now();
+
+    this.subscriptionEndAt = base.plusMonths(months);
+
+    refreshStatusBySubscription();
+  }
+
+  /**
+   * 구독 만료일에 따라 회사 상태 갱신
+   */
+  public void refreshStatusBySubscription() {
+    if (this.subscriptionEndAt == null) {
+      // 최초 결제 전이라면 ACTIVE 유지 (원하면 PENDING 등으로 커스터마이징 가능)
+      return;
+    }
+
+    if (this.subscriptionEndAt.isAfter(LocalDateTime.now())) {
+      this.status = "ACTIVE";
+    } else {
+      this.status = "EXPIRED";
+    }
+  }
+
+
   @PrePersist
   protected void onCreate() {
     this.createdAt = this.updatedAt = LocalDateTime.now();
@@ -82,4 +127,5 @@ public class Company {
   protected void onUpdate() {
     this.updatedAt = LocalDateTime.now();
   }
+
 }

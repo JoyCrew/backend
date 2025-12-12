@@ -51,3 +51,9 @@ aws:
   region: 'ap-northeast-2'
   s3:
     bucket-name: 'joycrew-prod-bucket'
+
+payment:
+  kcp:
+    site-key: 0123456789ABCDEF0123456789ABCDEF
+    pay-url: https://testpay.kcp.co.kr/pay
+    site-cd: T1234TEST

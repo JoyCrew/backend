@@ -27,8 +27,7 @@ public class EmployeeQueryService {
   private final EmployeeMapper employeeMapper;
 
   public PagedEmployeeResponse getEmployees(String keyword, int page, int size, Long currentUserId, AdminLevel requesterRole) {
-    Long tenant = Tenant.id(); // ✅ 테넌트
-
+    Long tenant = Tenant.id();
     StringBuilder where = new StringBuilder("WHERE c.companyId = :tenant AND e.employeeId != :currentUserId ");
 
     boolean hasKeyword = StringUtils.hasText(keyword);
