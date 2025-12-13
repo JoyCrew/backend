@@ -10,7 +10,6 @@ import com.joycrew.backend.repository.WalletRepository;
 import com.joycrew.backend.repository.CompanyDomainRepository;
 import com.joycrew.backend.security.JwtUtil;
 import com.joycrew.backend.security.UserPrincipal;
-import com.joycrew.backend.tenant.Tenant;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -68,9 +67,7 @@ public class AuthService {
             // 4. 토큰 생성
             String accessToken = jwtUtil.generateToken(employee.getEmail());
 
-            // 🚨 [핵심 수정]
-            // 기존: Tenant.id() -> 현재 접속한 URL(joycrew.co.kr)을 기준으로 찾음 (실패 원인)
-            // 수정: employee.getCompany().getCompanyId() -> '로그인한 유저의 소속 회사'를 기준으로 찾음 (정답)
+            // 5. 유저의 회사 ID 기반 서브도메인 찾기
             Long userCompanyId = employee.getCompany().getCompanyId();
 
             String subdomain = companyDomainRepository
@@ -87,7 +84,7 @@ public class AuthService {
                     employee.getRole(),
                     totalPoint,
                     employee.getProfileImageUrl(),
-                    subdomain // 이제 BDL 유저는 'bdl.joycrew.co.kr'을 반환받음
+                    subdomain
             );
 
         } catch (UsernameNotFoundException | BadCredentialsException e) {
@@ -112,12 +109,15 @@ public class AuthService {
      */
     @Transactional(readOnly = true)
     public void requestPasswordReset(String email) {
-        // 비밀번호 변경은 현재 접속한 도메인 컨텍스트를 유지하는 것이 안전할 수 있음
-        Long tenant = Tenant.id();
-        employeeRepository.findByCompanyCompanyIdAndEmail(tenant, email).ifPresent(emp -> {
+        // ✅ [수정 1] Tenant.id() 제거. 로그인 전이므로 Context가 없음.
+        // 대신 이메일로 전역 검색 (findByEmail 사용)
+        employeeRepository.findByEmail(email).ifPresent(emp -> {
+            Long tenantId = emp.getCompany().getCompanyId(); // 로깅용으로 추출
+
             String token = jwtUtil.generateToken(email, passwordResetExpirationMs);
             emailService.sendPasswordResetEmail(email, token);
-            log.info("Password reset requested for email: {} (tenant={})", email, tenant);
+
+            log.info("Password reset requested for email: {} (companyId={})", email, tenantId);
         });
     }
 
@@ -133,12 +133,13 @@ public class AuthService {
             throw new BadCredentialsException("Invalid or expired token.", e);
         }
 
-        Long tenant = Tenant.id();
+        // ✅ [수정 2] 여기도 Tenant.id() 제거.
+        // 토큰에 있는 이메일로 유저를 찾아서 비밀번호 변경
         Employee employee = employeeRepository
-                .findByCompanyCompanyIdAndEmail(tenant, email)
+                .findByEmail(email) // findByCompanyCompanyIdAndEmail 대신 findByEmail 사용
                 .orElseThrow(() -> new UserNotFoundException("User not found."));
 
         employee.changePassword(newPassword, passwordEncoder);
-        log.info("Password has been reset for: {} (tenant={})", email, tenant);
+        log.info("Password has been reset for: {} (companyId={})", email, employee.getCompany().getCompanyId());
     }
 }

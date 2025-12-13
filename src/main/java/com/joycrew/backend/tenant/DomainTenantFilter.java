@@ -25,13 +25,21 @@ public class DomainTenantFilter implements Filter {
         String host = extractHost(http);
         String normalized = normalizeHost(host);
 
-        // 🚨 [핵심 수정] 공통 도메인(메인, 로컬)은 테넌트 설정(필터) 없이 그냥 통과!
-        // 이유: 로그인 시 전체 회사를 뒤져서 유저를 찾아야 하기 때문.
+        // ✅ [수정] 공통 도메인(메인, 로컬) 처리 로직 변경
+        // 이유: 로그인 전 '이메일 찾기', '비밀번호 찾기' 등을 수행하려면
+        // DB 연결(DataSource)이 활성화되어야 하므로 기본 Tenant(1L)를 설정해줌.
         if (isCommonDomain(normalized)) {
-            chain.doFilter(req, res);
+            try {
+                // 1L은 JoyCrew 본사(Master) 혹은 Default DB 연결을 의미한다고 가정
+                TenantContext.set(1L);
+                chain.doFilter(req, res);
+            } finally {
+                TenantContext.clear();
+            }
             return;
         }
 
+        // --- 일반적인 서브도메인 접속 로직 (기존 유지) ---
         Long companyId = resolveCompanyId(normalized)
                 .orElseGet(this::fallbackCompanyId);
 
