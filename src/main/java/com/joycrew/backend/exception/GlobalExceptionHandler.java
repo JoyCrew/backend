@@ -1,58 +1,127 @@
-package com.joycrew.backend.exception;
+package com.joycrew.backend.web;
 
 import com.joycrew.backend.dto.ErrorResponse;
+import com.joycrew.backend.exception.BillingRequiredException;
+import com.joycrew.backend.exception.InsufficientPointsException;
+import com.joycrew.backend.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException; // import 추가
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
-import java.util.NoSuchElementException;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(InsufficientPointsException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleInsufficientPoints(InsufficientPointsException ex, HttpServletRequest req) {
-        return new ErrorResponse("INSUFFICIENT_POINTS", ex.getMessage(), LocalDateTime.now(), req.getRequestURI());
+    // -------------------------
+    // 400 - Validation
+    // -------------------------
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidation(
+            MethodArgumentNotValidException e,
+            HttpServletRequest req
+    ) {
+        String msg = e.getBindingResult().getAllErrors().isEmpty()
+                ? "Validation failed"
+                : e.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+
+        return ResponseEntity.badRequest().body(error(
+                "VALIDATION_ERROR",
+                msg,
+                req
+        ));
     }
 
-    @ExceptionHandler(NoSuchElementException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNoSuchElement(NoSuchElementException ex, HttpServletRequest req) {
-        return new ErrorResponse("NOT_FOUND", ex.getMessage(), LocalDateTime.now(), req.getRequestURI());
-    }
-
-    @ExceptionHandler(IllegalStateException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleIllegalState(IllegalStateException ex, HttpServletRequest req) {
-        return new ErrorResponse("ORDER_CANNOT_CANCEL", ex.getMessage(), LocalDateTime.now(), req.getRequestURI());
-    }
-
-    // '가입되지 않은 이메일' 처리
-    @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUsernameNotFound(UsernameNotFoundException ex, HttpServletRequest req) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                "AUTH_002", // 가입되지 않은 이메일
-                "이메일 또는 비밀번호가 잘못되었습니다.", // 보안을 위해 메시지는 동일하게 유지
-                LocalDateTime.now(),
-                req.getRequestURI()
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
-    }
-
-    // '비밀번호 불일치' 처리
+    // -------------------------
+    // 401 - Auth
+    // -------------------------
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleAuthenticationFailed(BadCredentialsException ex, HttpServletRequest req) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                "AUTH_003", // 비밀번호 불일치
-                "이메일 또는 비밀번호가 잘못되었습니다.", // 보안을 위해 메시지는 동일하게 유지
+    public ResponseEntity<ErrorResponse> handleBadCredentials(
+            BadCredentialsException e,
+            HttpServletRequest req
+    ) {
+        return ResponseEntity.status(401).body(error(
+                "AUTH_FAILED",
+                "Invalid email or password.",
+                req
+        ));
+    }
+
+    // -------------------------
+    // 403 - Billing required
+    // -------------------------
+    @ExceptionHandler(BillingRequiredException.class)
+    public ResponseEntity<ErrorResponse> handleBillingRequired(
+            BillingRequiredException e,
+            HttpServletRequest req
+    ) {
+        return ResponseEntity.status(403).body(error(
+                "BILLING_REQUIRED",
+                e.getMessage(),
+                req
+        ));
+    }
+
+    // -------------------------
+    // 404 - Not Found
+    // -------------------------
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(
+            UserNotFoundException e,
+            HttpServletRequest req
+    ) {
+        return ResponseEntity.status(404).body(error(
+                "USER_NOT_FOUND",
+                e.getMessage(),
+                req
+        ));
+    }
+
+    // -------------------------
+    // 409 / 400 - Business rule
+    // -------------------------
+    @ExceptionHandler(InsufficientPointsException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientPoints(
+            InsufficientPointsException e,
+            HttpServletRequest req
+    ) {
+        // 포인트 부족은 보통 409(충돌)로 주기도 하고 400으로 주기도 함.
+        // 정책 확정 전이면 409 추천.
+        return ResponseEntity.status(409).body(error(
+                "INSUFFICIENT_POINTS",
+                e.getMessage(),
+                req
+        ));
+    }
+
+    // -------------------------
+    // 500 - Fallback
+    // -------------------------
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnknown(
+            Exception e,
+            HttpServletRequest req
+    ) {
+        log.error("[UNHANDLED] path={}, msg={}", req.getRequestURI(), e.getMessage(), e);
+
+        return ResponseEntity.status(500).body(error(
+                "INTERNAL_SERVER_ERROR",
+                "An unexpected error occurred.",
+                req
+        ));
+    }
+
+    private ErrorResponse error(String code, String message, HttpServletRequest req) {
+        return new ErrorResponse(
+                code,
+                message,
                 LocalDateTime.now(),
                 req.getRequestURI()
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 }

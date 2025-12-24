@@ -137,4 +137,9 @@ public class Company {
   protected void onUpdate() {
     this.updatedAt = LocalDateTime.now();
   }
+
+  public boolean isBillingReady() {
+    // 카드 등록이 끝났다는 의미: billingKey + customerKey 존재
+    return this.tossBillingKey != null && this.tossCustomerKey != null && !this.tossBillingKey.isBlank();
+  }
 }

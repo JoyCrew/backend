@@ -4,6 +4,7 @@ import com.joycrew.backend.dto.LoginRequest;
 import com.joycrew.backend.dto.LoginResponse;
 import com.joycrew.backend.entity.Employee;
 import com.joycrew.backend.entity.Wallet;
+import com.joycrew.backend.entity.enums.AdminLevel;
 import com.joycrew.backend.exception.UserNotFoundException;
 import com.joycrew.backend.repository.EmployeeRepository;
 import com.joycrew.backend.repository.WalletRepository;
@@ -76,6 +77,9 @@ public class AuthService {
               .map(cd -> cd.getDomain().toLowerCase())
               .orElse(null); // 등록이 안 되어 있다면 null
 
+      boolean isAdmin = employee.getRole() == AdminLevel.HR_ADMIN || employee.getRole() == AdminLevel.SUPER_ADMIN;
+      boolean billingRequired = isAdmin && !employee.getCompany().isBillingReady();
+
       return new LoginResponse(
               accessToken,
               "Login successful",
@@ -85,7 +89,8 @@ public class AuthService {
               employee.getRole(),
               totalPoint,
               employee.getProfileImageUrl(),
-              subdomain
+              subdomain,
+              billingRequired
       );
 
     } catch (UsernameNotFoundException | BadCredentialsException e) {

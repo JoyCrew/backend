@@ -22,9 +22,22 @@ public record LoginResponse(
         @Schema(description = "URL of the profile image")
         String profileImageUrl,
         @Schema(description = "Tenant subdomain (e.g., 'alko', 'BDL')")
-        String subdomain
+        String subdomain,
+        @Schema(description = "Whether billing method registration is required after login")
+        boolean billingRequired
 ) {
-  public static LoginResponse fail(String message) {
-    return new LoginResponse(null, message, null, null, null, null, null, null, null);
-  }
+    public static LoginResponse fail(String message) {
+        return new LoginResponse(
+                null,          // accessToken
+                message,        // message
+                null,          // userId
+                null,          // name
+                null,          // email
+                null,          // role
+                null,          // totalPoint
+                null,          // profileImageUrl
+                null,          // subdomain
+                false          // billingRequired (로그인 실패면 의미 없으니 false)
+        );
+    }
 }
