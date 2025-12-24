@@ -52,12 +52,6 @@ aws:
   s3:
     bucket-name: 'joycrew-prod-bucket'
 
-payment:
-  kcp:
-    site-key: 0123456789ABCDEF0123456789ABCDEF
-    pay-url: https://testpay.kcp.co.kr/pay
-    site-cd: T1234TEST
-
 management:
   endpoints:
     web:
@@ -66,3 +60,9 @@ management:
   metrics:
     tags:
       application: joycrew-backend
+
+toss:
+  secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
+
+subscription:
+  monthly-price: 50000

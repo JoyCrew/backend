@@ -40,7 +40,7 @@ public class AdminDashboardService {
 
     // 3. Create and return the combined response DTO
     return new AdminPointBudgetResponse(
-        company.getTotalCompanyBalance(),
+            (double)company.getTotalCompanyBalance(),
         adminWallet.getBalance(),
         adminWallet.getGiftablePoint()
     );
