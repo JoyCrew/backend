@@ -22,58 +22,58 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class EmployeeQueryService {
 
-  @PersistenceContext
-  private final EntityManager em;
-  private final EmployeeMapper employeeMapper;
+    @PersistenceContext
+    private final EntityManager em;
+    private final EmployeeMapper employeeMapper;
 
-  public PagedEmployeeResponse getEmployees(String keyword, int page, int size, Long currentUserId, AdminLevel requesterRole) {
-    Long tenant = Tenant.id(); // ✅ 테넌트
+    public PagedEmployeeResponse getEmployees(String keyword, int page, int size, Long currentUserId, AdminLevel requesterRole) {
+        Long tenant = Tenant.id(); // 현재 테넌트(companyId)
 
-    StringBuilder where = new StringBuilder("WHERE c.companyId = :tenant AND e.employeeId != :currentUserId ");
+        StringBuilder where = new StringBuilder("WHERE c.companyId = :tenant AND e.employeeId != :currentUserId ");
 
-    boolean hasKeyword = StringUtils.hasText(keyword);
-    if (hasKeyword) {
-      where.append("AND (LOWER(e.employeeName) LIKE :keyword ")
-              .append("OR LOWER(e.email) LIKE :keyword ")
-              .append("OR LOWER(d.name) LIKE :keyword) ");
+        boolean hasKeyword = StringUtils.hasText(keyword);
+        if (hasKeyword) {
+            where.append("AND (LOWER(e.employeeName) LIKE :keyword ")
+                    .append("OR LOWER(e.email) LIKE :keyword ")
+                    .append("OR LOWER(d.name) LIKE :keyword) ");
+        }
+
+        boolean hideSuperAdmin = (requesterRole != AdminLevel.SUPER_ADMIN);
+        if (hideSuperAdmin) {
+            where.append("AND e.role <> :superAdmin ");
+        }
+
+        String countJpql = "SELECT COUNT(e) FROM Employee e JOIN e.company c LEFT JOIN e.department d " + where;
+        TypedQuery<Long> countQuery = em.createQuery(countJpql, Long.class)
+                .setParameter("tenant", tenant)
+                .setParameter("currentUserId", currentUserId);
+        if (hasKeyword) countQuery.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
+        if (hideSuperAdmin) countQuery.setParameter("superAdmin", AdminLevel.SUPER_ADMIN);
+
+        long totalCount = countQuery.getSingleResult();
+        int totalPages = (int) Math.ceil((double) totalCount / size);
+
+        String dataJpql =
+                "SELECT e FROM Employee e " +
+                        "JOIN FETCH e.company c " +
+                        "LEFT JOIN FETCH e.department d " +
+                        where +
+                        "ORDER BY e.employeeName ASC";
+
+        TypedQuery<Employee> dataQuery = em.createQuery(dataJpql, Employee.class)
+                .setParameter("tenant", tenant)
+                .setParameter("currentUserId", currentUserId);
+        if (hasKeyword) dataQuery.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
+        if (hideSuperAdmin) dataQuery.setParameter("superAdmin", AdminLevel.SUPER_ADMIN);
+
+        dataQuery.setFirstResult(page * size);
+        dataQuery.setMaxResults(size);
+
+        List<EmployeeQueryResponse> employees = dataQuery.getResultList().stream()
+                .filter(e -> !(hideSuperAdmin && e.getRole() == AdminLevel.SUPER_ADMIN)) // 최종 안전망
+                .map(employeeMapper::toEmployeeQueryResponse)
+                .collect(Collectors.toList());
+
+        return new PagedEmployeeResponse(employees, page, totalPages, page >= totalPages - 1);
     }
-
-    boolean hideSuperAdmin = (requesterRole != AdminLevel.SUPER_ADMIN);
-    if (hideSuperAdmin) {
-      where.append("AND e.role <> :superAdmin ");
-    }
-
-    String countJpql = "SELECT COUNT(e) FROM Employee e JOIN e.company c LEFT JOIN e.department d " + where;
-    TypedQuery<Long> countQuery = em.createQuery(countJpql, Long.class)
-            .setParameter("tenant", tenant)
-            .setParameter("currentUserId", currentUserId);
-    if (hasKeyword) countQuery.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
-    if (hideSuperAdmin) countQuery.setParameter("superAdmin", AdminLevel.SUPER_ADMIN);
-
-    long totalCount = countQuery.getSingleResult();
-    int totalPages = (int) Math.ceil((double) totalCount / size);
-
-    String dataJpql =
-            "SELECT e FROM Employee e " +
-                    "JOIN FETCH e.company c " +
-                    "LEFT JOIN FETCH e.department d " +
-                    where +
-                    "ORDER BY e.employeeName ASC";
-
-    TypedQuery<Employee> dataQuery = em.createQuery(dataJpql, Employee.class)
-            .setParameter("tenant", tenant)
-            .setParameter("currentUserId", currentUserId);
-    if (hasKeyword) dataQuery.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
-    if (hideSuperAdmin) dataQuery.setParameter("superAdmin", AdminLevel.SUPER_ADMIN);
-
-    dataQuery.setFirstResult(page * size);
-    dataQuery.setMaxResults(size);
-
-    List<EmployeeQueryResponse> employees = dataQuery.getResultList().stream()
-            .filter(e -> !(hideSuperAdmin && e.getRole() == AdminLevel.SUPER_ADMIN)) // 최종 안전망
-            .map(employeeMapper::toEmployeeQueryResponse)
-            .collect(Collectors.toList());
-
-    return new PagedEmployeeResponse(employees, page, totalPages, page >= totalPages - 1);
-  }
 }

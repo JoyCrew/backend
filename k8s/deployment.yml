@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+# Defines the desired state for the application pods.
+=======
+>>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,6 +9,10 @@ metadata:
   labels:
     app: joycrew-backend
 spec:
+<<<<<<< HEAD
+  # Runs 2 replicas of the pod for high availability.
+=======
+>>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
   replicas: 2
   selector:
     matchLabels:
@@ -14,6 +22,30 @@ spec:
       labels:
         app: joycrew-backend
     spec:
+<<<<<<< HEAD
+      # Use a dedicated service account for the application pods.
+      # This is crucial for securely granting AWS permissions via IRSA.
+      serviceAccountName: joycrew-service-account
+      containers:
+        - name: backend-container
+          image: "566105751077.dkr.ecr.ap-northeast-2.amazonaws.com/joycrew-backend:a761bbb-1754808557"
+          ports:
+            - containerPort: 8082
+          env:
+            - name: SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT
+              value: "20000" # 20 seconds
+            - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+              value: "5"
+          # Define resource requests and limits for better scheduling and stability.
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "150m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          # Readiness probe checks if the container is ready to accept traffic.
+=======
       # cluster.yml에서 생성한 서비스 계정 이름과 일치해야 함
       serviceAccountName: joycrew-service-account
       containers:
@@ -43,15 +75,27 @@ spec:
               memory: "1Gi"
               cpu: "1000m"
 
+>>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
           readinessProbe:
             httpGet:
               path: /
               port: 8082
+<<<<<<< HEAD
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          # Liveness probe checks if the container is still running correctly.
+          # If it fails, Kubernetes will restart the container.
+=======
             initialDelaySeconds: 40
             periodSeconds: 10
+>>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
           livenessProbe:
             httpGet:
               path: /
               port: 8082
+<<<<<<< HEAD
+            initialDelaySeconds: 60
+=======
             initialDelaySeconds: 90
+>>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
             periodSeconds: 20

@@ -38,6 +38,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
+    // Added from merged branch
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
@@ -52,14 +53,14 @@ dependencies {
     // AWS SDK for S3 and Secrets Manager Integration
     implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:3.1.1')
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
-    implementation(platform("software.amazon.awssdk:bom:2.21.46"))
+    implementation platform("software.amazon.awssdk:bom:2.21.46")
     implementation 'software.amazon.awssdk:s3'
 
     implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
 
     // Database Drivers
-    runtimeOnly 'com.mysql:mysql-connector-j' // For production
-    runtimeOnly 'com.h2database:h2'           // For development
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'com.h2database:h2'
 
     // Developer Tools
     compileOnly 'org.projectlombok:lombok'
@@ -76,7 +77,7 @@ bootJar {
     enabled = true
 }
 
-// Disables the plain JAR generation as the bootJar is sufficient.
+// Disables the plain JAR generation.
 jar {
     enabled = false
 }

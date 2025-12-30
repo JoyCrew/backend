@@ -1,3 +1,14 @@
+<<<<<<< HEAD
+name: Deploy to EC2 (Self-contained)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+=======
 name: Deploy to EKS
 
 on:
@@ -14,6 +25,7 @@ env:
 jobs:
   deploy:
     name: Build and Deploy
+>>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
@@ -31,6 +43,34 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
+<<<<<<< HEAD
+      - name: Transfer JAR to EC2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "build/libs/*.jar"
+          target: "/home/${{ secrets.SSH_USER }}/app"
+          strip_components: 2
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            APP_DIR="/home/${{ secrets.SSH_USER }}/app"
+            LOG_DIR="${APP_DIR}/logs"
+            DEPLOY_SCRIPT="$APP_DIR/deploy.sh"
+
+            mkdir -p $LOG_DIR
+
+            echo "> 배포 스크립트 실행"
+            chmod +x $DEPLOY_SCRIPT
+            $DEPLOY_SCRIPT
+=======
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -75,3 +115,4 @@ jobs:
           
           # 배포 확인
           kubectl rollout status deployment/joycrew-backend-deployment
+>>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7

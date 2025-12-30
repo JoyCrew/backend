@@ -22,18 +22,18 @@ public class DomainTenantFilter implements Filter {
             throws IOException, ServletException {
         HttpServletRequest http = (HttpServletRequest) req;
 
-        String host = extractHost(http);
-        String normalized = normalizeHost(host);
+        String host = extractHost(http);         // X-Forwarded-Host 우선
+        String normalized = normalizeHost(host); // 포트 제거, 소문자 변환
 
-        // 🚨 [핵심 수정] 공통 도메인(메인, 로컬)은 테넌트 설정(필터) 없이 그냥 통과!
-        // 이유: 로그인 시 전체 회사를 뒤져서 유저를 찾아야 하기 때문.
+        // 공통 도메인(메인, API, 로컬)은 테넌트 설정 없이 통과
+        // 이유: 로그인 등에서 전체 회사를 조회해야 하는 경우가 있기 때문
         if (isCommonDomain(normalized)) {
             chain.doFilter(req, res);
             return;
         }
 
         Long companyId = resolveCompanyId(normalized)
-                .orElseGet(this::fallbackCompanyId);
+                .orElseGet(this::fallbackCompanyId); // 없으면 기본값(개발/로컬용)
 
         try {
             TenantContext.set(companyId);
@@ -59,7 +59,9 @@ public class DomainTenantFilter implements Filter {
     }
 
     private Long fallbackCompanyId() {
-        return 1L; // 알 수 없는 서브도메인일 때만 1번으로 fallback
+        // 운영에선 404(UNKNOWN DOMAIN)로 처리하고 싶다면 예외를 던지도록 바꾸세요.
+        // throw new ServletException("Unknown domain");
+        return 1L; // 개발/로컬 환경 기본 테넌트
     }
 
     private String extractHost(HttpServletRequest http) {
@@ -70,7 +72,7 @@ public class DomainTenantFilter implements Filter {
 
     private String normalizeHost(String host) {
         if (host == null) return null;
-        int idx = host.indexOf(':');
+        int idx = host.indexOf(':'); // :443 등 제거
         String h = (idx > -1) ? host.substring(0, idx) : host;
         return h.toLowerCase();
     }

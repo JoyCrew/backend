@@ -19,45 +19,45 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class GiftPointService {
 
-    private final EmployeeRepository employeeRepository;
-    private final WalletRepository walletRepository;
-    private final RewardPointTransactionRepository transactionRepository;
-    private final ApplicationEventPublisher eventPublisher;
+  private final EmployeeRepository employeeRepository;
+  private final WalletRepository walletRepository;
+  private final RewardPointTransactionRepository transactionRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
-    @Transactional
-    public void giftPointsToColleague(String senderEmail, GiftPointRequest request) {
-        Employee sender = employeeRepository.findByEmail(senderEmail)
-                .orElseThrow(() -> new UserNotFoundException("Sender not found."));
-        Employee receiver = employeeRepository.findById(request.receiverId())
-                .orElseThrow(() -> new UserNotFoundException("Receiver not found."));
+  @Transactional
+  public void giftPointsToColleague(String senderEmail, GiftPointRequest request) {
+    Employee sender = employeeRepository.findByEmail(senderEmail)
+            .orElseThrow(() -> new UserNotFoundException("Sender not found."));
+    Employee receiver = employeeRepository.findById(request.receiverId())
+            .orElseThrow(() -> new UserNotFoundException("Receiver not found."));
 
-        Wallet senderWallet = walletRepository.findByEmployee_EmployeeId(sender.getEmployeeId())
-                .orElseThrow(() -> new IllegalStateException("Sender's wallet does not exist."));
-        Wallet receiverWallet = walletRepository.findByEmployee_EmployeeId(receiver.getEmployeeId())
-                .orElseThrow(() -> new IllegalStateException("Receiver's wallet does not exist."));
+    Wallet senderWallet = walletRepository.findByEmployee_EmployeeId(sender.getEmployeeId())
+            .orElseThrow(() -> new IllegalStateException("Sender's wallet does not exist."));
+    Wallet receiverWallet = walletRepository.findByEmployee_EmployeeId(receiver.getEmployeeId())
+            .orElseThrow(() -> new IllegalStateException("Receiver's wallet does not exist."));
 
-        // Transfer points
-        // 1. 보내는 사람: '총 잔액(balance)'과 '선물 한도(giftablePoint)' 둘 다 차감 (기존 로직)
-        senderWallet.spendGiftablePoints(request.points());
+    // Transfer points
+    // 1. 보내는 사람: '총 잔액(balance)'과 '선물 한도(giftablePoint)' 둘 다 차감
+    senderWallet.spendGiftablePoints(request.points());
 
-        // [FIXED] 2. 받는 사람: '총 잔액(balance)'만 증가시킴
-        receiverWallet.receiveGiftPoints(request.points());
-        // receiverWallet.addPoints(request.points()); // 👈 기존 코드
+    // 2. 받는 사람: '총 잔액(balance)'만 증가시킴 (선물로 받은 포인트)
+    receiverWallet.receiveGiftPoints(request.points());
+    // 기존: receiverWallet.addPoints(request.points());
 
-        // Record the transaction
-        RewardPointTransaction transaction = RewardPointTransaction.builder()
-                .sender(sender)
-                .receiver(receiver)
-                .pointAmount(request.points())
-                .message(request.message())
-                .type(TransactionType.AWARD_P2P)
-                .tags(request.tags())
-                .build();
-        transactionRepository.save(transaction);
+    // Record the transaction
+    RewardPointTransaction transaction = RewardPointTransaction.builder()
+            .sender(sender)
+            .receiver(receiver)
+            .pointAmount(request.points())
+            .message(request.message())
+            .type(TransactionType.AWARD_P2P)
+            .tags(request.tags())
+            .build();
+    transactionRepository.save(transaction);
 
-        // Publish an event for notifications or other async tasks
-        eventPublisher.publishEvent(
-                new RecognitionEvent(this, sender.getEmployeeId(), receiver.getEmployeeId(), request.points(), request.message())
-        );
-    }
+    // Publish an event for notifications or other async tasks
+    eventPublisher.publishEvent(
+            new RecognitionEvent(this, sender.getEmployeeId(), receiver.getEmployeeId(), request.points(), request.message())
+    );
+  }
 }
