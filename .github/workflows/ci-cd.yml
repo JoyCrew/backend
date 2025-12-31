@@ -1,4 +1,4 @@
-name: JoyCrew EC2 Deploy (Final)
+name: JoyCrew EC2 Deploy (Final Clean)
 
 on:
   push:
@@ -41,17 +41,22 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            # 1. GitHub Secrets를 환경변수로 직접 선언 (가장 확실한 주입 방식)
+            # 모든 환경변수 주입 (GitHub Secrets 이름 기준)
             export SPRING_DATASOURCE_URL="${{ secrets.DB_HOST }}"
             export SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USER }}"
             export SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}"
             export SPRING_MAIL_USERNAME="${{ secrets.GMAIL_USERNAME }}"
             export SPRING_MAIL_PASSWORD="${{ secrets.GMAIL_PASSWORD }}"
             export JWT_SECRET="${{ secrets.JWT_SECRET_KEY }}"
-            
-            # export SOLAPI_API_KEY="${{ secrets.SOLAPI_API_KEY }}"
-            
-            # 2. 서버에 있는 배포 스크립트 실행
-            APP_DIR="/home/${{ secrets.SSH_USER }}/app"
-            chmod +x $APP_DIR/deploy.sh
-            $APP_DIR/deploy.sh
+            export KYC_TOKEN_SECRET="${{ secrets.KYC_TOKEN_SECRET }}"
+            export APP_SMS_FROM_NUMBER="${{ secrets.APP_SMS_FROM_NUMBER }}"
+            export SOLAPI_API_KEY="${{ secrets.SOLAPI_API_KEY }}"
+            export SOLAPI_API_SECRET="${{ secrets.SOLAPI_API_SECRET }}"
+            export KAKAO_GIFTBIZ_API_KEY="${{ secrets.KAKAO_GIFTBIZ_API_KEY }}"
+            export KAKAO_GIFTBIZ_BASE_URL="${{ secrets.KAKAO_GIFTBIZ_BASE_URL }}"
+            export KAKAO_CALLBACK_SUCCESS_URL="${{ secrets.KAKAO_CALLBACK_SUCCESS_URL }}"
+            export KAKAO_CALLBACK_FAIL_URL="${{ secrets.KAKAO_CALLBACK_FAIL_URL }}"
+            export KAKAO_CALLBACK_GIFT_CANCEL_URL="${{ secrets.KAKAO_CALLBACK_GIFT_CANCEL_URL }}"
+
+            # 배포 스크립트 실행
+            /home/ec2-user/app/deploy.sh
