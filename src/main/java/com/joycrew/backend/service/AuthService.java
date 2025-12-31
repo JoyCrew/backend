@@ -118,20 +118,20 @@ public class AuthService {
    */
   @Transactional(readOnly = true)
   public void requestPasswordReset(String email) {
-    Long tenantId = TenantContext.get(); // null 허용을 위해 직접 get() 호출
-
+    Long tenantId = TenantContext.get();
     Optional<Employee> employeeOpt;
 
     if (tenantId != null) {
-      // 테넌트 도메인 접근 시: 해당 회사 소속 유저인지 체크
       employeeOpt = employeeRepository.findByCompanyCompanyIdAndEmail(tenantId, email);
     } else {
-      // 공통 도메인(api.joycrew.co.kr) 접근 시: 전체 유저 대상 검색
       employeeOpt = employeeRepository.findByEmail(email);
     }
 
     employeeOpt.ifPresent(emp -> {
       String token = jwtUtil.generateToken(email, passwordResetExpirationMs);
+
+      log.info("==== DEBUG RESET TOKEN FOR {} : {} ====", email, token);
+
       emailService.sendPasswordResetEmail(email, token);
       log.info("Password reset requested for email: {} (Search mode: {})",
               email, (tenantId != null ? "Tenant " + tenantId : "Global"));
