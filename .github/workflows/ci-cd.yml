@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-name: Deploy to EC2 (Self-contained)
+name: JoyCrew EC2 Deploy (Final)
 
 on:
   push:
@@ -8,24 +7,6 @@ on:
 
 jobs:
   build-and-deploy:
-=======
-name: Deploy to EKS
-
-on:
-  push:
-    branches: [ "main" ]
-
-env:
-  AWS_REGION: ap-northeast-2
-  ECR_REPOSITORY: joycrew-backend
-  EKS_CLUSTER_NAME: joycrew-cluster
-  # GitHub SHA를 태그로 사용하여 매번 새로운 이미지를 구분
-  IMAGE_TAG: ${{ github.sha }}
-
-jobs:
-  deploy:
-    name: Build and Deploy
->>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
@@ -43,12 +24,11 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
-<<<<<<< HEAD
       - name: Transfer JAR to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
+          username: ${{ secrets.SSH_USER }} # ec2-user
           key: ${{ secrets.SSH_KEY }}
           source: "build/libs/*.jar"
           target: "/home/${{ secrets.SSH_USER }}/app"
@@ -60,59 +40,17 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          # GitHub Secrets에 있는 원본 이름들을 나열
+          envs: DB_HOST, DB_USER, DB_PASSWORD, GMAIL_USERNAME, GMAIL_PASSWORD, JWT_SECRET_KEY
           script: |
+            export SPRING_DATASOURCE_URL="${DB_HOST}"
+            export SPRING_DATASOURCE_USERNAME="${DB_USER}"
+            export SPRING_DATASOURCE_PASSWORD="${DB_PASSWORD}"
+            export SPRING_MAIL_USERNAME="${GMAIL_USERNAME}"
+            export SPRING_MAIL_PASSWORD="${GMAIL_PASSWORD}"
+            export JWT_SECRET="${JWT_SECRET_KEY}"
+            
+            # 배포 경로 설정 및 스크립트 실행
             APP_DIR="/home/${{ secrets.SSH_USER }}/app"
-            LOG_DIR="${APP_DIR}/logs"
-            DEPLOY_SCRIPT="$APP_DIR/deploy.sh"
-
-            mkdir -p $LOG_DIR
-
-            echo "> 배포 스크립트 실행"
-            chmod +x $DEPLOY_SCRIPT
-            $DEPLOY_SCRIPT
-=======
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          # GitHub Repository Settings > Secrets에 등록 필요
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: |
-          # 이미지 빌드
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          
-          # 이미지 푸시
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-      - name: Update kubeconfig
-        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
-
-      - name: Deploy to EKS
-        run: |
-          # k8s 폴더 내의 모든 설정을 적용
-          # secret-provider.yml -> deployment.yml 순서 등이 자동으로 처리됨 (apply 시)
-          
-          # deployment.yml의 이미지 태그를 현재 빌드된 버전으로 교체
-          cd k8s
-          sed -i "s|image: .*joycrew-backend:.*|image: ${{ steps.build-image.outputs.image }}|g" deployment.yml
-          
-          # 매니페스트 적용
-          kubectl apply -f .
-          
-          # 배포 확인
-          kubectl rollout status deployment/joycrew-backend-deployment
->>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
+            chmod +x $APP_DIR/deploy.sh
+            $APP_DIR/deploy.sh
