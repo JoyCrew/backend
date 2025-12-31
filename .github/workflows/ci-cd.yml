@@ -28,7 +28,7 @@ jobs:
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }} # ec2-user
+          username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           source: "build/libs/*.jar"
           target: "/home/${{ secrets.SSH_USER }}/app"
@@ -40,17 +40,18 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          # GitHub Secrets에 있는 원본 이름들을 나열
-          envs: DB_HOST, DB_USER, DB_PASSWORD, GMAIL_USERNAME, GMAIL_PASSWORD, JWT_SECRET_KEY
           script: |
-            export SPRING_DATASOURCE_URL="${DB_HOST}"
-            export SPRING_DATASOURCE_USERNAME="${DB_USER}"
-            export SPRING_DATASOURCE_PASSWORD="${DB_PASSWORD}"
-            export SPRING_MAIL_USERNAME="${GMAIL_USERNAME}"
-            export SPRING_MAIL_PASSWORD="${GMAIL_PASSWORD}"
-            export JWT_SECRET="${JWT_SECRET_KEY}"
+            # 1. GitHub Secrets를 환경변수로 직접 선언 (가장 확실한 주입 방식)
+            export SPRING_DATASOURCE_URL="${{ secrets.DB_HOST }}"
+            export SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USER }}"
+            export SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            export SPRING_MAIL_USERNAME="${{ secrets.GMAIL_USERNAME }}"
+            export SPRING_MAIL_PASSWORD="${{ secrets.GMAIL_PASSWORD }}"
+            export JWT_SECRET="${{ secrets.JWT_SECRET_KEY }}"
             
-            # 배포 경로 설정 및 스크립트 실행
+            # export SOLAPI_API_KEY="${{ secrets.SOLAPI_API_KEY }}"
+            
+            # 2. 서버에 있는 배포 스크립트 실행
             APP_DIR="/home/${{ secrets.SSH_USER }}/app"
             chmod +x $APP_DIR/deploy.sh
             $APP_DIR/deploy.sh
