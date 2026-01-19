@@ -42,6 +42,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             # 모든 환경변수 주입 (GitHub Secrets 이름 기준)
+            export TOSS_SECRET_KEY="${{ secrets.TOSS_SECRET_KEY }}"
             export SPRING_DATASOURCE_URL="${{ secrets.DB_HOST }}"
             export SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USER }}"
             export SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}"
