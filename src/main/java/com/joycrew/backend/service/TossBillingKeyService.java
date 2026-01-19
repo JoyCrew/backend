@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
@@ -18,20 +19,30 @@ import java.util.Map;
 @Slf4j
 public class TossBillingKeyService {
 
-    @Value("${toss.secret-key}")
+    @Value("${toss.secret-key:}")
     private String secretKey;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     private static final String ISSUE_URL =
-            "https://api.tosspayments.com/v1/billing/authorizations/issue"; // 공식 엔드포인트 :contentReference[oaicite:3]{index=3}
+            "https://api.tosspayments.com/v1/billing/authorizations/issue";
 
     public String issueBillingKey(String authKey, String customerKey) {
-        String auth = Base64.getEncoder().encodeToString((secretKey + ":")
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException("toss.secret-key is missing");
+        }
+        if (authKey == null || authKey.isBlank()) {
+            throw new IllegalArgumentException("authKey is blank");
+        }
+        if (customerKey == null || customerKey.isBlank()) {
+            throw new IllegalArgumentException("customerKey is blank");
+        }
+
+        String basic = Base64.getEncoder().encodeToString((secretKey + ":")
                 .getBytes(StandardCharsets.UTF_8));
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Basic " + auth);
+        headers.set(HttpHeaders.AUTHORIZATION, "Basic " + basic);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         Map<String, Object> body = new HashMap<>();
@@ -40,18 +51,24 @@ public class TossBillingKeyService {
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
-        ResponseEntity<TossIssueBillingKeyResponse> response =
-                restTemplate.postForEntity(ISSUE_URL, entity, TossIssueBillingKeyResponse.class);
+        try {
+            ResponseEntity<TossIssueBillingKeyResponse> response =
+                    restTemplate.postForEntity(ISSUE_URL, entity, TossIssueBillingKeyResponse.class);
 
-        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-            throw new IllegalStateException("Issue billingKey failed");
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                throw new IllegalStateException("Issue billingKey failed (empty response)");
+            }
+
+            String billingKey = response.getBody().billingKey();
+            if (billingKey == null || billingKey.isBlank()) {
+                throw new IllegalStateException("billingKey is empty");
+            }
+
+            return billingKey;
+
+        } catch (HttpStatusCodeException e) {
+            log.error("[TOSS][ISSUE] status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new IllegalStateException("Toss issue billingKey failed: " + e.getStatusCode(), e);
         }
-
-        String billingKey = response.getBody().billingKey();
-        if (billingKey == null || billingKey.isBlank()) {
-            throw new IllegalStateException("billingKey is empty");
-        }
-
-        return billingKey;
     }
 }

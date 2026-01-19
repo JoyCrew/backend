@@ -12,9 +12,20 @@ public interface SubscriptionPaymentRepository extends JpaRepository<Subscriptio
 
     Optional<SubscriptionPayment> findByOrderId(String orderId);
 
-    boolean existsByOrderId(String orderId);
+    Page<SubscriptionPayment> findByCompanyCompanyId(Long companyId, Pageable pageable);
 
-    Page<SubscriptionPayment> findByCompany_CompanyIdOrderByRequestedAtDesc(Long companyId, Pageable pageable);
+    Page<SubscriptionPayment> findByCompanyCompanyIdAndStatus(Long companyId, PaymentStatus status, Pageable pageable);
 
-    Page<SubscriptionPayment> findByCompany_CompanyIdAndStatusOrderByRequestedAtDesc(Long companyId, PaymentStatus status, Pageable pageable);
+    // ✅ 전체 결제 이력 (최신순)
+    Page<SubscriptionPayment> findByCompanyCompanyIdOrderByCreatedAtDesc(
+            Long companyId,
+            Pageable pageable
+    );
+
+    // ✅ 상태별 결제 이력 (최신순)
+    Page<SubscriptionPayment> findByCompanyCompanyIdAndStatusOrderByCreatedAtDesc(
+            Long companyId,
+            PaymentStatus status,
+            Pageable pageable
+    );
 }

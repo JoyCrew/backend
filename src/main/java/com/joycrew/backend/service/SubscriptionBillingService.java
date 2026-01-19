@@ -2,6 +2,7 @@ package com.joycrew.backend.service;
 
 import com.joycrew.backend.entity.Company;
 import com.joycrew.backend.entity.SubscriptionPayment;
+import com.joycrew.backend.entity.enums.PaymentStatus;
 import com.joycrew.backend.repository.CompanyRepository;
 import com.joycrew.backend.repository.SubscriptionPaymentRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +25,7 @@ public class SubscriptionBillingService {
     private final TossBillingChargeService tossBillingChargeService;
 
     @Value("${subscription.monthly-price}")
-    private long monthlyPrice; // ✅ 정확한 amount 저장용
+    private long monthlyPrice;
 
     private static final DateTimeFormatter ORDER_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
@@ -38,49 +40,36 @@ public class SubscriptionBillingService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // 이번 결제가 커버할 구독 기간: (현재 subscriptionEndAt) ~ +1month
+        // 만료일 기준으로 다음 1개월 결제
         LocalDateTime periodStart = (company.getSubscriptionEndAt() != null) ? company.getSubscriptionEndAt() : now;
         LocalDateTime periodEnd = periodStart.plusMonths(1);
 
-        // ✅ 멱등성 orderId: company + periodStart 기준 고정
         String orderId = generateOrderId(companyId, periodStart);
 
-        // 이미 성공 이력이 있으면 재결제 방지
-        paymentRepository.findByOrderId(orderId).ifPresent(existing -> {
-            if (existing.getStatus().name().equals("SUCCESS")) {
-                log.info("[AUTO-BILL-SKIP] already success orderId={}", orderId);
-                return;
-            }
-        });
+        // ✅ 이미 SUCCESS면 진짜로 종료
+        Optional<SubscriptionPayment> existingOpt = paymentRepository.findByOrderId(orderId);
+        if (existingOpt.isPresent() && existingOpt.get().getStatus() == PaymentStatus.SUCCESS) {
+            log.info("[AUTO-BILL-SKIP] already success orderId={}", orderId);
+            return;
+        }
 
-        // ✅ PENDING 생성(없으면) + amount 정확히 저장
-        SubscriptionPayment payment = paymentRepository.findByOrderId(orderId)
-                .orElseGet(() -> paymentRepository.save(
-                        SubscriptionPayment.pending(
-                                company,
-                                orderId,
-                                monthlyPrice,   // ✅ 여기!
-                                periodStart,
-                                periodEnd,
-                                now
-                        )
-                ));
+        SubscriptionPayment payment = existingOpt.orElseGet(() ->
+                paymentRepository.save(
+                        SubscriptionPayment.pending(company, orderId, monthlyPrice, periodStart, periodEnd, now)
+                )
+        );
 
-        // Toss 결제 호출
         TossBillingChargeService.TossChargeResult result =
                 tossBillingChargeService.charge(company, orderId);
 
         if (result.success()) {
             payment.markSuccess(result.paymentKey(), result.approvedAt(), result.rawResponse());
-            company.extendSubscription(1); // ✅ 성공 시 구독 연장
+            company.extendSubscription(1);
 
             log.info("[AUTO-BILL-SUCCESS] companyId={}, orderId={}, newEndAt={}",
                     companyId, orderId, company.getSubscriptionEndAt());
         } else {
-            payment.markFailed(
-                    (result.failCode() != null ? result.failCode() : "FAILED"),
-                    result.rawResponse()
-            );
+            payment.markFailed(result.failCode() != null ? result.failCode() : "FAILED", result.rawResponse());
             company.markFailed();
 
             log.error("[AUTO-BILL-FAILED] companyId={}, orderId={}, code={}, msg={}",
