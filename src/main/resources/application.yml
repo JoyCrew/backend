@@ -62,7 +62,7 @@ management:
       application: joycrew-backend
 
 toss:
-  secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
+  secret-key: ${TOSS_SECRET_KEY}
 
 subscription:
   monthly-price: 50000

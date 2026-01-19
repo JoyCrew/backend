@@ -46,6 +46,7 @@ public class Company {
   @Column(name = "subscription_end_at")
   private LocalDateTime subscriptionEndAt;
 
+  @Column(nullable=false)
   private boolean autoRenew;
 
   @Column(name = "toss_billing_key")

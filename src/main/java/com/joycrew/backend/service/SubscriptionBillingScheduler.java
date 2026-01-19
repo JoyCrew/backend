@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,23 +17,20 @@ import java.util.List;
 public class SubscriptionBillingScheduler {
 
     private final CompanyRepository companyRepository;
-    private final SubscriptionBillingService subscriptionBillingService;
+    private final SubscriptionBillingService billingService;
 
-    @Scheduled(cron = "0 0 3 * * *")
+    @Scheduled(cron = "0 0 3 * * *") // 매일 새벽 3시
+    @Transactional
     public void autoBillingJob() {
         LocalDateTime now = LocalDateTime.now();
         List<Company> targets = companyRepository.findAutoBillingTargets(now);
 
-        log.info("[AUTO-BILLING] started at {}, targets={}", now, targets.size());
-
         for (Company c : targets) {
             try {
-                subscriptionBillingService.billCompany(c.getCompanyId());
+                billingService.billCompany(c.getCompanyId());
             } catch (Exception e) {
-                log.error("[AUTO-BILL-ERROR] companyId={} error={}", c.getCompanyId(), e.getMessage(), e);
+                log.error("[AUTO-BILL-ERROR] companyId={}", c.getCompanyId(), e);
             }
         }
-
-        log.info("[AUTO-BILLING] finished at {}", LocalDateTime.now());
     }
 }

@@ -7,107 +7,127 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-        name = "subscription_payment",
+@Table(name = "subscription_payment",
         indexes = {
-                @Index(name = "idx_subpay_company_requested", columnList = "company_id, requested_at"),
-                @Index(name = "idx_subpay_company_paid", columnList = "company_id, approved_at"),
-                @Index(name = "idx_subpay_order", columnList = "order_id", unique = true)
-        }
-)
+                @Index(name = "idx_subscription_payment_order_id", columnList = "order_id", unique = true),
+                @Index(name = "idx_subscription_payment_company_id", columnList = "company_id"),
+                @Index(name = "idx_subscription_payment_status", columnList = "status")
+        })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class SubscriptionPayment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** 결제 대상 회사 */
+    // 어떤 회사 결제인지
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    /** 우리쪽 주문 ID (멱등성/조회 기준) */
-    @Column(name = "order_id", nullable = false, unique = true, length = 80)
+    // 멱등성 key (회사+기간 기준으로 고정 생성)
+    @Column(name = "order_id", nullable = false, unique = true, length = 64)
     private String orderId;
 
-    /** 토스 paymentKey (성공 시 응답에 존재) */
-    @Column(name = "toss_payment_key", length = 200)
-    private String tossPaymentKey;
-
-    /** 금액 */
+    // 결제 금액 (예: 50000)
     @Column(nullable = false)
     private long amount;
 
-    /** 이번 결제가 커버하는 구독 기간 */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private PaymentStatus status;
+
+    // ✅ "요청 생성 시각" (DTO의 requestedAt 대응)
+    @Column(name = "requested_at", nullable = false)
+    private LocalDateTime requestedAt;
+
+    // ✅ Toss 승인 시각(성공 시)
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    // 이번 결제가 커버하는 구독 기간
     @Column(name = "period_start_at", nullable = false)
     private LocalDateTime periodStartAt;
 
     @Column(name = "period_end_at", nullable = false)
     private LocalDateTime periodEndAt;
 
-    /** 결제 요청 시각 */
-    @Column(name = "requested_at", nullable = false)
-    private LocalDateTime requestedAt;
+    // ✅ Toss 결제키(성공 시 저장) - DTO의 tossPaymentKey 대응
+    @Column(name = "toss_payment_key")
+    private String tossPaymentKey;
 
-    /** 승인 시각 */
-    @Column(name = "approved_at")
-    private LocalDateTime approvedAt;
+    // ✅ 실패코드/메시지 - DTO의 failMessage 대응
+    @Column(name = "fail_code")
+    private String failCode;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private PaymentStatus status;
+    @Column(name = "fail_message", length = 500)
+    private String failMessage;
 
-    /** 실패 사유 */
-    @Column(name = "fail_reason", length = 500)
-    private String failReason;
-
-    /** 토스 응답 raw */
+    // 디버깅/감사 목적: Toss 응답 원문(일부) 저장
     @Lob
     @Column(name = "raw_response")
     private String rawResponse;
 
-    public static SubscriptionPayment pending(Company company,
-                                              String orderId,
-                                              long amount,
-                                              LocalDateTime periodStartAt,
-                                              LocalDateTime periodEndAt,
-                                              LocalDateTime requestedAt) {
-        SubscriptionPayment p = new SubscriptionPayment();
-        p.company = company;
-        p.orderId = orderId;
-        p.amount = amount;
-        p.periodStartAt = periodStartAt;
-        p.periodEndAt = periodEndAt;
-        p.requestedAt = requestedAt;
-        p.status = PaymentStatus.PENDING;
-        return p;
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    // -----------------------
+    // Factory
+    // -----------------------
+    public static SubscriptionPayment pending(
+            Company company,
+            String orderId,
+            long amount,
+            LocalDateTime periodStartAt,
+            LocalDateTime periodEndAt,
+            LocalDateTime now
+    ) {
+        return SubscriptionPayment.builder()
+                .company(company)
+                .orderId(orderId)
+                .amount(amount)
+                .status(PaymentStatus.PENDING)
+                .requestedAt(now)
+                .periodStartAt(periodStartAt)
+                .periodEndAt(periodEndAt)
+                .build();
     }
 
+    // -----------------------
+    // State transitions
+    // -----------------------
     public void markSuccess(String tossPaymentKey, LocalDateTime approvedAt, String rawResponse) {
         this.status = PaymentStatus.SUCCESS;
         this.tossPaymentKey = tossPaymentKey;
-        this.approvedAt = approvedAt;
-        this.failReason = null;
+        this.approvedAt = approvedAt != null ? approvedAt : LocalDateTime.now();
         this.rawResponse = rawResponse;
+        this.failCode = null;
+        this.failMessage = null;
     }
 
-    public void markFailed(String reason, String rawResponse) {
+    public void markFailed(String failCode, String failMessageOrRaw) {
         this.status = PaymentStatus.FAILED;
-        this.failReason = reason;
-        this.rawResponse = rawResponse;
+        this.failCode = failCode;
+        this.failMessage = failMessageOrRaw;
     }
 
-    // ======================
-    // DTO/프론트 호환 getter
-    // ======================
-
-    public String getFailCode() {
-        return null; // 지금은 코드 저장 안 하므로 null (추후 확장)
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+        if (this.requestedAt == null) this.requestedAt = now;
+        if (this.status == null) this.status = PaymentStatus.PENDING;
     }
 
-    public String getFailMessage() {
-        return this.failReason;
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }

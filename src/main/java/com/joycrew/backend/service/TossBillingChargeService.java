@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
@@ -21,71 +22,17 @@ import java.util.Map;
 @Slf4j
 public class TossBillingChargeService {
 
-    @Value("${toss.secret-key}")
+    @Value("${toss.secret-key:}")
     private String secretKey;
 
     @Value("${subscription.monthly-price}")
     private long monthlyPrice;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String BILLING_URL =
             "https://api.tosspayments.com/v1/billing/{billingKey}";
-
-    public TossChargeResult charge(Company company, String orderId) {
-        String billingKey = company.getTossBillingKey();
-        String customerKey = company.getTossCustomerKey();
-
-        if (billingKey == null || customerKey == null) {
-            throw new IllegalStateException("Company has no billingKey/customerKey");
-        }
-
-        String auth = Base64.getEncoder().encodeToString((secretKey + ":")
-                .getBytes(StandardCharsets.UTF_8));
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Basic " + auth);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("customerKey", customerKey);
-        body.put("orderId", orderId);
-        body.put("amount", monthlyPrice);
-        body.put("orderName", "JoyCrew 월 구독");
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
-
-        ResponseEntity<String> response =
-                restTemplate.postForEntity(BILLING_URL, entity, String.class, billingKey);
-
-        String raw = response.getBody();
-
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            return TossChargeResult.failed(
-                    "HTTP_" + response.getStatusCode().value(),
-                    "Billing failed",
-                    raw
-            );
-        }
-
-        String paymentKey = null;
-        LocalDateTime approvedAt = null;
-
-        try {
-            if (raw != null) {
-                JsonNode node = objectMapper.readTree(raw);
-                if (node.hasNonNull("paymentKey")) paymentKey = node.get("paymentKey").asText();
-                if (node.hasNonNull("approvedAt")) {
-                    approvedAt = LocalDateTime.parse(node.get("approvedAt").asText().replace("Z", ""));
-                }
-            }
-        } catch (Exception e) {
-            log.warn("[TOSS-PARSE-WARN] cannot parse billing response. raw={}", raw);
-        }
-
-        return TossChargeResult.success(paymentKey, approvedAt, raw);
-    }
 
     public record TossChargeResult(
             boolean success,
@@ -94,13 +41,65 @@ public class TossBillingChargeService {
             String failCode,
             String failMessage,
             String rawResponse
-    ) {
-        public static TossChargeResult success(String paymentKey, LocalDateTime approvedAt, String raw) {
-            return new TossChargeResult(true, paymentKey, approvedAt, null, null, raw);
+    ) {}
+
+    public TossChargeResult charge(Company company, String orderId) {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException("toss.secret-key is missing");
+        }
+        if (company.getTossBillingKey() == null || company.getTossBillingKey().isBlank()) {
+            throw new IllegalStateException("billingKey missing");
+        }
+        if (company.getTossCustomerKey() == null || company.getTossCustomerKey().isBlank()) {
+            throw new IllegalStateException("customerKey missing");
         }
 
-        public static TossChargeResult failed(String failCode, String failMessage, String raw) {
-            return new TossChargeResult(false, null, null, failCode, failMessage, raw);
+        String basic = Base64.getEncoder().encodeToString((secretKey + ":")
+                .getBytes(StandardCharsets.UTF_8));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.AUTHORIZATION, "Basic " + basic);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("customerKey", company.getTossCustomerKey());
+        body.put("amount", monthlyPrice);
+        body.put("orderId", orderId);
+        body.put("orderName", "JoyCrew 월 구독");
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<String> res =
+                    restTemplate.postForEntity(BILLING_URL, entity, String.class, company.getTossBillingKey());
+
+            String raw = res.getBody();
+            String paymentKey = null;
+            LocalDateTime approvedAt = null;
+
+            if (raw != null) {
+                JsonNode node = objectMapper.readTree(raw);
+                paymentKey = node.path("paymentKey").asText(null);
+                // approvedAt 포맷은 토스 응답에 맞게 파싱 필요할 수 있음 (없으면 null 허용)
+            }
+
+            return new TossChargeResult(true, paymentKey, approvedAt, null, null, raw);
+
+        } catch (HttpStatusCodeException e) {
+            String raw = e.getResponseBodyAsString();
+            log.error("[TOSS][CHARGE] status={}, body={}", e.getStatusCode(), raw);
+
+            return new TossChargeResult(
+                    false,
+                    null,
+                    null,
+                    "HTTP_" + e.getStatusCode().value(),
+                    e.getStatusText(),
+                    raw
+            );
+        } catch (Exception e) {
+            log.error("[TOSS][CHARGE] unexpected error", e);
+            return new TossChargeResult(false, null, null, "EXCEPTION", e.getMessage(), null);
         }
     }
 }
