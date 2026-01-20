@@ -18,7 +18,6 @@ java {
 
 // Configuration for dependencies.
 configurations {
-    // Ensures that compile-only dependencies (like Lombok) are available for the annotation processor.
     compileOnly {
         extendsFrom annotationProcessor
     }
@@ -31,34 +30,31 @@ repositories {
 
 // Defines the project's dependencies.
 dependencies {
-    // Spring Boot Starters for core functionalities
+    // Spring Boot Starters
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
-
-    // Added from merged branch
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
-    // API Documentation (Swagger/OpenAPI)
+    // API Documentation
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 
-    // JSON Web Token (JWT) support
+    // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-    // AWS SDK for S3 and Secrets Manager Integration
+    // AWS SDK
     implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:3.1.1')
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
     implementation platform("software.amazon.awssdk:bom:2.21.46")
     implementation 'software.amazon.awssdk:s3'
-
     implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
 
-    // Database Drivers
+    // Database
     runtimeOnly 'com.mysql:mysql-connector-j'
     runtimeOnly 'com.h2database:h2'
 
@@ -67,9 +63,13 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-    // Testing Dependencies
+    // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-parameters'
 }
 
 // Configures the executable JAR generation.
