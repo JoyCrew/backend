@@ -17,7 +17,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class KakaoGiftBizClient {
 
     private final RestTemplate rt;
@@ -27,6 +26,10 @@ public class KakaoGiftBizClient {
 
     @Value("${kakao.giftbiz.api-key}")
     private String apiKey;
+
+    public KakaoGiftBizClient(@Qualifier("kakaoGiftBizRestTemplate") RestTemplate rt) {
+        this.rt = rt;
+    }
 
     private HttpHeaders authHeaders() {
         HttpHeaders h = new HttpHeaders();
