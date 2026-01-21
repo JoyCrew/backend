@@ -1,10 +1,10 @@
-// src/main/java/com/joycrew/backend/kakao/KakaoGiftBizClient.java
 package com.joycrew.backend.kakao;
 
 import com.joycrew.backend.dto.kakao.KakaoTemplateOrderRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.*;
