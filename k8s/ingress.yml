@@ -1,51 +1,50 @@
-<<<<<<< HEAD
-# /k8s/ingress.yml
-# Defines how external traffic reaches the service inside the cluster.
-# This configuration uses the AWS Load Balancer Controller to provision an ALB.
-=======
->>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
 metadata:
-  name: joycrew-backend-ingress
-  annotations:
-<<<<<<< HEAD
-    # Creates an internet-facing load balancer.
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    # Routes traffic directly to Pod IPs for better performance.
-    alb.ingress.kubernetes.io/target-type: ip
-    # Specifies the ARN of the ACM certificate for HTTPS.
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:566105751077:certificate/d5930928-10dc-4f4d-9cc4-67770a94522b
-    # Configures the ALB to listen on port 443 (HTTPS).
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
-    # Redirects HTTP traffic to HTTPS.
-    alb.ingress.kubernetes.io/ssl-redirect: '443'
-spec:
-  # Specifies that the 'alb' ingress controller should handle this Ingress. (Modern way)
-=======
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:566105751077:certificate/d5930928-10dc-4f4d-9cc4-67770a94522b
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/ssl-redirect: '443'
-spec:
->>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
-  ingressClassName: alb
-  rules:
-    - host: api.joycrew.co.kr
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-<<<<<<< HEAD
-                # Forwards traffic to the 'joycrew-backend-service'.
-                name: joycrew-backend-service
-                port:
-                  # Forwards to the service's port 80.
-=======
-                name: joycrew-backend-service
-                port:
->>>>>>> 12d0498008b5251ba390633e46e4cbf9f1235fd7
-                  number: 80
+  name: joycrew-cluster
+  region: ap-northeast-2
+  version: "1.29"
+
+iam:
+  withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: joycrew-service-account
+        namespace: default
+      attachPolicyARNs:
+        - "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+    - metadata:
+        name: aws-load-balancer-controller
+        namespace: kube-system
+      wellKnownPolicies:
+        awsLoadBalancerController: true
+
+vpc:
+  id: "vpc-067968d8c7f0de694" # 기존 VPC ID 사용
+  subnets:
+    private:
+      ap-northeast-2b: { id: "subnet-0b1c4ed704fe8809c" }
+      ap-northeast-2d: { id: "subnet-00394d1c845cc1187" }
+    public:
+      ap-northeast-2a: { id: "subnet-03e9e38db1457d819" }
+      ap-northeast-2c: { id: "subnet-0283caa043409b846" }
+
+managedNodeGroups:
+  - name: app-workers
+    instanceType: t3.small
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 4
+    ssh:
+      allow: true
+      publicKeyName: joycrew-deploy-key
+    labels:
+      role: application
+      environment: production
+    volumeSize: 20
+    volumeType: gp3
+
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["api", "audit", "authenticator", "controllerManager", "scheduler"]
