@@ -41,7 +41,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            # 모든 환경변수 주입 (GitHub Secrets 이름 기준)
             export SPRING_DATASOURCE_URL="${{ secrets.DB_HOST }}"
             export SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USER }}"
             export SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}"
@@ -58,5 +57,4 @@ jobs:
             export KAKAO_CALLBACK_FAIL_URL="${{ secrets.KAKAO_CALLBACK_FAIL_URL }}"
             export KAKAO_CALLBACK_GIFT_CANCEL_URL="${{ secrets.KAKAO_CALLBACK_GIFT_CANCEL_URL }}"
 
-            # 배포 스크립트 실행
             /home/ec2-user/app/deploy.sh

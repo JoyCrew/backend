@@ -1,4 +1,3 @@
-// src/main/java/com/joycrew/backend/kakao/KakaoGiftBizClient.java
 package com.joycrew.backend.kakao;
 
 import com.joycrew.backend.dto.kakao.KakaoTemplateOrderRequest;

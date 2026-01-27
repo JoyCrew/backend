@@ -46,7 +46,6 @@ logging:
     org.springframework.web: INFO
     org.hibernate: INFO
 
-# AWS 공통 설정
 aws:
   region: 'ap-northeast-2'
   s3:

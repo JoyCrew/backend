@@ -1,4 +1,4 @@
-package com.joycrew.backend.web;
+package com.joycrew.backend.exception;
 
 import com.joycrew.backend.dto.ErrorResponse;
 import com.joycrew.backend.exception.BillingRequiredException;

@@ -1,4 +1,3 @@
-// com.joycrew.backend.service.NotificationService.java
 package com.joycrew.backend.service;
 
 import com.joycrew.backend.dto.NotificationResponse;

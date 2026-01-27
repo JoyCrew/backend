@@ -1,4 +1,3 @@
-// src/main/java/com/joycrew/backend/entity/CompanyDomain.java
 package com.joycrew.backend.entity;
 
 import jakarta.persistence.*;

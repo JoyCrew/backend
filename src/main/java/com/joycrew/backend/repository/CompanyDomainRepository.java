@@ -1,4 +1,3 @@
-// src/main/java/com/joycrew/backend/repository/CompanyDomainRepository.java
 package com.joycrew.backend.repository;
 
 import java.util.Optional;

@@ -1,4 +1,3 @@
-// com.joycrew.backend.web.CookieUtil.java
 package com.joycrew.backend.web;
 
 import org.springframework.http.ResponseCookie;

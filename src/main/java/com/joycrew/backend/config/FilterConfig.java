@@ -1,4 +1,3 @@
-// src/main/java/com/joycrew/backend/config/FilterConfig.java
 package com.joycrew.backend.config;
 
 import com.joycrew.backend.tenant.DomainTenantFilter;

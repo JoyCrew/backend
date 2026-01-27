@@ -1,32 +1,32 @@
 module.eks.data.aws_partition.current[0]: Reading...
-module.iam_eks_role.data.aws_caller_identity.current: Reading...
-module.eks.data.aws_caller_identity.current[0]: Reading...
-module.eks.module.kms.data.aws_caller_identity.current[0]: Reading...
-module.iam_eks_role.data.aws_partition.current: Reading...
 module.eks.data.aws_iam_policy_document.assume_role_policy[0]: Reading...
-module.eks.module.kms.data.aws_partition.current[0]: Reading...
-module.db.module.db_instance.data.aws_iam_policy_document.enhanced_monitoring: Reading...
-module.iam_eks_role.data.aws_partition.current: Read complete after 0s [id=aws]
-module.eks.data.aws_partition.current[0]: Read complete after 0s [id=aws]
-module.eks.data.aws_iam_policy_document.assume_role_policy[0]: Read complete after 0s [id=2830595799]
-module.eks.module.kms.data.aws_partition.current[0]: Read complete after 0s [id=aws]
-module.db.module.db_instance.data.aws_iam_policy_document.enhanced_monitoring: Read complete after 0s [id=76086537]
-module.eks.module.eks_managed_node_group["app_nodes"].data.aws_caller_identity.current: Reading...
-module.eks.module.eks_managed_node_group["app_nodes"].data.aws_partition.current: Reading...
-module.eks.module.eks_managed_node_group["app_nodes"].data.aws_iam_policy_document.assume_role_policy[0]: Reading...
-module.db.module.db_instance.data.aws_partition.current: Reading...
 module.iam_eks_role.data.aws_region.current: Reading...
-module.eks.module.eks_managed_node_group["app_nodes"].data.aws_partition.current: Read complete after 0s [id=aws]
+module.eks.module.kms.data.aws_partition.current[0]: Reading...
+module.eks.data.aws_caller_identity.current[0]: Reading...
+module.db.module.db_instance.data.aws_iam_policy_document.enhanced_monitoring: Reading...
+module.iam_eks_role.data.aws_caller_identity.current: Reading...
+module.eks.module.eks_managed_node_group["app_nodes"].data.aws_partition.current: Reading...
 module.iam_eks_role.data.aws_region.current: Read complete after 0s [id=ap-northeast-2]
+module.eks.data.aws_iam_policy_document.assume_role_policy[0]: Read complete after 0s [id=2830595799]
+module.eks.data.aws_partition.current[0]: Read complete after 0s [id=aws]
+module.eks.module.kms.data.aws_partition.current[0]: Read complete after 0s [id=aws]
+module.eks.module.eks_managed_node_group["app_nodes"].data.aws_partition.current: Read complete after 0s [id=aws]
+module.db.module.db_instance.data.aws_iam_policy_document.enhanced_monitoring: Read complete after 0s [id=76086537]
+module.db.module.db_instance.data.aws_partition.current: Reading...
+module.eks.module.kms.data.aws_caller_identity.current[0]: Reading...
+module.eks.module.eks_managed_node_group["app_nodes"].data.aws_caller_identity.current: Reading...
 module.db.module.db_instance.data.aws_partition.current: Read complete after 0s [id=aws]
+module.iam_eks_role.data.aws_partition.current: Reading...
+module.iam_eks_role.data.aws_partition.current: Read complete after 0s [id=aws]
+module.eks.module.eks_managed_node_group["app_nodes"].data.aws_iam_policy_document.assume_role_policy[0]: Reading...
 module.eks.module.eks_managed_node_group["app_nodes"].data.aws_iam_policy_document.assume_role_policy[0]: Read complete after 0s [id=2560088296]
 module.eks.data.aws_iam_policy_document.custom[0]: Reading...
-module.eks.data.aws_iam_policy_document.custom[0]: Read complete after 0s [id=513122117]
-module.eks.module.kms.data.aws_caller_identity.current[0]: Read complete after 0s [id=566105751077]
 module.eks.data.aws_caller_identity.current[0]: Read complete after 0s [id=566105751077]
+module.eks.data.aws_iam_policy_document.custom[0]: Read complete after 0s [id=513122117]
 module.eks.data.aws_iam_session_context.current[0]: Reading...
 module.eks.data.aws_iam_session_context.current[0]: Read complete after 0s [id=arn:aws:iam::566105751077:root]
 module.iam_eks_role.data.aws_caller_identity.current: Read complete after 0s [id=566105751077]
+module.eks.module.kms.data.aws_caller_identity.current[0]: Read complete after 0s [id=566105751077]
 module.eks.module.eks_managed_node_group["app_nodes"].data.aws_caller_identity.current: Read complete after 0s [id=566105751077]
 
 Terraform used the selected providers to generate the following execution
@@ -80,6 +80,63 @@ Terraform will perform the following actions:
           + "Name" = "joycrew-rds-sg"
         }
       + vpc_id                 = (known after apply)
+    }
+
+  # helm_release.prometheus_stack will be created
+  + resource "helm_release" "prometheus_stack" {
+      + atomic                     = false
+      + chart                      = "kube-prometheus-stack"
+      + cleanup_on_fail            = false
+      + create_namespace           = false
+      + dependency_update          = false
+      + disable_crd_hooks          = false
+      + disable_openapi_validation = false
+      + disable_webhooks           = false
+      + force_update               = false
+      + id                         = (known after apply)
+      + lint                       = false
+      + max_history                = 0
+      + metadata                   = (known after apply)
+      + name                       = "joycrew-monitoring"
+      + namespace                  = "monitoring"
+      + pass_credentials           = false
+      + recreate_pods              = false
+      + render_subchart_notes      = true
+      + replace                    = false
+      + repository                 = "https://prometheus-community.github.io/helm-charts"
+      + reset_values               = false
+      + reuse_values               = false
+      + set_wo                     = (write-only attribute)
+      + skip_crds                  = false
+      + status                     = "deployed"
+      + take_ownership             = false
+      + timeout                    = 300
+      + upgrade_install            = false
+      + values                     = [
+          + <<-EOT
+                grafana:
+                  adminPassword: "admin1234"
+                  service:
+                    type: LoadBalancer
+            EOT,
+        ]
+      + verify                     = false
+      + version                    = "81.2.2"
+      + wait                       = true
+      + wait_for_jobs              = false
+    }
+
+  # kubernetes_namespace_v1.monitoring will be created
+  + resource "kubernetes_namespace_v1" "monitoring" {
+      + id                               = (known after apply)
+      + wait_for_default_service_account = false
+
+      + metadata {
+          + generation       = (known after apply)
+          + name             = "monitoring"
+          + resource_version = (known after apply)
+          + uid              = (known after apply)
+        }
     }
 
   # module.eks.data.tls_certificate.this[0] will be read during apply
@@ -1432,7 +1489,7 @@ Terraform will perform the following actions:
       + id = (known after apply)
     }
 
-Plan: 58 to add, 0 to change, 0 to destroy.
+Plan: 60 to add, 0 to change, 0 to destroy.
 
 ─────────────────────────────────────────────────────────────────────────────
 

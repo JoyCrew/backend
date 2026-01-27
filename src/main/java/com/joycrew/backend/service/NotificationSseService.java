@@ -1,4 +1,3 @@
-// com.joycrew.backend.service.NotificationSseService.java
 package com.joycrew.backend.service;
 
 import jakarta.annotation.PreDestroy;

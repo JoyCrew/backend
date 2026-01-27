@@ -1,4 +1,3 @@
-// src/main/java/com/joycrew/backend/dto/OrderResponse.java
 package com.joycrew.backend.dto;
 
 import com.joycrew.backend.entity.Order;

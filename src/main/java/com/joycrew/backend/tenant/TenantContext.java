@@ -1,4 +1,3 @@
-// src/main/java/com/joycrew/backend/tenant/TenantContext.java
 package com.joycrew.backend.tenant;
 
 public final class TenantContext {

@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface WalletRepository extends JpaRepository<Wallet, Long> {
 
-    // ⭐ 비관적 락 적용 (동시성 문제 해결용)
+    // 비관적 락 적용 (동시성 문제 해결용)
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select w from Wallet w where w.employee.employeeId = :employeeId")
     Optional<Wallet> findByEmployee_EmployeeIdForUpdate(Long employeeId);

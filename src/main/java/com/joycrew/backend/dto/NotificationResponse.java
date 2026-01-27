@@ -1,4 +1,3 @@
-// com.joycrew.backend.dto.NotificationResponse.java
 package com.joycrew.backend.dto;
 
 import com.joycrew.backend.entity.enums.NotificationType;
